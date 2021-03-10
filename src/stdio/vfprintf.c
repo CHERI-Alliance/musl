@@ -418,8 +418,8 @@ static int fmt_fp(FILE *f, long double y, int w, int p, int fl, int t)
 	return MAX(w, pl+l);
 }
 
+#ifdef MORELLO
 #define CAP_BUFFER_SIZE 129
-
 static int fmt_cap(FILE* f, const void *s){
 	char buf[CAP_BUFFER_SIZE];
 	char *z = buf + sizeof(buf);
@@ -473,6 +473,7 @@ static int fmt_cap(FILE* f, const void *s){
 	out(f, z, length);
 	return length;
 }
+#endif
 
 static int getint(char **s) {
 	int i;
@@ -608,10 +609,12 @@ static int printf_core(FILE *f, const char *fmt, va_list *ap, union arg *nl_arg,
 			}
 			continue;
 		case 'p':
+#ifdef MORELLO
 			if (fl & ALT_FORM) {
 				l = fmt_cap(f, arg.p);
 				continue;
 			}
+#endif
 			p = MAX(p, 2*sizeof(void*));
 			t = 'x';
 			fl |= ALT_FORM;

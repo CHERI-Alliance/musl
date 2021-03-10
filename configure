@@ -28,12 +28,15 @@ System types:
   --build=BUILD           build system type; used only to infer cross-compiling
 
 Optional features:
-  --enable-optimize=...   optimize listed components for speed over size [auto]
-  --enable-debug          build with debugging information [disabled]
-  --disable-warnings      build with recommended warnings flags [enabled]
-  --enable-wrapper=...    build given musl toolchain wrapper [auto]
-  --disable-shared        inhibit building shared library [enabled]
-  --disable-static        inhibit building static library [enabled]
+  --enable-optimize=...              optimize listed components for speed over size [auto]
+  --enable-debug                     build with debugging information [disabled]
+  --disable-warnings                 build with recommended warnings flags [enabled]
+  --enable-wrapper=...               build given musl toolchain wrapper [auto]
+  --disable-shared                   inhibit building shared library [enabled]
+  --disable-static                   inhibit building static library [enabled]
+  --disable-morello                  inhibit using Morello features (only for AArch64 targets)
+  --morello-subobject-bounds=on/off  support restricting the capability bounds of subobjects
+                                     (only for AArch64 targets, off by default)
 
 Optional packages:
   --with-malloc=...       choose malloc implementation [mallocng]
@@ -120,6 +123,7 @@ CFLAGS_AUTO=
 CFLAGS_MEMOPS=
 CFLAGS_NOSSP=
 CFLAGS_TRY=
+CFLAGS_MORELLO=
 LDFLAGS_AUTO=
 LDFLAGS_TRY=
 OPTIMIZE_GLOBS=
@@ -136,6 +140,9 @@ build=
 target=
 optimize=auto
 debug=no
+morello=yes
+morello_objects="\$(shell cat arch/aarch64/morello.objects | tr '\n' ' ')"
+morello_subobject_bounds=no
 warnings=yes
 shared=auto
 static=yes
@@ -163,6 +170,10 @@ case "$arg" in
 --disable-optimize) optimize=no ;;
 --enable-debug|--enable-debug=yes) debug=yes ;;
 --disable-debug|--enable-debug=no) debug=no ;;
+--enable-morello|--enable-morello=yes) morello=yes ; morello_objects="\$(shell cat arch/aarch64/morello.objects | tr '\n' ' ')" ;;
+--disable-morello|--enable-morello=no) morello=no ; morello_objects="" ;;
+--morello-subobject-bounds=on) morello_subobject_bounds=yes ;;
+--morello-subobject-bounds=off) morello_subobject_bounds=no ;;
 --enable-warnings|--enable-warnings=yes) warnings=yes ;;
 --disable-warnings|--enable-warnings=no) warnings=no ;;
 --enable-wrapper|--enable-wrapper=yes) wrapper=detect ;;
@@ -398,9 +409,32 @@ tryflag CFLAGS_NOSSP -fno-stack-protector
 tryflag CFLAGS_MEMOPS -fno-tree-loop-distribute-patterns
 
 #
-# Enable debugging if requessted.
+# Enable debugging if requested.
 #
 test "$debug" = yes && CFLAGS_AUTO=-g
+
+#
+# Enable Morello if requested.
+#
+test "$morello" = yes
+if test "$morello" = yes ; then
+    if test "$ARCH" = "aarch64" ; then
+        tryflag CFLAGS_MORELLO "-march=morello+c64 -mabi=purecap"
+    else
+        fail "$0: Morello can only be enabled for AArch64 target"
+    fi
+    if fnmatch '*-march=morello*' "$CFLAGS_MORELLO" ; then :
+    else
+        fail "$0: Morello is not supported by $CC"
+    fi
+fi
+
+#
+# Enable Morello subobject bounds if requested
+#
+if test "$morello_subobject_bounds" = yes ; then
+    CFLAGS_MORELLO="$CFLAGS_MORELLO -DMORELLO_ENABLE_SUBOBJECT_BOUNDS"
+fi
 
 #
 # Preprocess asm files to add extra debugging information if debug is
@@ -531,7 +565,7 @@ tryflag CFLAGS_AUTO -Werror=discarded-qualifiers
 tryflag CFLAGS_AUTO -Werror=discarded-array-qualifiers
 
 #
-# GCC ignores unused arguements by default, but Clang needs this extra
+# GCC ignores unused arguments by default, but Clang needs this extra
 # parameter to stop printing warnings about LDFLAGS passed during
 # compiling stage and CFLAGS passed during linking stage.
 #
@@ -561,7 +595,7 @@ pic_default=no
 fi
 
 # Reduce space lost to padding for alignment purposes by sorting data
-# objects according to their alignment reqirements. This approximates
+# objects according to their alignment requirements. This approximates
 # optimal packing.
 tryldflag LDFLAGS_AUTO -Wl,--sort-section,alignment
 tryldflag LDFLAGS_AUTO -Wl,--sort-common
@@ -801,6 +835,8 @@ ALL_TOOLS = $tools
 TOOL_LIBS = $tool_libs
 ADD_CFI = $ADD_CFI
 MALLOC_DIR = $malloc_dir
+CFLAGS_MORELLO = $CFLAGS_MORELLO
+MORELLO_OBJECTS = $morello_objects
 EOF
 test "x$static" = xno && echo "STATIC_LIBS ="
 test "x$shared" = xno && echo "SHARED_LIBS ="

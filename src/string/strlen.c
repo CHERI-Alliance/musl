@@ -10,7 +10,7 @@
 size_t strlen(const char *s)
 {
 	const char *a = s;
-#ifdef __GNUC__
+#if defined(__GNUC__) && !defined(MORELLO)
 	typedef size_t __attribute__((__may_alias__)) word;
 	const word *w;
 	for (; (uintptr_t)s % ALIGN; s++) if (!*s) return s-a;

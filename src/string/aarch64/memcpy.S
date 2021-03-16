@@ -11,12 +11,26 @@
  *
  */
 
+#ifdef MORELLO
+
+#define dstin   c0
+#define src     c1
+#define dst     c3
+#define srcend  c4
+#define dstend  c5
+#define tmp2    x15
+
+#else
+
 #define dstin   x0
 #define src     x1
-#define count   x2
 #define dst     x3
 #define srcend  x4
 #define dstend  x5
+
+#endif
+
+#define count   x2
 #define A_l     x6
 #define A_lw    w6
 #define A_h     x7
@@ -123,9 +137,16 @@ memcpy:
 	ldp     F_l, F_h, [src, 48]
 	cmp     count, 96
 	b.ls    .Lcopy96
+#ifdef MORELLO
+	ldr     G_l, [srcend, -64]
+	ldr     G_h, [srcend, -56]
+	str     G_l, [dstend, -64]
+	str     G_h, [dstend, -56]
+#else
 	ldp     G_l, G_h, [srcend, -64]
-	ldp     H_l, H_h, [srcend, -48]
 	stp     G_l, G_h, [dstend, -64]
+#endif
+	ldp     H_l, H_h, [srcend, -48]
 	stp     H_l, H_h, [dstend, -48]
 .Lcopy96:
 	stp     A_l, A_h, [dstin]
@@ -143,9 +164,18 @@ memcpy:
 	/* Copy 16 bytes and then align dst to 16-byte alignment.  */
 
 	ldp     D_l, D_h, [src]
+#ifdef MORELLO
+	gcvalue tmp1, dstin
+	bic     tmp2, tmp1, 15
+	scvalue dst, dstin, tmp2
+	and     tmp1, tmp1, 15
+	neg     tmp1, tmp1
+	add     src, src, tmp1
+#else
 	and     tmp1, dstin, 15
 	bic     dst, dstin, 15
 	sub     src, src, tmp1
+#endif
 	add     count, count, tmp1      /* Count is now 16 too large.  */
 	ldp     A_l, A_h, [src, 16]
 	stp     D_l, D_h, [dstin]

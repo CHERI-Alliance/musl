@@ -22,7 +22,8 @@ __attribute__((__noinline__))
 #endif
 void __init_libc(char **envp, char *pn)
 {
-	size_t i, *auxv, aux[AUX_CNT] = { 0 };
+	size_t i = 0;
+	uintptr_t *auxv, aux[AUX_CNT] = { 0 };
 	__environ = envp;
 	for (i=0; envp[i]; i++);
 	libc.auxv = auxv = (void *)(envp+i+1);
@@ -60,8 +61,13 @@ static void libc_start_init(void)
 {
 	_init();
 	uintptr_t a = (uintptr_t)&__init_array_start;
+
+#ifdef MORELLO
+	morello_init_array(a, &__init_array_end);
+#else
 	for (; a<(uintptr_t)&__init_array_end; a+=sizeof(void(*)()))
 		(*(void (**)(void))a)();
+#endif
 }
 
 weak_alias(libc_start_init, __libc_start_init);
@@ -89,6 +95,11 @@ static int libc_start_main_stage2(int (*main)(int,char **,char **), int argc, ch
 {
 	char **envp = argv+argc+1;
 	__libc_start_init();
+
+#ifdef MORELLO
+	morello_set_bounds_on_cap_array(&argv);
+	morello_set_bounds_on_cap_array(&envp);
+#endif
 
 	/* Pass control to the application */
 	exit(main(argc, argv, envp));

@@ -4,6 +4,7 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <limits.h>
+#include <stdint.h>
 
 struct __locale_map;
 
@@ -23,7 +24,7 @@ struct __libc {
 	char secure;
 	volatile signed char need_locks;
 	int threads_minus_1;
-	size_t *auxv;
+	uintptr_t *auxv;
 	struct tls_module *tls_head;
 	size_t tls_size, tls_align, tls_cnt;
 	size_t page_size;
@@ -38,7 +39,7 @@ extern hidden struct __libc __libc;
 #define libc __libc
 
 hidden void __init_libc(char **, char *);
-hidden void __init_tls(size_t *);
+hidden void __init_tls(uintptr_t *);
 hidden void __init_ssp(void *);
 hidden void __libc_start_init(void);
 hidden void __funcs_on_exit(void);

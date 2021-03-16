@@ -7,6 +7,9 @@
 #endif
 
 #if defined(_GNU_SOURCE) || defined(_BSD_SOURCE)
+// TODO: musl: Likely these and the sigcontext struct will need to be adjusted
+// from unsigned long to something 128 bits wide (probably uintptr_t),
+// however this is not expected to be problematic for getting a MVP
 typedef unsigned long greg_t;
 typedef unsigned long gregset_t[34];
 

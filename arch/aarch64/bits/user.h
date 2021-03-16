@@ -1,3 +1,6 @@
+// TODO: musl: Likely these will need to be adjusted from unsigned
+// long long to something 128 bits wide (probably uintptr_t), however
+// this is not expected to be problematic for getting a MVP
 struct user_regs_struct {
 	unsigned long long regs[31];
 	unsigned long long sp;

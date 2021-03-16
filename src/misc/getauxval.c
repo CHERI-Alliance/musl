@@ -2,9 +2,9 @@
 #include <errno.h>
 #include "libc.h"
 
-unsigned long __getauxval(unsigned long item)
+uintptr_t __getauxval(unsigned long item)
 {
-	size_t *auxv = libc.auxv;
+	uintptr_t *auxv = libc.auxv;
 	if (item == AT_SECURE) return libc.secure;
 	for (; *auxv; auxv+=2)
 		if (*auxv==item) return auxv[1];

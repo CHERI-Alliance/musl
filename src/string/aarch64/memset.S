@@ -11,12 +11,25 @@
  *
  */
 
+#ifdef MORELLO
+
+#define dstin   c0
+#define dst     c3
+#define dstend  c4
+#define tmp1    x6
+#define tmp2    x7
+
+#else
+
 #define dstin   x0
+#define dst     x3
+#define dstend  x4
+
+#endif
+
 #define val     x1
 #define valw    w1
 #define count   x2
-#define dst     x3
-#define dstend  x4
 #define zva_val x5
 
 .global memset
@@ -70,7 +83,13 @@ memset:
 	.p2align 4
 .Lset_long:
 	and     valw, valw, 255
+#ifdef MORELLO
+	gcvalue tmp1, dstin
+	bic     tmp1, tmp1, 15
+	scvalue dst, dstin, tmp1
+#else
 	bic     dst, dstin, 15
+#endif
 	str     q0, [dstin]
 	cmp     count, 160
 	ccmp    valw, 0, 0, hs
@@ -84,8 +103,16 @@ memset:
 #endif
 	str     q0, [dst, 16]
 	stp     q0, q0, [dst, 32]
+#ifdef MORELLO
+	gcvalue tmp1, dst
+	bic     tmp1, tmp1, 63
+	scvalue dst, dst, tmp1
+	gcvalue tmp2, dstend
+	sub     count, tmp2, tmp1      /* Count is now 64 too large.  */
+#else
 	bic     dst, dst, 63
 	sub     count, dstend, dst      /* Count is now 64 too large.  */
+#endif
 	sub     count, count, 128       /* Adjust count and bias for loop.  */
 
 	.p2align 4
@@ -99,7 +126,11 @@ memset:
 	ret
 
 .Lno_zva:
+#ifdef MORELLO
+	subs    count, dstend, dst
+#else
 	sub     count, dstend, dst      /* Count is 16 too large.  */
+#endif
 	sub     dst, dst, 16            /* Dst is biased by -32.  */
 	sub     count, count, 64 + 16   /* Adjust count and bias for loop.  */
 .Lno_zva_loop:

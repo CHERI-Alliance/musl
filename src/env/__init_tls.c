@@ -79,12 +79,12 @@ typedef Elf64_Phdr Phdr;
 
 extern weak hidden const size_t _DYNAMIC[];
 
-static void static_init_tls(size_t *aux)
+static void static_init_tls(uintptr_t *aux)
 {
 	unsigned char *p;
 	size_t n;
 	Phdr *phdr, *tls_phdr=0;
-	size_t base = 0;
+	uintptr_t base = 0;
 	void *mem;
 
 	for (p=(void *)aux[AT_PHDR],n=aux[AT_PHNUM]; n; n--,p+=aux[AT_PHENT]) {

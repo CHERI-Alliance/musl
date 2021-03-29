@@ -418,6 +418,62 @@ static int fmt_fp(FILE *f, long double y, int w, int p, int fl, int t)
 	return MAX(w, pl+l);
 }
 
+#define CAP_BUFFER_SIZE 129
+
+static int fmt_cap(FILE* f, const void *s){
+	char buf[CAP_BUFFER_SIZE];
+	char *z = buf + sizeof(buf);
+
+	/* Attributes */
+		*--z = ')';
+		if (__builtin_cheri_sealed_get(s)) *--z = 's';
+		*--z = '|';
+		if (!__builtin_cheri_tag_get(s)) *--z = 'i';
+		*--z = '(';
+		*--z = ' ';
+		*--z = ']';
+
+		/* Bounds */
+		size_t lower_bound = __builtin_cheri_base_get(s);
+		size_t upper_bound = lower_bound + __builtin_cheri_length_get(s);
+
+		z = fmt_x(upper_bound, z, 0);
+		*--z = 'x';
+		*--z = '0';
+		*--z = '-';
+		z = fmt_x(lower_bound, z, 0);
+		*--z = 'x';
+		*--z = '0';
+		*--z = ',';
+
+	/* Permissions */
+	size_t perms = __builtin_cheri_perms_get(s);
+	int perms_macros[] =  {__ARM_CAP_PERMISSION_EXECUTIVE__,
+					__CHERI_CAP_PERMISSION_PERMIT_STORE_CAPABILITY__,
+					__CHERI_CAP_PERMISSION_PERMIT_LOAD_CAPABILITY__,
+					__CHERI_CAP_PERMISSION_PERMIT_EXECUTE__,
+					__CHERI_CAP_PERMISSION_PERMIT_STORE__,
+					__CHERI_CAP_PERMISSION_PERMIT_LOAD__};
+	char perms_char_rep[] = {'E', 'W', 'R', 'x', 'w', 'r'};
+	for (int i = 0; i < 6; i++){
+		if (perms & perms_macros[i])
+			*--z = perms_char_rep[i];
+		else
+			*--z = '-';
+	}
+	*--z = '[';
+	*--z = ' ';
+
+		/* Address */
+		z = fmt_x(s, z, 0);
+		*--z = 'x';
+		*--z = '0';
+
+	size_t length = buf+sizeof(buf)-z;
+	out(f, z, length);
+	return length;
+}
+
 static int getint(char **s) {
 	int i;
 	for (i=0; isdigit(**s); (*s)++) {
@@ -552,6 +608,10 @@ static int printf_core(FILE *f, const char *fmt, va_list *ap, union arg *nl_arg,
 			}
 			continue;
 		case 'p':
+			if (fl & ALT_FORM) {
+				l = fmt_cap(f, arg.p);
+				continue;
+			}
 			p = MAX(p, 2*sizeof(void*));
 			t = 'x';
 			fl |= ALT_FORM;

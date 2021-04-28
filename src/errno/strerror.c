@@ -36,6 +36,9 @@ char *__strerror_l(int e, locale_t loc)
 #endif
 	if (e >= sizeof errmsgidx / sizeof *errmsgidx) e = 0;
 	s = (char *)&errmsgstr + errmsgidx[e];
+#ifdef MORELLO
+	s = __builtin_cheri_bounds_set(s, strlen(s) + 1);
+#endif
 	return (char *)LCTRANS(s, LC_MESSAGES, loc);
 }
 

@@ -1,6 +1,8 @@
 #include <string.h>
 #include <stdint.h>
 
+#include "morello_helpers.h"
+
 static char *twobyte_strstr(const unsigned char *h, const unsigned char *n)
 {
 	uint16_t nw = n[0]<<8 | n[1], hw = h[0]<<8 | h[1];
@@ -142,13 +144,15 @@ char *strstr(const char *h, const char *n)
 
 	/* Use faster algorithms for short needles */
 	h = strchr(h, *n);
+	char *p;
 	if (!h || !n[1]) return (char *)h;
-	if (!h[1]) return 0;
-	if (!n[2]) return twobyte_strstr((void *)h, (void *)n);
-	if (!h[2]) return 0;
-	if (!n[3]) return threebyte_strstr((void *)h, (void *)n);
-	if (!h[3]) return 0;
-	if (!n[4]) return fourbyte_strstr((void *)h, (void *)n);
+	else if (!h[1]) return 0;
+	else if (!n[2]) p = twobyte_strstr((void *)h, (void *)n);
+	else if (!h[2]) return 0;
+	else if (!n[3]) p = threebyte_strstr((void *)h, (void *)n);
+	else if (!h[3]) return 0;
+	else if (!n[4]) p = fourbyte_strstr((void *)h, (void *)n);
+	else p = twoway_strstr((void *)h, (void *)n);
 
-	return twoway_strstr((void *)h, (void *)n);
+	return RESTRICT_BOUNDS_TO_TAIL_IF_MORELLO_SUBOBJ(p);
 }

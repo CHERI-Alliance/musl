@@ -110,8 +110,10 @@ obj/src/env/aarch64/morello_init_array.o
 obj/src/env/aarch64/morello_init_stack_args.o
 obj/src/env/aarch64/morello_set_bounds_on_cap_array.o
 obj/src/env/__environ.o
+obj/src/env/getenv.o
 obj/src/env/__init_tls.o
 obj/src/env/__libc_start_main.o
+obj/src/env/secure_getenv.o
 obj/src/errno/__errno_location.o
 obj/src/errno/strerror.o
 obj/src/exit/abort_lock.o
@@ -135,6 +137,7 @@ obj/src/internal/intscan.o
 obj/src/internal/libc.o
 obj/src/internal/libm.o
 obj/src/internal/lock.o
+obj/src/internal/shgetc.o
 obj/src/internal/syscall_ret.o
 obj/src/internal/version.o
 obj/src/ipc/ipc.o
@@ -233,7 +236,9 @@ obj/src/stdio/putwchar.o
 obj/src/stdio/__stdio_exit.o
 obj/src/stdio/stdout.o
 obj/src/stdio/vfprintf.o
+obj/src/stdio/vsnprintf.o
 obj/src/stdlib/abs.o
+obj/src/stdlib/atoi.o
 obj/src/stdlib/bsearch.o
 obj/src/stdlib/div.o
 obj/src/stdlib/labs.o
@@ -241,6 +246,10 @@ obj/src/stdlib/ldiv.o
 obj/src/stdlib/llabs.o
 obj/src/stdlib/lldiv.o
 obj/src/stdlib/qsort.o
+obj/src/stdlib/strtod.o
+obj/src/stdlib/strtol.o
+obj/src/stdlib/wcstod.o
+obj/src/stdlib/wcstol.o
 obj/src/string/aarch64/memcpy.o
 obj/src/string/aarch64/memset.o
 obj/src/string/bcmp.o

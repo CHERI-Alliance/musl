@@ -31,7 +31,14 @@
 #include "atomic.h"
 #define ntz(x) a_ctz_l((x))
 
+#include "morello_helpers.h"
+
 typedef int (*cmpfun)(const void *, const void *);
+
+inline int cmpwrapper(cmpfun cmp, const void *a, const void *b, size_t width) {
+  return (*cmp)(RESTRICT_BNDS_IF_MORELLO(a, width),
+                RESTRICT_BNDS_IF_MORELLO(b, width));
+}
 
 static inline int pntz(size_t p[2]) {
 	int r = ntz(p[0] - 1);
@@ -99,10 +106,11 @@ static void sift(unsigned char *head, size_t width, cmpfun cmp, int pshift, size
 		rt = head - width;
 		lf = head - width - lp[pshift - 2];
 
-		if((*cmp)(ar[0], lf) >= 0 && (*cmp)(ar[0], rt) >= 0) {
+		if(cmpwrapper(cmp, ar[0], lf, width) >= 0 &&
+		   cmpwrapper(cmp, ar[0], rt, width) >= 0) {
 			break;
 		}
-		if((*cmp)(lf, rt) >= 0) {
+		if(cmpwrapper(cmp, lf, rt, width) >= 0) {
 			ar[i++] = lf;
 			head = lf;
 			pshift -= 1;
@@ -130,13 +138,14 @@ static void trinkle(unsigned char *head, size_t width, cmpfun cmp, size_t pp[2],
 	ar[0] = head;
 	while(p[0] != 1 || p[1] != 0) {
 		stepson = head - lp[pshift];
-		if((*cmp)(stepson, ar[0]) <= 0) {
+		if(cmpwrapper(cmp, stepson, ar[0], width) <= 0) {
 			break;
 		}
 		if(!trusty && pshift > 1) {
 			rt = head - width;
 			lf = head - width - lp[pshift - 2];
-			if((*cmp)(rt, stepson) >= 0 || (*cmp)(lf, stepson) >= 0) {
+			if(cmpwrapper(cmp, rt, stepson, width) >= 0 ||
+			   cmpwrapper(cmp, lf, stepson, width) >= 0) {
 				break;
 			}
 		}

@@ -141,7 +141,6 @@ target=
 optimize=auto
 debug=no
 morello=yes
-morello_objects="\$(shell cat arch/aarch64/morello.objects | tr '\n' ' ')"
 morello_subobject_bounds=no
 warnings=yes
 shared=auto

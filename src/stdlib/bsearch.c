@@ -1,4 +1,5 @@
 #include <stdlib.h>
+#include "morello_helpers.h"
 
 void *bsearch(const void *key, const void *base, size_t nel, size_t width, int (*cmp)(const void *, const void *))
 {
@@ -6,14 +7,14 @@ void *bsearch(const void *key, const void *base, size_t nel, size_t width, int (
 	int sign;
 	while (nel > 0) {
 		try = (char *)base + width*(nel/2);
-		sign = cmp(key, try);
+		sign = cmp(key, RESTRICT_BNDS_IF_MORELLO(try, width));
 		if (sign < 0) {
 			nel /= 2;
 		} else if (sign > 0) {
 			base = (char *)try + width;
 			nel -= nel/2+1;
 		} else {
-			return try;
+		  return RESTRICT_BNDS_IF_MORELLO_SUBOBJ(try, width);
 		}
 	}
 	return NULL;

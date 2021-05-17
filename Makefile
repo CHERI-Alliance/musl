@@ -44,7 +44,7 @@ LIBCC = -lgcc
 CPPFLAGS =
 CFLAGS =
 CFLAGS_AUTO = -Os -pipe
-CFLAGS_C99FSE = -std=c99 -ffreestanding -nostdinc 
+CFLAGS_C99FSE = -std=c99 -ffreestanding -nostdinc
 
 CFLAGS_ALL = $(CFLAGS_C99FSE)
 CFLAGS_ALL += -D_XOPEN_SOURCE=700 -I$(srcdir)/arch/$(ARCH) -I$(srcdir)/arch/generic -Iobj/src/internal -I$(srcdir)/src/include -I$(srcdir)/src/internal -Iobj/include -I$(srcdir)/include
@@ -158,13 +158,69 @@ obj/%.lo: $(srcdir)/%.S
 obj/%.lo: $(srcdir)/%.c $(GENH) $(IMPH)
 	$(CC_CMD)
 
+ifeq ($(USE_LIBSHIM),1)
+
+override LIBSHIM_BUILD = lib/libshim/build
+override LIBSHIM = $(LIBSHIM_BUILD)/libshim.a
+override LIBSHIM_LIBC_PATH = $(shell realpath $(srcdir))/lib/libshim-libc
+override LIBSHIM_OBJECTS := $$(find $(LIBSHIM_BUILD) -type f -name \*.o)
+
+LIBSHIM_URL ?= https://git.morello-project.org/morello/android/platform/external
+
+LIBSHIM_GIT ?= $(LIBSHIM_URL)/libshim
+LIBSHIM_REF ?= null
+LIBARCHCAP_GIT ?= $(LIBSHIM_URL)/libarchcap
+LIBARCHCAP_REF ?= null
+
+$(LIBSHIM): lib/libshim
+	$(MAKE) -C lib/libshim LIBC=musl ARCH=morello LIBC_PATH=$(LIBSHIM_LIBC_PATH) \
+	CC=$(CC) CXX=$(CC)++ CFLAGS=-DMORELLO CXXFLAGS=-DMORELLO
+
+lib/libshim: lib/libshim-libc lib/libarchcap
+	git clone --depth 1 $(LIBSHIM_GIT) $@
+ifneq ($(LIBSHIM_REF),null)
+	cd $@ && git pull $(LIBSHIM_GIT) $(LIBSHIM_REF)
+endif
+
+lib/libarchcap:
+	git clone --depth 1 $(LIBARCHCAP_GIT) $@
+ifneq ($(LIBARCHCAP_REF),null)
+	cd $@ && git pull $(LIBARCHCAP_GIT) $(LIBARCHCAP_REF)
+endif
+
+# install libc headers for libshim build
+lib/libshim-libc/include/bits/%: $(srcdir)/arch/$(ARCH)/bits/%
+	$(INSTALL) -D -m 644 $< $@
+
+# install libc headers for libshim build
+lib/libshim-libc/include/bits/%: $(srcdir)/arch/generic/bits/%
+	$(INSTALL) -D -m 644 $< $@
+
+# install libc headers for libshim build
+lib/libshim-libc/include/bits/%: obj/include/bits/%
+	$(INSTALL) -D -m 644 $< $@
+
+# install libc headers for libshim build
+lib/libshim-libc/include/%: $(srcdir)/include/%
+	$(INSTALL) -D -m 644 $< $@
+
+# install libc headers for libshim build
+lib/libshim-libc: $(ALL_INCLUDES:include/%=lib/libshim-libc/include/%)
+
+else
+
+override LIBSHIM =
+override LIBSHIM_OBJECTS =
+
+endif # USE_LIBSHIM
+
 lib/libc.so: $(LOBJS) $(LDSO_OBJS)
 	$(CC) $(CFLAGS_ALL) $(LDFLAGS_ALL) -nostdlib -shared \
 	-Wl,-e,_dlstart -o $@ $(LOBJS) $(LDSO_OBJS) $(LIBCC)
 
-lib/libc.a: $(AOBJS)
+lib/libc.a: $(AOBJS) $(LIBSHIM)
 	rm -f $@
-	$(AR) rc $@ $(AOBJS)
+	$(AR) rc $@ $(AOBJS) $(LIBSHIM_OBJECTS)
 	$(RANLIB) $@
 
 $(EMPTY_LIBS):
@@ -233,5 +289,8 @@ clean:
 
 distclean: clean
 	rm -f config.mak
+
+# Turn off implicit rules
+.SUFFIXES:
 
 .PHONY: all clean install install-libs install-headers install-tools

@@ -19,7 +19,13 @@
 #endif
 
 #ifndef __scc
+
+#if MORELLO
+#define __scc(X) ((__INTPTR_TYPE__) (X))
+#else
 #define __scc(X) ((long) (X))
+#endif
+
 typedef long syscall_arg_t;
 #endif
 

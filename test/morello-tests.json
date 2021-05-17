@@ -1,0 +1,615 @@
+[
+    {
+        "app": "${build}/hello.exe",
+        "name": "hello",
+        "xrc": [32]
+    },
+    {
+        "app": "${build}/hello.exe",
+        "name": "hello-one-arg",
+        "args": ["test"],
+        "xrc": [48]
+    },
+    {
+        "app": "${build}/hello.exe",
+        "name": "hello-two-args",
+        "args": ["morello", "test"],
+        "xrc": [64]
+    },
+    {
+        "app": "${build}/strerror_r.exe",
+        "name": "strerror_r",
+        "xrc": [0]
+    },
+    {
+        "app": "${build}/strerror.exe",
+        "name": "strerror",
+        "xrc": [0]
+    },
+    {
+        "app": "${build}/bsearch.exe",
+        "args": ["0"],
+        "name": "bsearch-basic",
+        "xrc": [0]
+    },
+    {
+        "app": "${build}/bsearch.exe",
+        "args": ["1"],
+        "name": "bsearch-duplicate",
+        "xrc": [0]
+    },
+    {
+        "app": "${build}/bsearch.exe",
+        "args": ["2"],
+        "name": "bsearch-not-found",
+        "xrc": [0]
+    },
+    {
+        "app": "${build}/memccpy.exe",
+        "name": "memccpy-c",
+        "args": ["0"],
+        "xrc": [0]
+    },
+    {
+        "app": "${build}/memccpy.exe",
+        "name": "memccpy-n",
+        "args": ["1"],
+        "xrc": [0]
+    },
+    {
+        "app": "${build}/memccpy.exe",
+        "name": "memccpy-whole-string",
+        "args": ["2"],
+        "xrc": [0]
+    },
+    {
+        "app": "${build}/memchr.exe",
+        "name": "memchr-found",
+        "args": ["0"],
+        "xrc": [0]
+    },
+    {
+        "app": "${build}/memchr.exe",
+        "name": "memchr-not-found",
+        "args": ["1"],
+        "xrc": [0]
+    },
+    {
+        "app": "${build}/memchr.exe",
+        "name": "memchr-not-within-n",
+        "args": ["2"],
+        "xrc": [0]
+    },
+    {
+        "app": "${build}/stpcpy.exe",
+        "name": "stpcpy",
+        "xrc": [0]
+    },
+    {
+        "app": "${build}/stpncpy.exe",
+        "name": "stpncpy",
+        "xrc": [0]
+    },
+    {
+        "app": "${build}/strlen.exe",
+        "name": "strlen-basic",
+        "args": ["0"],
+        "xrc": [0]
+    },
+    {
+        "app": "${build}/strlen.exe",
+        "name": "strlen-empty",
+        "args": ["1"],
+        "xrc": [0]
+    },
+    {
+        "app": "${build}/strlen.exe",
+        "name": "strlen-many",
+        "args": ["2"],
+        "xrc": [0]
+    },
+    {
+        "app": "${build}/strcasestr.exe",
+        "name": "strcasestr-found",
+        "xrc": [0],
+        "args": ["0"]
+    },
+    {
+        "app": "${build}/strcasestr.exe",
+        "name": "strcasestr-not-found",
+        "xrc": [0],
+        "args": ["1"]
+    },
+    {
+        "app": "${build}/strcasestr.exe",
+        "name": "strcasestr-empty-haystack",
+        "xrc": [0],
+        "args": ["2"]
+    },
+    {
+        "app": "${build}/mempcpy.exe",
+        "name": "mempcpy",
+        "xrc": [0]
+    },
+    {
+        "app": "${build}/memrchr.exe",
+        "name": "memrchr-found",
+        "args": ["0"],
+        "xrc": [0]
+    },
+    {
+        "app": "${build}/memrchr.exe",
+        "name": "memrchr-not-found",
+        "args": ["1"],
+        "xrc": [0]
+    },
+    {
+        "app": "${build}/memrchr.exe",
+        "name": "memrchr-not-within-n",
+        "args": ["2"],
+        "xrc": [0]
+    },
+    {
+        "app": "${build}/strcasecmp.exe",
+        "name": "strcasecmp",
+        "xrc": [0]
+    },
+    {
+        "app": "${build}/strcat.exe",
+        "name": "strcat",
+        "xrc": [0]
+    },
+    {
+        "app": "${build}/memmove.exe",
+        "name": "memmove-high-to-low",
+        "args": ["0"],
+        "xrc": [0]
+    },
+    {
+        "app": "${build}/memmove.exe",
+        "name": "memmove-low-to-high",
+        "args": ["1"],
+        "xrc": [0]
+    },
+    {
+        "app": "${build}/strchr.exe",
+        "name": "strchr-found",
+        "args": ["0"],
+        "xrc": [0]
+    },
+    {
+        "app": "${build}/strchr.exe",
+        "name": "strchr-not-found",
+        "args": ["1"],
+        "xrc": [0]
+    },
+    {
+        "app": "${build}/strchrnul.exe",
+        "name": "strchrnul-found",
+        "args": ["0"],
+        "xrc": [0]
+    },
+    {
+        "app": "${build}/strchrnul.exe",
+        "name": "strchrnul-not-found",
+        "args": ["1"],
+        "xrc": [0]
+    },
+    {
+        "app": "${build}/strlcpy.exe",
+        "name": "strlcpy",
+        "xrc": [0]
+    },
+    {
+        "app": "${build}/strcmp.exe",
+        "name": "strcmp",
+        "xrc": [0]
+    },
+    {
+        "app": "${build}/strcpy.exe",
+        "name": "strcpy",
+        "xrc": [0]
+    },
+    {
+        "app": "${build}/strcspn.exe",
+        "name": "strcspn-empty",
+        "args": ["0"],
+        "xrc": [0]
+    },
+    {
+        "app": "${build}/strcspn.exe",
+        "name": "strcspn-found",
+        "args": ["1"],
+        "xrc": [0]
+    },
+    {
+        "app": "${build}/strcspn.exe",
+        "name": "strcspn-not-found",
+        "args": ["2"]
+    },
+    {
+        "app": "${build}/strlcat.exe",
+        "name": "strlcat-shorter-than-n",
+        "args": ["0"]
+    },
+    {
+        "app": "${build}/strlcat.exe",
+        "name": "strlcat-longer-than-n",
+        "args": ["1"]
+    },
+    {
+        "app": "${build}/strncasecmp.exe",
+        "name": "strncasecmp",
+        "xrc": [0]
+    },
+    {
+        "app": "${build}/strncat.exe",
+        "name": "strncat",
+        "xrc": [0]
+    },
+    {
+        "app": "${build}/strncmp.exe",
+        "name": "strncmp",
+        "xrc": [0]
+    },
+    {
+        "app": "${build}/strncpy.exe",
+        "name": "strncpy",
+        "xrc": [0]
+    },
+    {
+        "app": "${build}/strnlen.exe",
+        "name": "strnlen-basic",
+        "args": ["0"],
+        "xrc": [0]
+    },
+    {
+        "app": "${build}/strnlen.exe",
+        "name": "strnlen-empty",
+        "args": ["1"],
+        "xrc": [0]
+    },
+    {
+        "app": "${build}/strnlen.exe",
+        "name": "strnlen-many",
+        "args": ["2"],
+        "xrc": [0]
+    },
+    {
+        "app": "${build}/strpbrk.exe",
+        "name": "strpbrk-not-found",
+        "args": ["0"],
+        "xrc": [0]
+    },
+    {
+        "app": "${build}/strpbrk.exe",
+        "name": "strpbrk-found",
+        "args": ["1"],
+        "xrc": [0]
+    },
+    {
+        "app": "${build}/strrchr.exe",
+        "name": "strrchr-found",
+        "args": ["0"],
+        "xrc": [0]
+    },
+    {
+        "app": "${build}/strrchr.exe",
+        "name": "strrchr-not-found",
+        "args": ["1"],
+        "xrc": [0]
+    },
+    {
+        "app": "${build}/swab.exe",
+        "name": "swab",
+        "xrc": [0]
+    },
+    {
+        "app": "${build}/strsignal.exe",
+        "name": "strsignal",
+        "xrc": [0]
+    },
+    {
+        "app": "${build}/strsep.exe",
+        "name": "strsep",
+        "xrc": [0]
+    },
+    {
+        "app": "${build}/wcslen.exe",
+        "name": "wcslen-basic",
+        "args": ["0"],
+        "xrc": [0]
+    },
+    {
+        "app": "${build}/wcslen.exe",
+        "name": "wcslen-empty",
+        "args": ["1"],
+        "xrc": [0]
+    },
+    {
+        "app": "${build}/wcslen.exe",
+        "name": "wcslen-many",
+        "args": ["2"],
+        "xrc": [0]
+    },
+    {
+        "app": "${build}/wmemset.exe",
+        "name": "wmemset",
+        "xrc": [0]
+    },
+    {
+        "app": "${build}/wcscpy.exe",
+        "name": "wcscpy",
+        "xrc": [0]
+    },
+    {
+        "app": "${build}/wcscmp.exe",
+        "name": "wcscmp",
+        "xrc": [0]
+    },
+    {
+        "app": "${build}/wcsncasecmp.exe",
+        "name": "wcsncasecmp",
+        "xrc": [0]
+    },
+    {
+        "app": "${build}/wmemcpy.exe",
+        "name": "wmemcpy",
+        "xrc": [0]
+    },
+    {
+        "app": "${build}/wmemmove.exe",
+        "name": "wmemmove-high-to-low",
+        "args": ["0"],
+        "xrc": [0]
+    },
+    {
+        "app": "${build}/wmemmove.exe",
+        "name": "wmemmove-low-to-high",
+        "args": ["1"],
+        "xrc": [0]
+    },
+    {
+        "app": "${build}/wcscasecmp.exe",
+        "name": "wcscasecmp",
+        "xrc": [0]
+    },
+    {
+        "app": "${build}/wcscspn.exe",
+        "name": "wcscspn-empty",
+        "args": ["0"],
+        "xrc": [0]
+    },
+    {
+        "app": "${build}/wcscspn.exe",
+        "name": "wcscspn-found",
+        "args": ["1"],
+        "xrc": [0]
+    },
+    {
+        "app": "${build}/wcscspn.exe",
+        "name": "wcscspn-not-found",
+        "args": ["2"]
+    },
+    {
+        "app": "${build}/wmemcmp.exe",
+        "name": "wmemcmp"
+    },
+    {
+        "app": "${build}/wcsncat.exe",
+        "name": "wcsncat",
+        "xrc": [0]
+    },
+    {
+        "app": "${build}/wcsspn.exe",
+        "name": "wcsspn-empty",
+        "args": ["0"],
+        "xrc": [0]
+    },
+    {
+        "app": "${build}/wcsspn.exe",
+        "name": "wcsspn-found",
+        "args": ["1"],
+        "xrc": [0]
+    },
+    {
+        "app": "${build}/wcsspn.exe",
+        "name": "wcsspn-not-found",
+        "args": ["2"]
+    },
+    {
+        "app": "${build}/wcsnlen.exe",
+        "name": "wcsnlen-basic",
+        "args": ["0"],
+        "xrc": [0]
+    },
+    {
+        "app": "${build}/wcsnlen.exe",
+        "name": "wcsnlen-empty",
+        "args": ["1"],
+        "xrc": [0]
+    },
+    {
+        "app": "${build}/wcsnlen.exe",
+        "name": "wcsnlen-many",
+        "args": ["2"],
+        "xrc": [0]
+    },
+    {
+        "app": "${build}/wcschr.exe",
+        "name": "wcschr-found",
+        "args": ["0"],
+        "xrc": [0]
+    },
+    {
+        "app": "${build}/wcschr.exe",
+        "name": "wcschr-not-found",
+        "args": ["1"],
+        "xrc": [0]
+    },
+    {
+        "app": "${build}/wcspbrk.exe",
+        "name": "wcspbrk-not-found",
+        "args": ["0"],
+        "xrc": [0]
+    },
+    {
+        "app": "${build}/wcspbrk.exe",
+        "name": "wcspbrk-found",
+        "args": ["1"],
+        "xrc": [0]
+    },
+    {
+        "app": "${build}/wmemchr.exe",
+        "name": "wmemchr-found",
+        "args": ["0"],
+        "xrc": [0]
+    },
+    {
+        "app": "${build}/wmemchr.exe",
+        "name": "wmemchr-not-found",
+        "args": ["1"],
+        "xrc": [0]
+    },
+    {
+        "app": "${build}/wmemchr.exe",
+        "name": "wmemchr-not-within-n",
+        "args": ["2"],
+        "xrc": [0]
+    },
+    {
+        "app": "${build}/wcpcpy.exe",
+        "name": "wcpcpy",
+        "xrc": [0]
+    },
+    {
+        "app": "${build}/wcpncpy.exe",
+        "name": "wcpncpy",
+        "xrc": [0]
+    },
+    {
+        "app": "${build}/wcsrchr.exe",
+        "name": "wcsrchr-found",
+        "args": ["0"],
+        "xrc": [0]
+    },
+    {
+        "app": "${build}/wcsrchr.exe",
+        "name": "wcsrchr-not-found",
+        "args": ["1"],
+        "xrc": [0]
+    },
+    {
+        "app": "${build}/wcsncmp.exe",
+        "name": "wcsncmp",
+        "xrc": [0]
+    },
+    {
+        "app": "${build}/wcsncpy.exe",
+        "name": "wcsncpy",
+        "xrc": [0]
+    },
+    {
+        "app": "${build}/wcscat.exe",
+        "name": "wcscat",
+        "xrc": [0]
+    },
+    {
+        "app": "${build}/wcsstr.exe",
+        "name": "wcsstr",
+        "xrc": [0]
+    },
+    {
+        "app": "${build}/wcstok.exe",
+        "name": "wcstok",
+        "xrc": [0]
+    },
+    {
+        "app": "${build}/strtok_r.exe",
+        "name": "strtok_r",
+        "xrc": [0]
+    },
+    {
+        "app": "${build}/assert.exe",
+        "name": "assert",
+        "xrc": [-6]
+    },
+    {
+        "app": "${build}/assert_noop.exe",
+        "name": "assert_noop",
+        "xrc": [0]
+    },
+    {
+        "app": "${build}/gettimeofday.exe",
+        "name": "gettimeofday",
+        "xrc": [0]
+    },
+    {
+        "app": "${build}/clock_getres.exe",
+        "name": "clock_getres",
+        "xrc": [0]
+    },
+    {
+        "app": "${build}/stdout.exe",
+        "name": "stdout",
+        "xrc": [0],
+        "stdout" : ["Hello stdout"]
+    },
+    {
+        "app": "${build}/stderr.exe",
+        "name": "stderr",
+        "xrc": [0],
+        "stderr" : ["Hello stderr"]
+    },
+    {
+        "app": "${build}/echo.exe",
+        "name": "stdin_echo",
+        "xrc": [0],
+        "stdin": "Hello stdin",
+        "stdout" : ["Hello stdin"]
+    },
+    {
+        "app": "${build}/getenv.exe",
+        "name": "getenv",
+        "xrc": [0],
+        "env": {"HELLO": "world"},
+        "stdout": ["world", "6"]
+    },
+    {
+        "app": "${build}/secure_getenv.exe",
+        "name": "secure_getenv",
+        "xrc": [0],
+        "env": {"HELLO": "world"},
+        "stdout": ["world", "6"]
+    },
+    {
+        "app": "${build}/nl_langinfo.exe",
+        "name": "nl_langinfo",
+        "xrc": [0],
+        "stdout": ["ASCII", "6", "%m/%d/%y", "9"]
+    },
+    {
+        "app": "${build}/localtime.exe",
+        "name": "localtime",
+        "xrc": [0],
+        "stdout": ["0"]
+    },
+    {
+        "app": "${build}/gmtime.exe",
+        "name": "gmtime",
+        "xrc": [0],
+        "stdout": ["0"]
+    },
+    {
+        "app": "${build}/asctime.exe",
+        "name": "asctime",
+        "xrc": [0],
+        "stdout": ["[A-Z][a-z]{2} [A-Z][a-z]{2} [ \\d]\\d \\d{2}:\\d{2}:\\d{2} \\d{4}", "26"]
+    },
+    {
+        "app": "${build}/strftime.exe",
+        "name": "strftime",
+        "xrc": [0],
+        "stdout": ["\\d{2}:\\d{2}, 40"]
+    }
+]

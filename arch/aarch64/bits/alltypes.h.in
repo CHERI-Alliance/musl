@@ -22,3 +22,12 @@ TYPEDEF float float_t;
 TYPEDEF double double_t;
 
 TYPEDEF struct { long long __ll; long double __ld; } max_align_t;
+
+#if MORELLO
+#define __NEED_uintcap_t
+TYPEDEF __UINTPTR_TYPE__ uintcap_t;
+#define __NEED_intcap_t
+TYPEDEF __INTPTR_TYPE__ intcap_t;
+#define __NEED_ptraddr_t
+TYPEDEF __PTRADDR_TYPE__ ptraddr_t;
+#endif

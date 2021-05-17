@@ -1,6 +1,45 @@
 #define __SYSCALL_LL_E(x) (x)
 #define __SYSCALL_LL_O(x) (x)
 
+#if MUSL_USE_LIBSHIM
+
+static inline __INTPTR_TYPE__ __syscall0(__INTPTR_TYPE__ n)
+{
+	return __shim_syscall(n);
+}
+
+static inline __INTPTR_TYPE__ __syscall1(__INTPTR_TYPE__ n, __INTPTR_TYPE__ a)
+{
+	return __shim_syscall(n, a);
+}
+
+static inline __INTPTR_TYPE__ __syscall2(__INTPTR_TYPE__ n, __INTPTR_TYPE__ a, __INTPTR_TYPE__ b)
+{
+	return __shim_syscall(n, a, b);
+}
+
+static inline __INTPTR_TYPE__ __syscall3(__INTPTR_TYPE__ n, __INTPTR_TYPE__ a, __INTPTR_TYPE__ b, __INTPTR_TYPE__ c)
+{
+	return __shim_syscall(n, a, b, c);
+}
+
+static inline __INTPTR_TYPE__ __syscall4(__INTPTR_TYPE__ n, __INTPTR_TYPE__ a, __INTPTR_TYPE__ b, __INTPTR_TYPE__ c, __INTPTR_TYPE__ d)
+{
+	return __shim_syscall(n, a, b, c, d);
+}
+
+static inline __INTPTR_TYPE__ __syscall5(__INTPTR_TYPE__ n, __INTPTR_TYPE__ a, __INTPTR_TYPE__ b, __INTPTR_TYPE__ c, __INTPTR_TYPE__ d, __INTPTR_TYPE__ e)
+{
+	return __shim_syscall(n, a, b, c, d, e);
+}
+
+static inline __INTPTR_TYPE__ __syscall6(__INTPTR_TYPE__ n, __INTPTR_TYPE__ a, __INTPTR_TYPE__ b, __INTPTR_TYPE__ c, __INTPTR_TYPE__ d, __INTPTR_TYPE__ e, __INTPTR_TYPE__ f)
+{
+	return __shim_syscall(n, a, b, c, d, e, f);
+}
+
+#else /* MUSL_USE_LIBSHIM */
+
 #define __asm_syscall(...) do { \
 	__asm__ __volatile__ ( "svc 0" \
 	: "=r"(x0) : __VA_ARGS__ : "memory", "cc"); \
@@ -70,6 +109,8 @@ static inline long __syscall6(long n, long a, long b, long c, long d, long e, lo
 	register long x5 __asm__("x5") = f;
 	__asm_syscall("r"(x8), "0"(x0), "r"(x1), "r"(x2), "r"(x3), "r"(x4), "r"(x5));
 }
+
+#endif MUSL_USE_LIBSHIM
 
 /*
  TODO: eventually we want to support VDSO in musl, however while there is no

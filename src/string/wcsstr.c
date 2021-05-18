@@ -1,5 +1,7 @@
 #include <wchar.h>
 
+#include "morello_helpers.h"
+
 #define MAX(a,b) ((a)>(b)?(a):(b))
 #define MIN(a,b) ((a)<(b)?(a):(b))
 
@@ -84,7 +86,7 @@ static wchar_t *twoway_wcsstr(const wchar_t *h, const wchar_t *n)
 		}
 		/* Compare left half */
 		for (k=ms+1; k>mem && n[k-1] == h[k-1]; k--);
-		if (k <= mem) return (wchar_t *)h;
+		if (k <= mem) return RESTRICT_BOUNDS_TO_TAIL_IF_MORELLO_SUBOBJ((wchar_t *)h);
 		h += p;
 		mem = mem0;
 	}
@@ -98,7 +100,7 @@ wchar_t *wcsstr(const wchar_t *restrict h, const wchar_t *restrict n)
 
 	/* Use faster algorithms for short needles */
 	h = wcschr(h, *n);
-	if (!h || !n[1]) return (wchar_t *)h;
+	if (!h || !n[1]) return RESTRICT_BOUNDS_TO_TAIL_IF_MORELLO_SUBOBJ((wchar_t *)h);
 	if (!h[1]) return 0;
 
 	return twoway_wcsstr(h, n);

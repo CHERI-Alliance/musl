@@ -49,7 +49,11 @@ feraiseexcept:
 fegetenv:
 	mrs x1, fpcr
 	mrs x2, fpsr
+#ifdef MORELLO
+	stp w1, w2, [c0]
+#else
 	stp w1, w2, [x0]
+#endif
 	mov w0, #0
 	ret
 
@@ -61,7 +65,11 @@ fesetenv:
 	mov x2, #0
 	cmn x0, #1
 	b.eq 1f
+#ifdef MORELLO
+	ldp w1, w2, [c0]
+#else
 	ldp w1, w2, [x0]
+#endif
 1:	msr fpcr, x1
 	msr fpsr, x2
 	mov w0, #0

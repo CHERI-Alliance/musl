@@ -332,6 +332,7 @@ obj/src/thread/pthread_detach.o
 obj/src/thread/pthread_equal.o
 obj/src/thread/pthread_getconcurrency.o
 obj/src/thread/pthread_kill.o
+obj/src/fenv/aarch64/fenv.o
 obj/src/thread/pthread_self.o
 obj/src/thread/pthread_setconcurrency.o
 obj/src/thread/pthread_setschedprio.o

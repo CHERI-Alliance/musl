@@ -6,6 +6,8 @@
 #include <string.h>
 #include <strings.h>
 
+#include "morello_helpers.h"
+
 char *strptime(const char *restrict s, const char *restrict f, struct tm *restrict tm)
 {
 	int i, w, neg, adj, min, range, *dest, dummy;
@@ -202,5 +204,5 @@ char *strptime(const char *restrict s, const char *restrict f, struct tm *restri
 		if (want_century & 2) tm->tm_year += century * 100 - 1900;
 		else if (tm->tm_year <= 68) tm->tm_year += 100;
 	}
-	return (char *)s;
+	return RESTRICT_BOUNDS_TO_TAIL_IF_MORELLO_SUBOBJ((char *)s);
 }

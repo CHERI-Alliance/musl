@@ -214,6 +214,10 @@ obj/src/prng/lrand48.o
 obj/src/prng/mrand48.o
 obj/src/prng/rand.o
 obj/src/prng/srand48.o
+obj/src/prng/random.o
+obj/src/prng/__rand48_step.o
+obj/src/prng/rand_r.o
+obj/src/prng/seed48.o
 obj/src/process/_Fork.o
 obj/src/process/vfork.o
 obj/src/sched/sched_get_priority_max.o

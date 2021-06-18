@@ -177,6 +177,7 @@ obj/src/locale/langinfo.o
 obj/src/locale/legacychars.o
 obj/src/locale/pleval.o
 obj/src/locale/revjis.o
+obj/src/locale/strxfrm.o
 obj/src/malloc/libc_calloc.o
 obj/src/malloc/replaced.o
 obj/src/misc/ffs.o

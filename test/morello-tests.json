@@ -611,5 +611,35 @@
         "name": "strftime",
         "xrc": [0],
         "stdout": ["\\d{2}:\\d{2}, 40"]
+    },
+    {
+        "app":  "${build}/rand.exe",
+        "name": "prng-seeds",
+        "args": ["0"],
+        "xrc": [0]
+    },
+    {
+        "app":  "${build}/rand.exe",
+        "name": "prng-rand",
+        "args": ["1"],
+        "xrc": [0]
+    },
+    {
+        "app":  "${build}/rand.exe",
+        "name": "prng-drand48-erand48",
+        "args": ["2"],
+        "xrc": [0]
+    },
+    {
+        "app":  "${build}/rand.exe",
+        "name": "prng-lrand48-nrand48",
+        "args": ["3"],
+        "xrc": [0]
+    },
+    {
+        "app":  "${build}/rand.exe",
+        "name": "prng-mrand48-jrand48",
+        "args": ["4"],
+        "xrc": [0]
     }
 ]

@@ -550,6 +550,23 @@
         "xrc": [0]
     },
     {
+        "app":  "${build}/strxfrm.exe",
+        "name": "strxfrm-get-length",
+        "args": ["0"],
+        "xrc": [0]
+    },
+    {
+        "app":  "${build}/strxfrm.exe",
+        "name": "strxfrm-convert",
+        "args": ["1"],
+        "xrc": [0]
+    },
+    {
+        "app":  "${build}/strcoll.exe",
+        "name": "strcoll",
+        "xrc": [0]
+    },
+    {
         "app": "${build}/stdout.exe",
         "name": "stdout",
         "xrc": [0],

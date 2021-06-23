@@ -1,5 +1,6 @@
 src/functional/clock_gettime.err
 src/functional/qsort.err
+src/functional/random.err
 src/functional/strftime.err
 src/functional/string.err
 src/functional/string_memcpy.err

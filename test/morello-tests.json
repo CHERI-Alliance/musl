@@ -567,6 +567,36 @@
         "xrc": [0]
     },
     {
+        "app":  "${build}/localeconv.exe",
+        "name": "localeconv-check-validity",
+        "args": ["0"],
+        "xrc": [0]
+    },
+    {
+        "app":  "${build}/localeconv.exe",
+        "name": "localeconv-read-char",
+        "args": ["1"],
+        "xrc": [0]
+    },
+    {
+        "app":  "${build}/localeconv.exe",
+        "name": "localeconv-write-char",
+        "args": ["2"],
+        "xrc": [-7]
+    },
+    {
+        "app":  "${build}/localeconv.exe",
+        "name": "localeconv-read-string",
+        "args": ["3"],
+        "xrc": [0]
+    },
+    {
+        "app":  "${build}/localeconv.exe",
+        "name": "localeconv-write-string",
+        "args": ["4"],
+        "xrc": [-7]
+    },
+    {
         "app": "${build}/stdout.exe",
         "name": "stdout",
         "xrc": [0],

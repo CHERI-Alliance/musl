@@ -582,7 +582,7 @@
         "app":  "${build}/localeconv.exe",
         "name": "localeconv-write-char",
         "args": ["2"],
-        "xrc": [-7]
+        "xrc": [-11]
     },
     {
         "app":  "${build}/localeconv.exe",
@@ -594,7 +594,7 @@
         "app":  "${build}/localeconv.exe",
         "name": "localeconv-write-string",
         "args": ["4"],
-        "xrc": [-7]
+        "xrc": [-11]
     },
     {
         "app": "${build}/stdout.exe",

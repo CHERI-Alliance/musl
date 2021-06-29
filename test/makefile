@@ -16,7 +16,7 @@ SOURCES := $(wildcard src/*.c)
 OBJS := $(patsubst %.c, %.o, $(SOURCES))
 EXE := $(patsubst %.c, %.exe, $(SOURCES))
 
-all: $(EXE) check_morelloie
+test: $(EXE) check_morelloie
 	python3 runner.py src morello-tests.json $(MORELLOIE) musl.custom.morello
 
 check_musl_root:
@@ -35,7 +35,10 @@ endif
 %.exe: %.o
 	$(CC) $(LDFLAGS) $(CRT_PRE) $< $(CRT_POST) -o $@ $(LDLIBS) -static
 
+run-%: src/%.exe
+	$(MORELLOIE) $(MIE_ARGS) -- $< $(TEST_ARGS)
+
 clean:
-	rm -f suite-morello-results.xml $(EXE) $(OBJS)
+	@rm -vf suite-morello-results.xml $(EXE) $(OBJS)
 
 .PHONY: clean check_morelloie check_musl_root all

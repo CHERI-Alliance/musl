@@ -4,10 +4,15 @@ int main() {
   char *words[] = {"where", "daffodil", "and", "lily", "wave"};
   size_t ns[] = {1, 4, 2, 4, 4};
 
-  char *exp = "wdaffanlilywave";
+  const char *exp = "wdaffanlilywave";
 
-  char str[strlen(exp)];
+  const size_t length = strlen(exp) + 1;
+  char str[length];
+  // null initialise str
+  memset(str, 0, length);
+
   char* dst = str;
+
   for (int i = 0; i < 5; i++) {
     dst = stpncpy(dst, words[i], ns[i]);
     for (int j = (dst - str) + ns[i]; j < strlen(exp) + 1; j++) {

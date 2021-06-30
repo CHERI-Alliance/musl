@@ -1,10 +1,10 @@
+obj/crt/Scrt1.o
 obj/crt/aarch64/crti.o
 obj/crt/aarch64/crtn.o
 obj/crt/crt1.o
 obj/crt/crti.o
 obj/crt/crtn.o
 obj/crt/rcrt1.o
-obj/crt/Scrt1.o
 obj/src/complex/cabs.o
 obj/src/complex/cabsf.o
 obj/src/complex/cabsl.o
@@ -242,6 +242,7 @@ obj/src/stat/fchmod.o
 obj/src/stat/futimens.o
 obj/src/stat/umask.o
 obj/src/stdio/__fdopen.o
+obj/src/stdio/__stdio_close.o
 obj/src/stdio/__stdio_exit.o
 obj/src/stdio/__stdio_read.o
 obj/src/stdio/__stdio_write.o
@@ -359,6 +360,7 @@ obj/src/thread/__lock.o
 obj/src/thread/aarch64/__set_thread_area.o
 obj/src/thread/default_attr.o
 obj/src/thread/lock_ptc.o
+obj/src/thread/pthread_cancel.o
 obj/src/thread/pthread_detach.o
 obj/src/thread/pthread_equal.o
 obj/src/thread/pthread_getconcurrency.o
@@ -416,6 +418,8 @@ obj/src/unistd/pause.o
 obj/src/unistd/pipe.o
 obj/src/unistd/pipe2.o
 obj/src/unistd/posix_close.o
+obj/src/unistd/pwrite.o
+obj/src/unistd/pwritev.o
 obj/src/unistd/setegid.o
 obj/src/unistd/seteuid.o
 obj/src/unistd/setgid.o
@@ -432,3 +436,5 @@ obj/src/unistd/sync.o
 obj/src/unistd/tcgetpgrp.o
 obj/src/unistd/tcsetpgrp.o
 obj/src/unistd/usleep.o
+obj/src/unistd/write.o
+obj/src/unistd/writev.o

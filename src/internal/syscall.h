@@ -1,6 +1,10 @@
 #ifndef _INTERNAL_SYSCALL_H
 #define _INTERNAL_SYSCALL_H
 
+#define __NEED_intptr_t
+#define __NEED_uintptr_t
+
+#include <bits/alltypes.h>
 #include <features.h>
 #include <errno.h>
 #include <sys/syscall.h>
@@ -21,17 +25,19 @@
 #ifndef __scc
 
 #if MORELLO
-#define __scc(X) ((__INTPTR_TYPE__) (X))
+#define __scc(X) ((intptr_t) (X))
+typedef intptr_t syscall_arg_t;
+hidden intptr_t __syscall_ret(uintptr_t);
+hidden intptr_t __syscall_cp(syscall_arg_t, syscall_arg_t, syscall_arg_t, syscall_arg_t,
+	             syscall_arg_t, syscall_arg_t, syscall_arg_t);
 #else
 #define __scc(X) ((long) (X))
-#endif
-
 typedef long syscall_arg_t;
-#endif
-
-hidden long __syscall_ret(unsigned long),
-	__syscall_cp(syscall_arg_t, syscall_arg_t, syscall_arg_t, syscall_arg_t,
+hidden long __syscall_ret(unsigned long);
+hidden syscall_arg_t __syscall_cp(syscall_arg_t, syscall_arg_t, syscall_arg_t, syscall_arg_t,
 	             syscall_arg_t, syscall_arg_t, syscall_arg_t);
+#endif
+#endif
 
 #define __syscall1(n,a) __syscall1(n,__scc(a))
 #define __syscall2(n,a,b) __syscall2(n,__scc(a),__scc(b))
@@ -64,22 +70,22 @@ hidden long __syscall_ret(unsigned long),
 #define __syscall_cp(...) __SYSCALL_DISP(__syscall_cp,__VA_ARGS__)
 #define syscall_cp(...) __syscall_ret(__syscall_cp(__VA_ARGS__))
 
-static inline long __alt_socketcall(int sys, int sock, int cp, long a, long b, long c, long d, long e, long f)
+static inline intptr_t __alt_socketcall(int sys, int sock, int cp, intptr_t a, intptr_t b, intptr_t c, intptr_t d, intptr_t e, intptr_t f)
 {
-	long r;
+	intptr_t r;
 	if (cp) r = __syscall_cp(sys, a, b, c, d, e, f);
 	else r = __syscall(sys, a, b, c, d, e, f);
 	if (r != -ENOSYS) return r;
 #ifdef SYS_socketcall
-	if (cp) r = __syscall_cp(SYS_socketcall, sock, ((long[6]){a, b, c, d, e, f}));
-	else r = __syscall(SYS_socketcall, sock, ((long[6]){a, b, c, d, e, f}));
+	if (cp) r = __syscall_cp(SYS_socketcall, sock, ((intptr_t[6]){a, b, c, d, e, f}));
+	else r = __syscall(SYS_socketcall, sock, ((intptr_t[6]){a, b, c, d, e, f}));
 #endif
 	return r;
 }
 #define __socketcall(nm, a, b, c, d, e, f) __alt_socketcall(SYS_##nm, __SC_##nm, 0, \
-	(long)(a), (long)(b), (long)(c), (long)(d), (long)(e), (long)(f))
+	(intptr_t)(a), (intptr_t)(b), (intptr_t)(c), (intptr_t)(d), (intptr_t)(e), (intptr_t)(f))
 #define __socketcall_cp(nm, a, b, c, d, e, f) __alt_socketcall(SYS_##nm, __SC_##nm, 1, \
-	(long)(a), (long)(b), (long)(c), (long)(d), (long)(e), (long)(f))
+	(intptr_t)(a), (intptr_t)(b), (intptr_t)(c), (intptr_t)(d), (intptr_t)(e), (intptr_t)(f))
 
 /* fixup legacy 16-bit junk */
 

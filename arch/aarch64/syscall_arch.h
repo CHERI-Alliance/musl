@@ -3,37 +3,39 @@
 
 #if MUSL_USE_LIBSHIM
 
-static inline __INTPTR_TYPE__ __syscall0(__INTPTR_TYPE__ n)
+#include <bits/alltypes.h>
+
+static inline intptr_t __syscall0(intptr_t n)
 {
 	return __shim_syscall(n);
 }
 
-static inline __INTPTR_TYPE__ __syscall1(__INTPTR_TYPE__ n, __INTPTR_TYPE__ a)
+static inline intptr_t __syscall1(intptr_t n, intptr_t a)
 {
 	return __shim_syscall(n, a);
 }
 
-static inline __INTPTR_TYPE__ __syscall2(__INTPTR_TYPE__ n, __INTPTR_TYPE__ a, __INTPTR_TYPE__ b)
+static inline intptr_t __syscall2(intptr_t n, intptr_t a, intptr_t b)
 {
 	return __shim_syscall(n, a, b);
 }
 
-static inline __INTPTR_TYPE__ __syscall3(__INTPTR_TYPE__ n, __INTPTR_TYPE__ a, __INTPTR_TYPE__ b, __INTPTR_TYPE__ c)
+static inline intptr_t __syscall3(intptr_t n, intptr_t a, intptr_t b, intptr_t c)
 {
 	return __shim_syscall(n, a, b, c);
 }
 
-static inline __INTPTR_TYPE__ __syscall4(__INTPTR_TYPE__ n, __INTPTR_TYPE__ a, __INTPTR_TYPE__ b, __INTPTR_TYPE__ c, __INTPTR_TYPE__ d)
+static inline intptr_t __syscall4(intptr_t n, intptr_t a, intptr_t b, intptr_t c, intptr_t d)
 {
 	return __shim_syscall(n, a, b, c, d);
 }
 
-static inline __INTPTR_TYPE__ __syscall5(__INTPTR_TYPE__ n, __INTPTR_TYPE__ a, __INTPTR_TYPE__ b, __INTPTR_TYPE__ c, __INTPTR_TYPE__ d, __INTPTR_TYPE__ e)
+static inline intptr_t __syscall5(intptr_t n, intptr_t a, intptr_t b, intptr_t c, intptr_t d, intptr_t e)
 {
 	return __shim_syscall(n, a, b, c, d, e);
 }
 
-static inline __INTPTR_TYPE__ __syscall6(__INTPTR_TYPE__ n, __INTPTR_TYPE__ a, __INTPTR_TYPE__ b, __INTPTR_TYPE__ c, __INTPTR_TYPE__ d, __INTPTR_TYPE__ e, __INTPTR_TYPE__ f)
+static inline intptr_t __syscall6(intptr_t n, intptr_t a, intptr_t b, intptr_t c, intptr_t d, intptr_t e, intptr_t f)
 {
 	return __shim_syscall(n, a, b, c, d, e, f);
 }

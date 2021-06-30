@@ -3,9 +3,10 @@
 #include "pthread_impl.h"
 #include "syscall.h"
 
-hidden long __cancel(), __syscall_cp_asm(), __syscall_cp_c();
+hidden intptr_t __cancel();
+hidden intptr_t __syscall_cp_asm(), __syscall_cp_c();
 
-long __cancel()
+intptr_t __cancel()
 {
 	pthread_t self = __pthread_self();
 	if (self->canceldisable == PTHREAD_CANCEL_ENABLE || self->cancelasync)
@@ -14,16 +15,16 @@ long __cancel()
 	return -ECANCELED;
 }
 
-long __syscall_cp_asm(volatile void *, syscall_arg_t,
+intptr_t __syscall_cp_asm(volatile void *, syscall_arg_t,
                       syscall_arg_t, syscall_arg_t, syscall_arg_t,
                       syscall_arg_t, syscall_arg_t, syscall_arg_t);
 
-long __syscall_cp_c(syscall_arg_t nr,
+intptr_t __syscall_cp_c(syscall_arg_t nr,
                     syscall_arg_t u, syscall_arg_t v, syscall_arg_t w,
                     syscall_arg_t x, syscall_arg_t y, syscall_arg_t z)
 {
 	pthread_t self;
-	long r;
+	intptr_t r;
 	int st;
 
 	if ((st=(self=__pthread_self())->canceldisable)

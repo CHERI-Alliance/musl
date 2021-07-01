@@ -197,6 +197,21 @@ This includes the ``crtbegin`` and ``crtend`` objects which are provided by the 
        -c ${LLVM_PROJECT}/compiler-rt/lib/crt/crtend.c \
        -o ${MORELLO_HOME}/lib/clang/11.0.0/lib/linux/clang_rt.crtend-morello.o
 
+Contributing
+------------
+
+Sorting ``morello.objects``
+^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+To sort the ``morello.objects`` file please use the command line ``sort``
+utility. This can also be used to remove duplicate entries.
+
+E.g. from musl root directory:
+
+.. code-block::
+
+   LC_COLLATE=C sort -uf arch/aarch64/morello.objects -o arch/aarch64/morello.objects
+
 Original README
 ---------------
 

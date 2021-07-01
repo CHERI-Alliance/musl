@@ -2,15 +2,17 @@
 #include <fcntl.h>
 #include <stdarg.h>
 #include <errno.h>
+#include <stdint.h>
 #include "syscall.h"
 
 int fcntl(int fd, int cmd, ...)
 {
-	unsigned long arg;
+	uintptr_t arg;
 	va_list ap;
 	va_start(ap, cmd);
-	arg = va_arg(ap, unsigned long);
+	arg = va_arg(ap, uintptr_t);
 	va_end(ap);
+
 	if (cmd == F_SETFL) arg |= O_LARGEFILE;
 	if (cmd == F_SETLKW) return syscall_cp(SYS_fcntl, fd, cmd, (void *)arg);
 	if (cmd == F_GETOWN) {

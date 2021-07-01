@@ -688,5 +688,35 @@
         "name": "prng-mrand48-jrand48",
         "args": ["4"],
         "xrc": [0]
+    },
+    {
+        "app": "${build}/open.exe",
+        "name": "open",
+        "args": ["0"],
+        "xrc": [0]
+    },
+    {
+        "app": "${build}/open.exe",
+        "name": "openat",
+        "args": ["1"],
+        "xrc": [0]
+    },
+    {
+        "app": "${build}/fcntl.exe",
+        "name": "fcntl-flock",
+        "args": ["0"],
+        "xrc": [0]
+    },
+    {
+        "app": "${build}/fcntl.exe",
+        "name": "fcntl-fd",
+        "args": ["1"],
+        "xrc": [0]
+    },
+    {
+        "app": "${build}/fcntl.exe",
+        "name": "fcntl-fl",
+        "args": ["2"],
+        "xrc": [0]
     }
 ]

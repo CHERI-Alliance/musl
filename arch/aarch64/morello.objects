@@ -122,6 +122,11 @@ obj/src/exit/abort_lock.o
 obj/src/exit/assert.o
 obj/src/exit/exit.o
 obj/src/exit/quick_exit.o
+obj/src/fcntl/creat.o
+obj/src/fcntl/fcntl.o
+obj/src/fcntl/openat.o
+obj/src/fcntl/open.o
+obj/src/fcntl/posix_fadvise.o
 obj/src/fcntl/posix_fallocate.o
 obj/src/fenv/__flt_rounds.o
 obj/src/fenv/aarch64/fenv.o
@@ -236,6 +241,7 @@ obj/src/signal/sigsetjmp.o
 obj/src/stat/fchmod.o
 obj/src/stat/futimens.o
 obj/src/stat/umask.o
+obj/src/stdio/__fdopen.o
 obj/src/stdio/__stdio_exit.o
 obj/src/stdio/__stdio_read.o
 obj/src/stdio/__stdio_write.o
@@ -258,6 +264,7 @@ obj/src/stdio/snprintf.o
 obj/src/stdio/stderr.o
 obj/src/stdio/stdin.o
 obj/src/stdio/stdout.o
+obj/src/stdio/tmpfile.o
 obj/src/stdio/vfprintf.o
 obj/src/stdio/vsnprintf.o
 obj/src/stdlib/abs.o

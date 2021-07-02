@@ -202,6 +202,8 @@ obj/src/mman/munlockall.o
 obj/src/mq/mq_close.o
 obj/src/multibyte/btowc.o
 obj/src/multibyte/internal.o
+obj/src/multibyte/mbsinit.o
+obj/src/multibyte/mbrtowc.o
 obj/src/multibyte/wctob.o
 obj/src/network/htonl.o
 obj/src/network/htons.o

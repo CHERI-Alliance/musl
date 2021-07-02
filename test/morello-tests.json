@@ -597,6 +597,11 @@
         "xrc": [-11]
     },
     {
+        "app":  "${build}/mbrtowc.exe",
+        "name": "mbrtowc",
+        "xrc": [0]
+    },
+    {
         "app": "${build}/stdout.exe",
         "name": "stdout",
         "xrc": [0],

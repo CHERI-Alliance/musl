@@ -723,5 +723,73 @@
         "name": "fcntl-fl",
         "args": ["2"],
         "xrc": [0]
+    },
+    {
+        "app": "${build}/fscanf.exe",
+        "name": "fscanf-int",
+        "args": ["0"],
+        "xrc": [0],
+        "stdin": "25 -63 101 3d"
+    },
+    {
+        "app": "${build}/fscanf.exe",
+        "name": "fscanf-exact-word",
+        "args": ["1"],
+        "xrc": [0],
+        "stdin": "match-63"
+    },
+    {
+        "app": "${build}/fscanf.exe",
+        "name": "fscanf-float",
+        "args": ["2"],
+        "xrc": [0],
+        "stdin": "-2.365 6.805646e+39"
+    },
+    {
+        "app": "${build}/fscanf.exe",
+        "name": "fscanf-char",
+        "args": ["3"],
+        "xrc": [0],
+        "stdin": "match"
+    },
+    {
+        "app": "${build}/fscanf.exe",
+        "name": "fscanf-string",
+        "args": ["4"],
+        "xrc": [0],
+        "stdin": "match those words exactly"
+    },
+    {
+        "app": "${build}/fscanf.exe",
+        "name": "fscanf-set",
+        "args": ["5"],
+        "xrc": [0],
+        "stdin": "startend"
+    },
+    {
+        "app": "${build}/fscanf.exe",
+        "name": "fscanf-discard",
+        "args": ["6"],
+        "xrc": [0],
+        "stdin": "25 -63"
+    },
+    {
+        "app": "${build}/fscanf.exe",
+        "name": "fscanf-positional",
+        "args": ["7"],
+        "xrc": [0],
+        "stdin": "25 -63"
+    },
+    {
+        "app": "${build}/fscanf.exe",
+        "name": "fscanf-capabilities",
+        "args": ["8"],
+        "xrc": [0],
+        "stdin": "F0E32F0E32F0E32A"
+    },
+    {
+        "app":  "${build}/sscanf.exe",
+        "name": "sscanf",
+        "xrc": [0]
     }
 ]

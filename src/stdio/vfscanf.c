@@ -126,6 +126,8 @@ int vfscanf(FILE *restrict f, const char *restrict fmt, va_list ap)
 			s = 0;
 			alloc = !!dest;
 			p++;
+			//TODO temporarily disable 'm' until we have malloc support
+			goto input_fail;
 		} else {
 			alloc = 0;
 		}
@@ -225,12 +227,12 @@ int vfscanf(FILE *restrict f, const char *restrict fmt, va_list ap)
 			i = 0;
 			k = t=='c' ? width+1U : 31;
 			if (size == SIZE_l) {
-				if (alloc) {
+				/*if (alloc) { //TODO enable when malloc is ported
 					wcs = malloc(k*sizeof(wchar_t));
 					if (!wcs) goto alloc_fail;
-				} else {
+				} else {*/
 					wcs = dest;
-				}
+				//}
 				st = (mbstate_t){0};
 				while (scanset[(c=shgetc(f))+1]) {
 					switch (mbrtowc(&wc, &(char){c}, 1, &st)) {
@@ -240,15 +242,15 @@ int vfscanf(FILE *restrict f, const char *restrict fmt, va_list ap)
 						continue;
 					}
 					if (wcs) wcs[i++] = wc;
-					if (alloc && i==k) {
+					/*if (alloc && i==k) { //TODO enable when malloc is ported
 						k+=k+1;
 						wchar_t *tmp = realloc(wcs, k*sizeof(wchar_t));
 						if (!tmp) goto alloc_fail;
 						wcs = tmp;
-					}
+					}*/
 				}
 				if (!mbsinit(&st)) goto input_fail;
-			} else if (alloc) {
+			/*} else if (alloc) { //TODO enable when malloc is ported
 				s = malloc(k);
 				if (!s) goto alloc_fail;
 				while (scanset[(c=shgetc(f))+1]) {
@@ -259,7 +261,7 @@ int vfscanf(FILE *restrict f, const char *restrict fmt, va_list ap)
 						if (!tmp) goto alloc_fail;
 						s = tmp;
 					}
-				}
+				}*/
 			} else if ((s = dest)) {
 				while (scanset[(c=shgetc(f))+1])
 					s[i++] = c;
@@ -269,10 +271,10 @@ int vfscanf(FILE *restrict f, const char *restrict fmt, va_list ap)
 			shunget(f);
 			if (!shcnt(f)) goto match_fail;
 			if (t == 'c' && shcnt(f) != width) goto match_fail;
-			if (alloc) {
+			/*if (alloc) { //TODO enable when malloc is ported
 				if (size == SIZE_l) *(wchar_t **)dest = wcs;
 				else *(char **)dest = s;
-			}
+			}*/
 			if (t != 'c') {
 				if (wcs) wcs[i] = 0;
 				if (s) s[i] = 0;
@@ -295,7 +297,11 @@ int vfscanf(FILE *restrict f, const char *restrict fmt, va_list ap)
 		int_common:
 			x = __intscan(f, base, 0, ULLONG_MAX);
 			if (!shcnt(f)) goto match_fail;
+#ifdef MORELLO
+			if (t=='p' && dest) *(void **)dest = __builtin_cheri_address_set(NULL,x);
+#else
 			if (t=='p' && dest) *(void **)dest = (void *)(uintptr_t)x;
+#endif
 			else store_int(dest, size, x);
 			break;
 		case 'a': case 'A':

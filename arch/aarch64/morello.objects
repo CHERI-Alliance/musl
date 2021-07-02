@@ -1,10 +1,10 @@
-obj/crt/Scrt1.o
 obj/crt/aarch64/crti.o
 obj/crt/aarch64/crtn.o
 obj/crt/crt1.o
 obj/crt/crti.o
 obj/crt/crtn.o
 obj/crt/rcrt1.o
+obj/crt/Scrt1.o
 obj/src/complex/cabs.o
 obj/src/complex/cabsf.o
 obj/src/complex/cabsl.o
@@ -223,7 +223,6 @@ obj/src/prng/mrand48.o
 obj/src/prng/rand.o
 obj/src/prng/random.o
 obj/src/prng/rand_r.o
-obj/src/prng/random.o
 obj/src/prng/seed48.o
 obj/src/prng/srand48.o
 obj/src/prng/__rand48_step.o
@@ -246,6 +245,7 @@ obj/src/stat/futimens.o
 obj/src/stat/umask.o
 obj/src/stdio/fgets.o
 obj/src/stdio/fprintf.o
+obj/src/stdio/fscanf.o
 obj/src/stdio/fwrite.o
 obj/src/stdio/getchar.o
 obj/src/stdio/getchar_unlocked.o
@@ -255,13 +255,18 @@ obj/src/stdio/printf.o
 obj/src/stdio/putchar.o
 obj/src/stdio/putchar_unlocked.o
 obj/src/stdio/putwchar.o
+obj/src/stdio/scanf.o
 obj/src/stdio/snprintf.o
+obj/src/stdio/sscanf.o
 obj/src/stdio/stderr.o
 obj/src/stdio/stdin.o
 obj/src/stdio/stdout.o
 obj/src/stdio/tmpfile.o
+obj/src/stdio/vfscanf.o
 obj/src/stdio/vfprintf.o
+obj/src/stdio/vscanf.o
 obj/src/stdio/vsnprintf.o
+obj/src/stdio/vsscanf.o
 obj/src/stdio/__fdopen.o
 obj/src/stdio/__stdio_close.o
 obj/src/stdio/__stdio_exit.o

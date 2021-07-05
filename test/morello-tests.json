@@ -791,5 +791,12 @@
         "app":  "${build}/sscanf.exe",
         "name": "sscanf",
         "xrc": [0]
+    },
+    {
+        "app": "${build}/syscall.exe",
+        "name": "syscall",
+        "args": ["0"],
+        "skip": "always",
+        "xrc": [0]
     }
 ]

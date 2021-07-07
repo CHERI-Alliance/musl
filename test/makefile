@@ -40,5 +40,6 @@ run-%: src/%.exe
 
 clean:
 	@rm -vf suite-morello-results.xml $(EXE) $(OBJS)
+	@rm -vrf /tmp/morello-musl-tests-*
 
 .PHONY: clean check_morelloie check_musl_root all

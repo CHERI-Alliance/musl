@@ -798,5 +798,41 @@
         "args": ["0"],
         "skip": "always",
         "xrc": [0]
+    },
+    {
+        "app": "${build}/temp.exe",
+        "name": "temp-mktemp",
+        "args": ["0"],
+        "xrc": [0]
+    },
+    {
+        "app": "${build}/temp.exe",
+        "name": "temp-mkstemp",
+        "args": ["1"],
+        "xrc": [0]
+    },
+    {
+        "app": "${build}/temp.exe",
+        "name": "temp-mkostemp",
+        "args": ["2"],
+        "xrc": [0]
+    },
+    {
+        "app": "${build}/temp.exe",
+        "name": "temp-mkstemps",
+        "args": ["3"],
+        "xrc": [0]
+    },
+    {
+        "app": "${build}/temp.exe",
+        "name": "temp-mkostemps",
+        "args": ["4"],
+        "xrc": [0]
+    },
+    {
+        "app": "${build}/temp.exe",
+        "name": "temp-mkdtemp",
+        "args": ["5"],
+        "xrc": [0]
     }
 ]

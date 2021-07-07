@@ -241,7 +241,10 @@ obj/src/signal/sigrtmax.o
 obj/src/signal/sigrtmin.o
 obj/src/signal/sigsetjmp.o
 obj/src/stat/fchmod.o
+obj/src/stat/fstatat.o
 obj/src/stat/futimens.o
+obj/src/stat/mkdir.o
+obj/src/stat/stat.o
 obj/src/stat/umask.o
 obj/src/stdio/fgets.o
 obj/src/stdio/fopen.o
@@ -362,6 +365,13 @@ obj/src/string/wmemcmp.o
 obj/src/string/wmemcpy.o
 obj/src/string/wmemmove.o
 obj/src/string/wmemset.o
+obj/src/temp/mkdtemp.o
+obj/src/temp/mkostemp.o
+obj/src/temp/mkostemps.o
+obj/src/temp/mkstemp.o
+obj/src/temp/mkstemps.o
+obj/src/temp/mktemp.o
+obj/src/temp/__randname.o
 obj/src/termios/tcdrain.o
 obj/src/termios/tcflow.o
 obj/src/termios/tcgetsid.o
@@ -444,6 +454,8 @@ obj/src/unistd/sleep.o
 obj/src/unistd/sync.o
 obj/src/unistd/tcgetpgrp.o
 obj/src/unistd/tcsetpgrp.o
+obj/src/unistd/unlink.o
+obj/src/unistd/unlinkat.o
 obj/src/unistd/usleep.o
 obj/src/unistd/write.o
 obj/src/unistd/writev.o

@@ -707,6 +707,12 @@
         "xrc": [0]
     },
     {
+        "app": "${build}/open.exe",
+        "name": "creat",
+        "args": ["2"],
+        "xrc": [0]
+    },
+    {
         "app": "${build}/fcntl.exe",
         "name": "fcntl-flock",
         "args": ["0"],

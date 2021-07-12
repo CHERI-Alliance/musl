@@ -840,5 +840,41 @@
         "name": "temp-mkdtemp",
         "args": ["5"],
         "xrc": [0]
+    },
+    {
+        "app": "${build}/stat.exe",
+        "name": "stat",
+        "args": ["0"],
+        "xrc": [0]
+    },
+    {
+        "app": "${build}/stat.exe",
+        "name": "mkfifo",
+        "args": ["1"],
+        "xrc": [0]
+    },
+    {
+        "app": "${build}/stat.exe",
+        "name": "umask",
+        "args": ["2"],
+        "xrc": [0]
+    },
+    {
+        "app": "${build}/stat.exe",
+        "name": "utimensat-futimensat",
+        "args": ["3"],
+        "xrc": [0]
+    },
+    {
+        "app": "${build}/stat.exe",
+        "name": "chmod",
+        "args": ["4"],
+        "xrc": [0]
+    },
+    {
+        "app": "${build}/stat.exe",
+        "name": "statvfs",
+        "args": ["5"],
+        "xrc": [0]
     }
 ]

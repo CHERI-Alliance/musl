@@ -55,8 +55,12 @@ int test_mktemp() {
 
         if(!stat(filename, &statbuf)) return 1; // file shouldn't exist
 
+        if (__builtin_cheri_base_get(filename) != __builtin_cheri_base_get(template)) return 2;
+        if (__builtin_cheri_length_get(filename) != __builtin_cheri_length_get(template)) return 3;
+        if (__builtin_cheri_perms_get(filename) != __builtin_cheri_perms_get(template)) return 4;
+        if (__builtin_cheri_tag_get(filename) != __builtin_cheri_tag_get(template)) return 5;
 
-        if(strncmp("test", filename + strlen(TMP_DIR), 4)) return 2;
+        if(strncmp("test", filename + strlen(TMP_DIR), 4)) return 6;
     }
 
     return 0;

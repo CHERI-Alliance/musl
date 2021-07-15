@@ -1,38 +1,40 @@
 #define __SYSCALL_LL_E(x) (x)
 #define __SYSCALL_LL_O(x) (x)
 
-#if MUSL_USE_LIBSHIM
+#ifdef MUSL_USE_LIBSHIM
+
+void *__shim_syscall(intptr_t n, intptr_t a, intptr_t b, intptr_t c, intptr_t d, intptr_t e, intptr_t f);
 
 #include <bits/alltypes.h>
 
 static inline intptr_t __syscall0(intptr_t n)
 {
-	return __shim_syscall(n);
+	return __shim_syscall(n, 0, 0, 0, 0, 0, 0);
 }
 
 static inline intptr_t __syscall1(intptr_t n, intptr_t a)
 {
-	return __shim_syscall(n, a);
+	return __shim_syscall(n, a, 0, 0, 0, 0, 0);
 }
 
 static inline intptr_t __syscall2(intptr_t n, intptr_t a, intptr_t b)
 {
-	return __shim_syscall(n, a, b);
+	return __shim_syscall(n, a, b, 0, 0, 0, 0);
 }
 
 static inline intptr_t __syscall3(intptr_t n, intptr_t a, intptr_t b, intptr_t c)
 {
-	return __shim_syscall(n, a, b, c);
+	return __shim_syscall(n, a, b, c, 0, 0, 0);
 }
 
 static inline intptr_t __syscall4(intptr_t n, intptr_t a, intptr_t b, intptr_t c, intptr_t d)
 {
-	return __shim_syscall(n, a, b, c, d);
+	return __shim_syscall(n, a, b, c, d, 0, 0);
 }
 
 static inline intptr_t __syscall5(intptr_t n, intptr_t a, intptr_t b, intptr_t c, intptr_t d, intptr_t e)
 {
-	return __shim_syscall(n, a, b, c, d, e);
+	return __shim_syscall(n, a, b, c, d, e, 0);
 }
 
 static inline intptr_t __syscall6(intptr_t n, intptr_t a, intptr_t b, intptr_t c, intptr_t d, intptr_t e, intptr_t f)
@@ -112,7 +114,7 @@ static inline long __syscall6(long n, long a, long b, long c, long d, long e, lo
 	__asm_syscall("r"(x8), "0"(x0), "r"(x1), "r"(x2), "r"(x3), "r"(x4), "r"(x5));
 }
 
-#endif MUSL_USE_LIBSHIM
+#endif // MUSL_USE_LIBSHIM
 
 /*
  TODO: eventually we want to support VDSO in musl, however while there is no

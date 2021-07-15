@@ -24,20 +24,18 @@
 
 #ifndef __scc
 
-#if MORELLO
+#ifdef MORELLO
 #define __scc(X) ((intptr_t) (X))
 typedef intptr_t syscall_arg_t;
 hidden intptr_t __syscall_ret(uintptr_t);
-hidden intptr_t __syscall_cp(syscall_arg_t, syscall_arg_t, syscall_arg_t, syscall_arg_t,
-	             syscall_arg_t, syscall_arg_t, syscall_arg_t);
 #else
 #define __scc(X) ((long) (X))
 typedef long syscall_arg_t;
 hidden long __syscall_ret(unsigned long);
+#endif // #if MORELLO
 hidden syscall_arg_t __syscall_cp(syscall_arg_t, syscall_arg_t, syscall_arg_t, syscall_arg_t,
-	             syscall_arg_t, syscall_arg_t, syscall_arg_t);
-#endif
-#endif
+	syscall_arg_t, syscall_arg_t, syscall_arg_t);
+#endif // #ifndef __scc
 
 #define __syscall1(n,a) __syscall1(n,__scc(a))
 #define __syscall2(n,a,b) __syscall2(n,__scc(a),__scc(b))

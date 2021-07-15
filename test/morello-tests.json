@@ -800,9 +800,25 @@
     },
     {
         "app": "${build}/syscall.exe",
-        "name": "syscall",
+        "name": "syscall-write",
         "args": ["0"],
-        "skip": "always",
+        "xrc": [0]
+    },
+    {
+        "app": "${build}/syscall.exe",
+        "name": "syscall-getcpu",
+        "args": ["1"],
+        "xrc": [0]
+    },
+    {
+        "app": "${build}/syscall.exe",
+        "name": "syscall-mmap",
+        "args": ["2"],
+        "xrc": [0]
+    },
+    {
+        "app": "${build}/mmap.exe",
+        "name": "mmap",
         "xrc": [0]
     },
     {

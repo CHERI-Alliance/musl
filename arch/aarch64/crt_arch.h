@@ -6,7 +6,7 @@ START ":\n"
 "	mov x29, #0\n"
 "	mov x30, #0\n"
 #ifdef MORELLO
-#if MUSL_USE_LIBSHIM
+#ifdef MUSL_USE_LIBSHIM
 "	mov x0, sp\n"
 "	cvtd c0, x0\n"
 "	mov csp, c0\n"

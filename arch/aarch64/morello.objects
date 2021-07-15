@@ -199,6 +199,7 @@ obj/src/misc/syscall.o
 obj/src/mman/mlockall.o
 obj/src/mman/mmap.o
 obj/src/mman/munlockall.o
+obj/src/mman/munmap.o
 obj/src/mq/mq_close.o
 obj/src/multibyte/btowc.o
 obj/src/multibyte/internal.o
@@ -423,9 +424,12 @@ obj/src/time/mktime.o
 obj/src/time/strftime.o
 obj/src/time/strptime.o
 obj/src/time/time.o
+obj/src/time/__map_file.o
 obj/src/time/__month_to_secs.o
 obj/src/time/__secs_to_tm.o
+obj/src/time/__tm_to_secs.o
 obj/src/time/__tz.o
+obj/src/time/__year_to_secs.o
 obj/src/unistd/close.o
 obj/src/unistd/dup.o
 obj/src/unistd/dup2.o
@@ -454,6 +458,12 @@ obj/src/unistd/pipe2.o
 obj/src/unistd/posix_close.o
 obj/src/unistd/pwrite.o
 obj/src/unistd/pwritev.o
+obj/src/unistd/read.o
+obj/src/unistd/readlink.o
+obj/src/unistd/readlinkat.o
+obj/src/unistd/readv.o
+obj/src/unistd/renameat.o
+obj/src/unistd/rmdir.o
 obj/src/unistd/setegid.o
 obj/src/unistd/seteuid.o
 obj/src/unistd/setgid.o

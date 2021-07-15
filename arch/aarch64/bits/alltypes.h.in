@@ -23,7 +23,7 @@ TYPEDEF double double_t;
 
 TYPEDEF struct { long long __ll; long double __ld; } max_align_t;
 
-#if MORELLO
+#ifdef MORELLO
 typedef __UINTPTR_TYPE__ uintcap_t;
 typedef __INTPTR_TYPE__ intcap_t;
 typedef __PTRADDR_TYPE__ ptraddr_t;

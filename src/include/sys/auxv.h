@@ -5,6 +5,7 @@
 
 #include <features.h>
 
-hidden uintptr_t __getauxval(unsigned long);
+hidden unsigned long __getauxval(unsigned long);
+hidden void *__getauxptr(unsigned long);
 
 #endif

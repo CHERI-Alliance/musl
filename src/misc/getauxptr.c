@@ -2,7 +2,7 @@
 #include <errno.h>
 #include "libc.h"
 
-unsigned long __getauxval(unsigned long item)
+void *__getauxptr(unsigned long item)
 {
 	uintptr_t *auxv = libc.auxv;
 	if (item == AT_SECURE) return libc.secure;
@@ -12,4 +12,4 @@ unsigned long __getauxval(unsigned long item)
 	return 0;
 }
 
-weak_alias(__getauxval, getauxval);
+weak_alias(__getauxptr, getauxptr);

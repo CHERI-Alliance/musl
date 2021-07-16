@@ -189,6 +189,7 @@ obj/src/malloc/libc_calloc.o
 obj/src/malloc/replaced.o
 obj/src/misc/ffs.o
 obj/src/misc/ffsll.o
+obj/src/misc/getauxptr.o
 obj/src/misc/getauxval.o
 obj/src/misc/gethostid.o
 obj/src/misc/getpriority.o

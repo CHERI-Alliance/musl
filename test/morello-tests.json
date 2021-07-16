@@ -892,5 +892,10 @@
         "name": "statvfs",
         "args": ["5"],
         "xrc": [0]
+    },
+    {
+        "app": "${build}/getauxptr.exe",
+        "name": "getauxptr",
+        "xrc": [0]
     }
 ]

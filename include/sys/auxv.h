@@ -8,7 +8,8 @@ extern "C" {
 #include <elf.h>
 #include <bits/hwcap.h>
 
-uintptr_t getauxval(unsigned long);
+unsigned long getauxval(unsigned long);
+void *getauxptr(unsigned long);
 
 #ifdef __cplusplus
 }

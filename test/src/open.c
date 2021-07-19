@@ -10,11 +10,11 @@
 #define TMP_DIR "/tmp/morello-musl-tests-open/"
 #define IN_TMP_DIR(f) TMP_DIR f
 
-mode_t mode = 0700;
+mode_t mode = 0666;
 
 int test_open() {
   // set up root dir in /tmp
-  if (mkdir(TMP_DIR, 0700) && errno != EEXIST) return -2;
+  if (mkdir(TMP_DIR, 0777) && errno != EEXIST) return -2;
 
   // open temp file
   int fd = open(".", O_TMPFILE | O_RDWR | O_EXCL, mode);
@@ -62,7 +62,7 @@ int test_openat() {
 
 int test_creat() {
   // set up root dir in /tmp
-  if (mkdir(TMP_DIR, 0700) && errno != EEXIST) return -2;
+  if (mkdir(TMP_DIR, 0777) && errno != EEXIST) return -2;
 
   // generate name for file in /tmp/...
   char template[] = IN_TMP_DIR("openXXXXXX");
@@ -79,6 +79,8 @@ int test_creat() {
 }
 
 int main(int argc, char **argv) {
+  umask(0);
+
   switch (argv[1][0]) {
     case '0': // open
       return test_open();

@@ -23,8 +23,10 @@ int test_mkdtemp();
 int main(int argc, char **argv) {
     if (argc < 2) return -1;
 
+    umask(0);
+
     // set up root dir in /tmp
-    if (mkdir(TMP_DIR, 0700) && errno != EEXIST) return -2;
+    if (mkdir(TMP_DIR, 0777) && errno != EEXIST) return -2;
 
     switch(argv[1][0]) {
         case '0': // temp-mktemp

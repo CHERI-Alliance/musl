@@ -18,11 +18,15 @@ int test_utimensat_futimensat();
 int test_chmod();
 int test_statvfs();
 
+mode_t mode = 0666;
+
 int main(int argc, char **argv) {
   if (argc < 2) return -1;
 
+  umask(0);
+
   // set up root dir in /tmp -- also inherently tests mkdir()
-  if (mkdir(TMP_DIR, 0700) && errno != EEXIST)
+  if (mkdir(TMP_DIR, 0777) && errno != EEXIST)
     return -2;
 
   switch (argv[1][0]) {
@@ -71,19 +75,19 @@ int test_mkfifo() {
   char filename[] = IN_TMP_DIR("statXXXXXX");
   mktemp(filename);
 
-  if (mkfifo(filename, 0700)) return 1;
+  if (mkfifo(filename, mode)) return 1;
   if (remove(filename)) return 2;
 
-  if (mkfifoat(0, filename, 0700)) return 3;
+  if (mkfifoat(0, filename, mode)) return 3;
   if (remove(filename)) return 4;
 
   return 0;
 }
 
 int test_umask() {
-  mode_t um = umask(0777);
+  mode_t um = umask(mode);
   umask(um);
-  mode_t um2 = umask(0777);
+  mode_t um2 = umask(mode);
 
   if (um != um2) return 1;
 

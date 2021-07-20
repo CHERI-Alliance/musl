@@ -19,6 +19,8 @@ EXE := $(patsubst %.c, %.exe, $(SOURCES))
 test: $(EXE) check_morelloie
 	python3 runner.py src morello-tests.json $(MORELLOIE) musl.custom.morello
 
+build: $(EXE)
+
 check_musl_root:
 ifndef MUSL_ROOT
 	$(error MUSL_ROOT is undefined)
@@ -42,4 +44,4 @@ clean:
 	@rm -vf suite-morello-results.xml $(EXE) $(OBJS)
 	@rm -vrf /tmp/morello-musl-tests-*
 
-.PHONY: clean check_morelloie check_musl_root all
+.PHONY: clean check_morelloie check_musl_root test build

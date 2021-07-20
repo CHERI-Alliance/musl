@@ -897,5 +897,18 @@
         "app": "${build}/getauxptr.exe",
         "name": "getauxptr",
         "xrc": [0]
+    },
+    {
+        "app": "${build}/mainargv.exe",
+        "name": "mainargv",
+        "args": ["one", "2", "three"],
+        "xrc": [0]
+    },
+    {
+        "app": "${build}/mainenvp.exe",
+        "name": "mainenvp",
+        "args": ["one", "2", "three"],
+        "env": {"HELLO": "world", "MORELLO": "cheri"},
+        "xrc": [0]
     }
 ]

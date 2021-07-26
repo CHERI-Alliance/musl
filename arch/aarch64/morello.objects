@@ -278,6 +278,7 @@ obj/src/stdio/putwchar.o
 obj/src/stdio/remove.o
 obj/src/stdio/scanf.o
 obj/src/stdio/snprintf.o
+obj/src/stdio/sprintf.o
 obj/src/stdio/sscanf.o
 obj/src/stdio/stderr.o
 obj/src/stdio/stdin.o
@@ -287,6 +288,7 @@ obj/src/stdio/vfprintf.o
 obj/src/stdio/vfscanf.o
 obj/src/stdio/vscanf.o
 obj/src/stdio/vsnprintf.o
+obj/src/stdio/vsprintf.o
 obj/src/stdio/vsscanf.o
 obj/src/stdio/__fdopen.o
 obj/src/stdio/__fmodeflags.o

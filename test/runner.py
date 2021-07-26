@@ -1,5 +1,4 @@
 import os
-import sys
 import json
 import subprocess
 import time
@@ -8,6 +7,39 @@ import re
 from os.path import basename
 from string import Template
 from datetime import datetime
+from multiprocessing import Pool as pool
+from argparse import ArgumentParser, Namespace
+
+class ArgParser(ArgumentParser):
+
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs)
+        self.command = Namespace()
+
+    def parse(self):
+        self.command = self.parse_args()
+        return self
+
+    def add(self, *args, **kwargs):
+        self.add_argument(*args, **kwargs)
+        if 'default' in kwargs and 'dest' in kwargs:
+            self.set_defaults(**{kwargs['dest']: kwargs['default']})
+        return self
+
+    def flag(self, *args, **kwargs):
+        name = args[0][2:]
+        self.add_argument('--%s' % name, dest=name, action='store_true', **kwargs)
+        self.add_argument('--no-%s' % name, dest=name, action='store_false', **kwargs)
+        if 'default' in kwargs:
+            self.set_defaults(**{name: kwargs['default']})
+        return self
+
+    def get(self, name: str, fmt=lambda u: u):
+        if hasattr(self.command, name):
+            return fmt(getattr(self.command, name))
+        else:
+            return None
+
 
 report = Template('''<?xml version="1.0" encoding="UTF-8"?>
 <testsuites>
@@ -43,32 +75,17 @@ def run_process(command: list, stdin: str, timeout: int, _env: dict):
     return code, stdout, stderr
 
 
-def build_test(_tc: dict, cwd: str, _runner: str, _libtracer: str, _libmie: str) -> tuple:
+def build_test(_tc: dict, cwd: str, _runner: str) -> tuple:
     app: str = _tc.get('app').replace('${build}', cwd)
     params: dict = _tc.get('params', {'tracer': [], 'mie': []})
     args: list = _tc.get('args', [])
     _tname = _tc.get('name', '%s%s' % (basename(app), ('-%s' % ('-'.join(args))) if args else ''))
-    params_launcher = params.get('launcher', [])
-    params_tracer = params.get('tracer', [])
-    params_frontend = params.get('frontend', [])
-    params_mie = params.get('mie', [])
-    _cmd: list = [_runner] + params_launcher
-    if params_tracer:
-        if _libtracer:
-            _cmd += (['-c', _libtracer] + params_tracer)
-        else:
-            _cmd += params_tracer
-    if params_frontend and not _libmie and not _libtracer:
-        # these parameters are only used for frontend
-        _cmd += params_frontend
-    if _libmie:
-        _cmd += (['-c', _libmie] + params_mie + ['--', app] + args)
-    else:
-        _cmd += (params_mie + ['--', app] + args)
+    params_mie: list = params.get('mie', [])
+    _cmd: list = [_runner] + params_mie + ['--', app] + args
+    _env: dict = _tc.get('env', {})
     _xrc: list = _tc.get('xrc', [0])
     _xout: list = _tc.get('stdout', [])
     _xerr: list = _tc.get('stderr', [])
-    _env: dict = _tc.get('env', {})
     return _tname, _cmd, _xrc, _xout, _xerr, _env
 
 def check_return_code(_rc: int, _xrc: list) -> tuple:
@@ -112,7 +129,6 @@ def check_output(output: list, expected: list) -> tuple:
            'expected output', \
            'incorrect output\n  - %s' % '\n  - '.join(['%s' % _msg for t, _msg in results if not t])
 
-
 def check_results(_rc: int, _out: list, _err: list, _xrc: list, _xout: list, _xerr: list) -> tuple:
     messages = []
     _res, _msg, error = check_return_code(_rc, _xrc)
@@ -137,7 +153,7 @@ def check_results(_rc: int, _out: list, _err: list, _xrc: list, _xout: list, _xe
     return True, '\n - '.join([t for t in messages if t is not None])
 
 # Usage:
-# python 3 runner.py <cwd> <JSON test spec> <emulator-binary> <suite-name> [<one-test>]
+# python3 runner.py <cwd> <JSON test spec> <emulator-binary> <suite-name>
 #  - cwd: current working directory (it replaces the ${build} placeholder
 #              in the JSON test spec)
 #  - JSON test spec: description of tests and how to check their results
@@ -146,108 +162,114 @@ def check_results(_rc: int, _out: list, _err: list, _xrc: list, _xout: list, _xe
 #              (`frontend` means use the `morelloie` frontend from the build tree)
 #              (otherwise this must be path to the `morelloie` executable)
 #  - suite name: a name of the test suite for the JUnit XML test report
-#  - one-test: (optional) can be used to run one specific test from the
-#              test suite
 
 if __name__ == '__main__':
+
+    options = ArgParser() \
+        .add('folder', help='current working directory (it replaces the ${build} placeholder in the JSON test spec)') \
+        .add('script', help='path to the JSON test spec (description of tests and how to check their results)') \
+        .add('emulator', help='path to the emulator binary') \
+        .add('suite', help='a name of the test suite for the JUnit XML test report') \
+        .add('--only-test', help='name of the test to run', dest='thetest', default=None) \
+        .add('--nproc', help='number of processes to run in parallel', dest='nproc', default='8') \
+        .parse()
 
     # folder -- current working directory
     # script -- path to the JSON spec file
     # how -- which runner to use (path to the `morelloie` executable)
     # suite_name -- name of the test suite for the JUnit XML report
-    folder, script, how, suite_name = sys.argv[1:5]
-
-    # whether this test run is for debug build
-    is_debug = 'debug' in suite_name
+    folder, script, runner, suite_name = options.get('folder'), options.get('script'), options.get('emulator'), options.get('suite')
 
     # to allow running specific test
-    if len(sys.argv) >= 6:
-        the_test = sys.argv[5]
-        if the_test == '@':
-            # run all tests
-            the_test = None
-        if len(sys.argv) >= 7:
-            libc = sys.argv[6]
-        else:
-            libc = None
-    else:
-        the_test = None
-        libc = None
-    if how == 'launcher':
-        # use launcher and client libraries from the build tree
-        runner = os.path.join(folder, 'launcher/launcher')
-        libtracer = os.path.join(folder, 'libtracer/libtracer.so')
-        libmie = os.path.join(folder, 'libmie/libmie.so')
-    elif how == 'frontend':
-        # use `morelloie` from the build tree
-        runner = os.path.join(folder, 'launcher/morelloie')
-        libtracer = None
-        libmie = None
-    else:
-        # use specific path to the `morelloie` binary
-        runner = how
-        libtracer = None
-        libmie = None
+    thetest = options.get('thetest')
+    nproc: int = options.get('nproc', fmt=lambda t: int(t))
 
     with open(script, 'rt') as f:
         suite: list = json.load(f)
+
+    def process(tc):
+
+        tname, cmd, xrc, xout, xerr, env = build_test(tc, folder, runner)
+
+        if thetest and tname != thetest:
+            # to allow running specific test
+            return None
+
+        st = time.time()
+        rc, out, err = run_process(cmd, tc.get('stdin', None), int(tc.get('timeout', 5 * 60)), env)
+        delta = (time.time() - st)
+
+        res, msg = check_results(rc, out.split('\n'), err.split('\n'), xrc, xout, xerr)
+        time_str = '%.3f' % delta
+        tsreasons = {}  # why tests are skipped
+
+        if res:
+            print('PASSED  %s: %s (%s sec)' % (tname, msg, time_str))
+            tres = passcase.substitute(
+                name=tname, suite=suite_name.split('-')[0], time=time_str,
+                stdout='' if out is None else out,
+                stderr='' if err is None else err)
+            tskipped = 0
+            tfailure = 0
+        else:
+            skip = tc.get('skip', 'never')
+            if skip != 'never':
+                if (skip == 'jenkins' and 'JOB_URL' in os.environ) or skip == 'always':
+                    tskipped = 1
+                    print('SKIPPED (%s: %s): %s (%s sec)' % (tname, skip, msg, time_str))
+                    tres = skipcase.substitute(
+                        name=tname, suite=suite_name.split('-')[0], time=time_str,
+                        stdout='' if out is None else out,
+                        stderr='' if err is None else err)
+                    skipping = True
+                    if skip not in tsreasons:
+                        tsreasons[skip] = 0
+                    tsreasons[skip] += 1
+                else:
+                    skipping = False
+                    tskipped = 0
+                    tres = None
+            else:
+                skipping = False
+                tskipped = 0
+                tres = None
+            if not skipping:
+                tfailure = 1
+                print('FAILED  %s: %s (%s sec)' % (tname, msg, time_str))
+                tres = failcase.substitute(
+                    name=tname, suite=suite_name.split('-')[0], time=time_str,
+                    stdout='' if out is None else out,
+                    stderr='' if err is None else err)
+            else:
+                tfailure = 0
+        return tres, delta, tskipped, tfailure, tsreasons
+
+    if nproc == 1:
+        q = [process(t) for t in suite]
+    else:
+        with pool(nproc) as p:
+            q = p.map(process, suite)
 
     testcases = []  # list of results
     ntests, failures, skipped = 0, 0, 0  # counters for tests
     total = 0.0  # total execution time
     skip_reasons = {}  # why tests are skipped
 
-    for tc in suite:
-
-        tname, cmd, xrc, xout, xerr, env = build_test(tc, folder, runner, libtracer, libmie)
-
-        if the_test and tname != the_test:
-            # to allow running specific test
+    for x in q:
+        if x is None:
             continue
-
-        st = time.time()
-        rc, out, err = run_process(cmd, tc.get('stdin', None), int(tc.get('timeout', 5 * 60)), env)
-        delta = (time.time() - st)
-        total += delta
+        sres, stime, sskipped, sfailure, ssreasons = x
+        if sres is None:
+            continue
+        testcases.append(sres)
         ntests += 1
-        res, msg = check_results(rc, out.split('\n'), err.split('\n'), xrc, xout, xerr)
-        time_str = '%.3f' % delta
-
-        if res:
-            print('PASSED  %s: %s (%s sec)' % (tname, msg, time_str))
-            testcases.append(passcase.substitute(
-                name=tname, suite=suite_name.split('-')[0], time=time_str,
-                stdout='' if out is None else out,
-                stderr='' if err is None else err))
-        else:
-            skip = tc.get('skip', 'never')
-            if skip != 'never':
-                if (is_debug and skip == 'debug')\
-                        or (skip == 'musl' and libc == 'musl') \
-                        or (skip == 'glibc' and libc == 'glibc') \
-                        or (skip == 'jenkins' and 'JOB_URL' in os.environ) \
-                        or skip == 'always':
-                    skipped += 1
-                    print('SKIPPED (%s: %s): %s (%s sec)' % (tname, skip, msg, time_str))
-                    testcases.append(skipcase.substitute(
-                        name=tname, suite=suite_name.split('-')[0], time=time_str,
-                        stdout='' if out is None else out,
-                        stderr='' if err is None else err))
-                    skipping = True
-                    if skip not in skip_reasons:
-                        skip_reasons[skip] = 0
-                    skip_reasons[skip] += 1
-                else:
-                    skipping = False
-            else:
-                skipping = False
-            if not skipping:
-                failures += 1
-                print('FAILED  %s: %s (%s sec)' % (tname, msg, time_str))
-                testcases.append(failcase.substitute(
-                    name=tname, suite=suite_name.split('-')[0], time=time_str,
-                    stdout='' if out is None else out,
-                    stderr='' if err is None else err))
+        skipped += sskipped
+        failures += sfailure
+        total += stime
+        for s, n in ssreasons.items():
+            if s not in skip_reasons:
+                skip_reasons[s] = 0
+            skip_reasons[s] += n
 
     ts = datetime.now()
     with open('suite-%s-results.xml' % suite_name.split('.')[-1], 'wt') as f:

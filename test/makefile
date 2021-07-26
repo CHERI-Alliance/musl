@@ -1,5 +1,7 @@
 override SHELL = /bin/bash
 
+MORELLO_TESTS_PROCS = 8
+
 MUSL_LIB = $(MUSL_ROOT)/lib
 MUSL_INC = $(MUSL_ROOT)/include
 
@@ -17,7 +19,9 @@ OBJS := $(patsubst %.c, %.o, $(SOURCES))
 EXE := $(patsubst %.c, %.exe, $(SOURCES))
 
 test: $(EXE) check_morelloie
-	python3 runner.py src morello-tests.json $(MORELLOIE) musl.custom.morello
+	python3 runner.py --nproc $(MORELLO_TESTS_PROCS) src morello-tests.json $(MORELLOIE) musl.custom.morello
+
+build: $(EXE)
 
 build: $(EXE)
 

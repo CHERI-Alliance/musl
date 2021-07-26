@@ -910,5 +910,16 @@
         "args": ["one", "2", "three"],
         "env": {"HELLO": "world", "MORELLO": "cheri"},
         "xrc": [0]
+    },
+    {
+        "app": "${build}/sprintf.exe",
+        "name": "sprintf",
+        "xrc": [0]
+    },
+    {
+        "app": "${build}/vsprintf.exe",
+        "args": ["morello"],
+        "name": "vsprintf",
+        "xrc": [0]
     }
 ]

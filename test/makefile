@@ -23,8 +23,6 @@ test: $(EXE) check_morelloie
 
 build: $(EXE)
 
-build: $(EXE)
-
 check_musl_root:
 ifndef MUSL_ROOT
 	$(error MUSL_ROOT is undefined)

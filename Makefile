@@ -174,7 +174,7 @@ LIBARCHCAP_REF ?= null
 
 $(LIBSHIM): lib/libshim
 	$(MAKE) -C lib/libshim LIBC=musl ARCH=morello LIBC_PATH=$(LIBSHIM_LIBC_PATH) \
-	CC=$(CC) CXX=$(CC)++ CFLAGS=-DMORELLO CXXFLAGS=-DMORELLO
+	CC=$(CC) CXX=$(CC)++ CFLAGS="-DMORELLO $(LIBSHIM_FLAGS)" CXXFLAGS="-DMORELLO $(LIBSHIM_FLAGS)"
 
 lib/libshim: lib/libshim-libc lib/libarchcap
 	git clone --depth 1 $(LIBSHIM_GIT) $@

@@ -105,6 +105,14 @@ libraries for ``-lc`` and ``-lm`` are used. The ``-static`` is necessary because
 static linking is currently supported. See `Morello LLVM toolchain`_ for more details
 about the ``crtbegin`` and ``crtend`` objects.
 
+Cross-compiling
+^^^^^^^^^^^^^^^
+Both the steps above can be cross-compiled from an x86 host to target Morello. To do
+so append ``--target=aarch64-linux-gnu`` to the ``configure`` script and clang invocations.
+Clang is a cross-compiler by default so it can output code for any architecture on demand.
+The configure script will also try to use LLVM's binutils instead of gcc's. They can be
+overridden in the same way as ``CC``.
+
 Morello LLVM toolchain
 ----------------------
 

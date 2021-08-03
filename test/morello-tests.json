@@ -957,5 +957,10 @@
         "name": "malloc_double_free",
         "args": ["5"],
         "xrc": [-11]
+    },
+    {
+        "app": "${build}/pthread.exe",
+        "name": "pthread-basic",
+        "xrc": [0]
     }
 ]

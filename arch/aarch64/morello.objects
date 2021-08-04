@@ -185,7 +185,17 @@ obj/src/locale/revjis.o
 obj/src/locale/strcoll.o
 obj/src/locale/strxfrm.o
 obj/src/locale/__lctrans.o
+obj/src/malloc/free.o
 obj/src/malloc/libc_calloc.o
+obj/src/malloc/lite_malloc.o
+obj/src/malloc/mallocng/donate.o
+obj/src/malloc/mallocng/malloc_usable_size.o
+obj/src/malloc/mallocng/realloc.o
+obj/src/malloc/mallocng/meta.h
+obj/src/malloc/mallocng/malloc.o
+obj/src/malloc/mallocng/glue.h
+obj/src/malloc/mallocng/free.o
+obj/src/malloc/realloc.o
 obj/src/malloc/replaced.o
 obj/src/misc/ffs.o
 obj/src/misc/ffsll.o
@@ -199,6 +209,7 @@ obj/src/misc/setpriority.o
 obj/src/misc/syscall.o
 obj/src/mman/mlockall.o
 obj/src/mman/mmap.o
+obj/src/mman/mprotect.o
 obj/src/mman/munlockall.o
 obj/src/mman/munmap.o
 obj/src/mq/mq_close.o
@@ -234,6 +245,7 @@ obj/src/process/_Fork.o
 obj/src/sched/sched_getscheduler.o
 obj/src/sched/sched_get_priority_max.o
 obj/src/sched/sched_yield.o
+obj/src/signal/block.o
 obj/src/signal/kill.o
 obj/src/signal/killpg.o
 obj/src/signal/raise.o
@@ -412,6 +424,7 @@ obj/src/thread/thrd_yield.o
 obj/src/thread/tls.o
 obj/src/thread/tss_delete.o
 obj/src/thread/__lock.o
+obj/src/thread/__syscall_cp.o
 obj/src/time/asctime.o
 obj/src/time/asctime_r.o
 obj/src/time/clock.o

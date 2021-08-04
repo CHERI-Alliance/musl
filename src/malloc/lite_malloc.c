@@ -103,7 +103,7 @@ static void *__simple_malloc(size_t n)
 	return p;
 }
 
-weak_alias(__simple_malloc, __libc_malloc_impl);
+//weak_alias(__simple_malloc, __libc_malloc_impl); //TODO this is temporary because for some reason lite malloc is used instead of the main one
 
 void *__libc_malloc(size_t n)
 {

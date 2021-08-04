@@ -32,7 +32,9 @@
 #define assert(x) do { if (!(x)) a_crash(); } while(0)
 #endif
 
+#ifndef MORELLO
 #define brk(p) ((uintptr_t)__syscall(SYS_brk, p))
+#endif
 
 #define mmap __mmap
 #define madvise __madvise
@@ -43,7 +45,11 @@
 static inline uint64_t get_random_secret()
 {
 	uint64_t secret = (size_t)&secret * 1103515245;
+#ifdef MORELLO
+	void * random = getauxptr(AT_RANDOM);
+#else
 	uintptr_t random = getauxval(AT_RANDOM);
+#endif
 	if (random) secret = *((uint64_t*)((char*)random + 8));
 	return secret;
 }

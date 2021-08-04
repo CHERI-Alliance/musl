@@ -58,6 +58,7 @@ struct meta *alloc_meta(void)
 		if (!ctx.avail_meta_area_count && ctx.brk!=-1) {
 			uintptr_t new = ctx.brk + pagesize;
 			int need_guard = 0;
+#ifndef MORELLO
 			if (!ctx.brk) {
 				need_guard = 1;
 				ctx.brk = brk(0);
@@ -76,6 +77,7 @@ struct meta *alloc_meta(void)
 				ctx.avail_meta_area_count = pagesize>>12;
 				need_unprotect = 0;
 			}
+#endif
 		}
 		if (!ctx.avail_meta_area_count) {
 			size_t n = 2UL << ctx.meta_alloc_shift;
@@ -118,7 +120,7 @@ static uint32_t try_avail(struct meta **pm)
 	if (!m) return 0;
 	uint32_t mask = m->avail_mask;
 	if (!mask) {
-		if (!m) return 0;
+		if (!m) return 0; //TODO isn't this redundant with 3 line above ?
 		if (!m->freed_mask) {
 			dequeue(pm, m);
 			m = *pm;
@@ -149,7 +151,7 @@ static uint32_t try_avail(struct meta **pm)
 			} else {
 				int cnt = m->mem->active_idx + 2;
 				int size = size_classes[m->sizeclass]*UNIT;
-				int span = UNIT + size*cnt;
+				int span = GRP_SIZE + size*cnt;
 				// activate up to next 4k boundary
 				while ((span^(span+size-1)) < 4096) {
 					cnt++;
@@ -203,11 +205,11 @@ static struct meta *alloc_group(int sc, size_t req)
 
 	// If we selected a count of 1 above but it's not sufficient to use
 	// mmap, increase to 2. Then it might be; if not it will nest.
-	if (cnt==1 && size*cnt+UNIT <= pagesize/2) cnt = 2;
+	if (cnt==1 && size*cnt+GRP_SIZE <= pagesize/2) cnt = 2;
 
 	// All choices of size*cnt are "just below" a power of two, so anything
 	// larger than half the page size should be allocated as whole pages.
-	if (size*cnt+UNIT > pagesize/2) {
+	if (size*cnt+GRP_SIZE > pagesize/2) {
 		// check/update bounce counter to start/increase retention
 		// of freed maps, and inhibit use of low-count, odd-size
 		// small mappings and single-slot groups if activated.
@@ -231,16 +233,16 @@ static struct meta *alloc_group(int sc, size_t req)
 			else if ((sc&3)==0 && size*cnt>8*pagesize) cnt = 3;
 			else if ((sc&3)==0 && size*cnt>2*pagesize) cnt = 5;
 		}
-		size_t needed = size*cnt + UNIT;
+		size_t needed = size*cnt + GRP_SIZE;
 		needed += -needed & (pagesize-1);
 
 		// produce an individually-mmapped allocation if usage is low,
 		// bounce counter hasn't triggered, and either it saves memory
 		// or it avoids eagar slot allocation without wasting too much.
 		if (!nosmall && cnt<=7) {
-			req += IB + UNIT;
+			req += IB + GRP_SIZE;
 			req += -req & (pagesize-1);
-			if (req<size+UNIT || (req>=4*pagesize && 2*cnt>usage)) {
+			if (req<size+GRP_SIZE || (req>=4*pagesize && 2*cnt>usage)) {
 				cnt = 1;
 				needed = req;
 			}
@@ -253,12 +255,12 @@ static struct meta *alloc_group(int sc, size_t req)
 		}
 		m->maplen = needed>>12;
 		ctx.mmap_counter++;
-		active_idx = (4096-UNIT)/size-1;
+		active_idx = (4096-GRP_SIZE)/size-1;
 		if (active_idx > cnt-1) active_idx = cnt-1;
 		if (active_idx < 0) active_idx = 0;
 	} else {
-		int j = size_to_class(UNIT+cnt*size-IB);
-		int idx = alloc_slot(j, UNIT+cnt*size-IB);
+		int j = size_to_class(GRP_SIZE+cnt*size-IB);
+		int idx = alloc_slot(j, GRP_SIZE+cnt*size-IB);
 		if (idx < 0) {
 			free_meta(m);
 			return 0;
@@ -268,7 +270,7 @@ static struct meta *alloc_group(int sc, size_t req)
 		m->maplen = 0;
 		p[-3] = (p[-3]&31) | (6<<5);
 		for (int i=0; i<=cnt; i++)
-			p[UNIT+i*size-4] = 0;
+			p[GRP_SIZE+i*size-4] = 0;
 		active_idx = cnt-1;
 	}
 	ctx.usage_by_class[sc] += cnt;
@@ -306,8 +308,13 @@ void *malloc(size_t n)
 	int ctr;
 
 	if (n >= MMAP_THRESHOLD) {
-		size_t needed = n + IB + UNIT;
-		void *p = mmap(0, needed, PROT_READ|PROT_WRITE,
+		size_t needed = n + IB + GRP_SIZE;
+		size_t needed_aligned = needed + 4095 & -4096; // make it so we are allowed the full last (4k) page so we can read and write the footer info.
+		// we can't just keep the "needed" value and change malloc's logic too easily. The only data we keep about the size of the mmap'ed chunk is
+		// maplen, which is a multiple of 4kiB. Except... if we use the capability bound ? What if, instead of using maplen to get the *end in enframe
+		// we use the limit encoded in the capability ?
+		//TODO this is to be fixed in mmap/libshim, not in malloc. Mmap should return a cap whose bound is a multiple of pagesize.
+		void *p = mmap(0, needed_aligned, PROT_READ|PROT_WRITE,
 			MAP_PRIVATE|MAP_ANON, -1, 0);
 		if (p==MAP_FAILED) return 0;
 		wrlock();
@@ -315,7 +322,7 @@ void *malloc(size_t n)
 		g = alloc_meta();
 		if (!g) {
 			unlock();
-			munmap(p, needed);
+			munmap(p, needed_aligned);
 			return 0;
 		}
 		g->mem = p;
@@ -323,7 +330,7 @@ void *malloc(size_t n)
 		g->last_idx = 0;
 		g->freeable = 1;
 		g->sizeclass = 63;
-		g->maplen = (needed+4095)/4096;
+		g->maplen = needed_aligned/4096;
 		g->avail_mask = g->freed_mask = 0;
 		// use a global counter to cycle offset in
 		// individually-mmapped allocations.
@@ -376,7 +383,8 @@ void *malloc(size_t n)
 success:
 	ctr = ctx.mmap_counter;
 	unlock();
-	return enframe(g, idx, n, ctr);
+	return enframe(g, idx, n, ctr); //TODO we will have to deal with the bound of this capability. Ideally we want to
+	// restrict it so the user can't access the metadata or footer, but if we do so, will we be able to free or realloc ?
 }
 
 int is_allzero(void *p)

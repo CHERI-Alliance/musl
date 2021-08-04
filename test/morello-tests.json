@@ -921,5 +921,41 @@
         "args": ["morello"],
         "name": "vsprintf",
         "xrc": [0]
+    },
+    {
+        "app": "${build}/malloc.exe",
+        "name": "malloc_basic",
+        "args": ["0"],
+        "xrc": [0]
+    },
+    {
+        "app": "${build}/malloc.exe",
+        "name": "malloc_free",
+        "args": ["1"],
+        "xrc": [0]
+    },
+    {
+        "app": "${build}/malloc.exe",
+        "name": "malloc_free_re_malloc",
+        "args": ["2"],
+        "xrc": [0]
+    },
+    {
+        "app": "${build}/malloc.exe",
+        "name": "malloc_no_overlap",
+        "args": ["3"],
+        "xrc": [0]
+    },
+    {
+        "app": "${build}/malloc.exe",
+        "name": "malloc_free_and_use",
+        "args": ["4"],
+        "xrc": [-11]
+    },
+    {
+        "app": "${build}/malloc.exe",
+        "name": "malloc_double_free",
+        "args": ["5"],
+        "xrc": [-11]
     }
 ]

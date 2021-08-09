@@ -209,6 +209,7 @@ obj/src/mman/mlockall.o
 obj/src/mman/mmap.o
 obj/src/mman/mprotect.o
 obj/src/mman/munlock.o
+obj/src/mman/mremap.o
 obj/src/mman/munlockall.o
 obj/src/mman/munmap.o
 obj/src/mq/mq_close.o

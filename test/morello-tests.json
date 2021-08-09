@@ -967,5 +967,34 @@
         "app": "${build}/printf_plain_text.exe",
         "name": "printf_plain_text",
         "xrc": [0]
+    },
+    {
+        "app": "${build}/memcpy.exe",
+        "name": "memcpy_small_cpy",
+        "args": ["0"],
+        "xrc": [0]
+    },
+    {
+        "app": "${build}/memcpy.exe",
+        "name": "memcpy_medium_cpy",
+        "args": ["1"],
+        "xrc": [0]
+    },
+    {
+        "app": "${build}/memcpy.exe",
+        "name": "memcpy_large_cpy",
+        "args": ["2"],
+        "xrc": [0]
+    },
+    {
+        "app": "${build}/memcpy.exe",
+        "name": "memcpy_nested_capabilities",
+        "args": ["3"],
+        "xrc": [0]
+    },
+    {
+        "app": "${build}/mremap.exe",
+        "name": "mremap",
+        "xrc": [0]
     }
 ]

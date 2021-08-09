@@ -1163,5 +1163,39 @@
         "app": "${build}/clearenv.exe",
         "name": "clearenv",
         "xrc": [0]
+    },
+    {
+        "app": "${build}/realloc.exe",
+        "name": "realloc-no-move",
+        "args": ["0"],
+        "xrc": [0]
+    },
+    {
+        "app": "${build}/realloc.exe",
+        "name": "realloc-increase",
+        "args": ["1"],
+        "xrc": [0]
+    },
+    {
+        "app": "${build}/realloc.exe",
+        "name": "realloc-decrease",
+        "args": ["2"],
+        "xrc": [0]
+    },
+    {
+        "app": "${build}/realloc.exe",
+        "name": "realloc-change-regime",
+        "args": ["3"],
+        "xrc": [0]
+    },
+    {
+        "app": "${build}/calloc.exe",
+        "name": "calloc",
+        "xrc": [0]
+    },
+    {
+        "app": "${build}/aligned_alloc.exe",
+        "name": "aligned_alloc",
+        "xrc": [0]
     }
 ]

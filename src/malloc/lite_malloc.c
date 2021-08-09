@@ -58,13 +58,15 @@ static void *__simple_malloc(size_t n)
 	if (n > end-cur) {
 		size_t req = n - (end-cur) + PAGE_SIZE-1 & -PAGE_SIZE;
 
+#ifndef MORELLO
 		if (!cur) {
 			brk = __syscall(SYS_brk, 0);
 			brk += -brk & PAGE_SIZE-1;
 			cur = end = brk;
 		}
+#endif
 
-		if (brk == end && req < SIZE_MAX-brk
+		if (brk && brk == end && req < SIZE_MAX-brk
 		    && !traverses_stack_p(brk, brk+req)
 		    && __syscall(SYS_brk, brk+req)==brk+req) {
 			brk = end += req;
@@ -103,7 +105,7 @@ static void *__simple_malloc(size_t n)
 	return p;
 }
 
-//weak_alias(__simple_malloc, __libc_malloc_impl); //TODO this is temporary because for some reason lite malloc is used instead of the main one
+weak_alias(__simple_malloc, __libc_malloc_impl);
 
 void *__libc_malloc(size_t n)
 {

@@ -25,8 +25,8 @@ static void donate(unsigned char *base, size_t len)
 		m->freeable = 0;
 		m->sizeclass = sc;
 		m->maplen = 0;
-		*((unsigned char *)m->mem+UNIT-4) = 0;
-		*((unsigned char *)m->mem+UNIT-3) = 255;
+		*((unsigned char *)m->mem+GRP_SIZE-4) = 0;
+		*((unsigned char *)m->mem+GRP_SIZE-3) = 255;
 		m->mem->storage[size_classes[sc]*UNIT-4] = 0;
 		queue(&ctx.active[sc], m);
 		a += (size_classes[sc]+1)*UNIT;

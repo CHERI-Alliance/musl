@@ -22,6 +22,9 @@ const uint16_t size_classes[] = {
 	2340, 2730, 3276, 4095,
 	4680, 5460, 6552, 8191,
 };
+// There's a hidden dependency on the biggest sizeclass not being (much) above 8k.
+// there are 32 slots in one group, so that make the start of the last biggest group
+// just below 64k. The offset to access the start of each slot is encoded with 16 bits
 
 static const uint8_t small_cnt_tab[][3] = {
 	{ 30, 30, 30 },

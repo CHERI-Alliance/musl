@@ -962,5 +962,10 @@
         "app": "${build}/pthread.exe",
         "name": "pthread-basic",
         "xrc": [0]
+    },
+    {
+        "app": "${build}/printf_plain_text.exe",
+        "name": "printf_plain_text",
+        "xrc": [0]
     }
 ]

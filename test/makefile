@@ -16,7 +16,10 @@ CRT_POST = $(CRT_END) $(MUSL_LIB)/crtn.o
 
 SOURCES := $(wildcard src/*.c)
 OBJS := $(patsubst %.c, %.o, $(SOURCES))
+MKFS := $(patsubst %.c, %.mk, $(SOURCES))
 EXE := $(patsubst %.c, %.exe, $(SOURCES))
+
+-include $(MKFS)
 
 test: $(EXE) check_morelloie
 	python3 runner.py --nproc $(MORELLO_TESTS_PROCS) src morello-tests.json $(MORELLOIE) musl.custom.morello

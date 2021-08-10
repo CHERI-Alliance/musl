@@ -97,13 +97,17 @@ Link executable objects:
        hello.c.o \
        ${MORELLO_HOME}/lib/clang/11.0.0/lib/linux/clang_rt.crtend-morello.o \
        ${MUSL_HOME}/lib/crtn.o \
-       -nostdlib -L${MUSL_HOME}/lib -lc -lm \
+       -nostdlib -L${MUSL_HOME}/lib -lc -lm -lgcc \
        -static
 
 The ``-nostdlib`` and ``-L${MUSL_HOME}/lib`` options are used to make sure the right
 libraries for ``-lc`` and ``-lm`` are used. The ``-static`` is necessary because only
 static linking is currently supported. See `Morello LLVM toolchain`_ for more details
 about the ``crtbegin`` and ``crtend`` objects.
+
+As a temporary workaround to address linker errors, it is possible to use ``-lgcc`` on
+the linker command line. As soon as Morello version of LLVM's compiler-rt is available
+there will be no need in this workaround.
 
 Cross-compiling
 ^^^^^^^^^^^^^^^
@@ -223,4 +227,4 @@ E.g. from musl root directory:
 Original README
 ---------------
 
-.. include:: README
+Original Musl `README <README>`_ file.

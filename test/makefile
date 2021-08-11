@@ -5,7 +5,9 @@ MORELLO_TESTS_PROCS = 8
 MUSL_LIB = $(MUSL_ROOT)/lib
 MUSL_INC = $(MUSL_ROOT)/include
 
-CFLAGS += -nostdinc -isystem $(MUSL_INC) -march=morello+c64 -mabi=purecap -g -DMORELLO -fno-builtin-mempcpy -Werror
+CFLAGS += -nostdinc -isystem $(MUSL_INC) -march=morello+c64 -mabi=purecap -g -DMORELLO -fno-builtin-mempcpy
+CFLAGS += -Wall -Wpedantic -Werror
+CFLAGS += -Wno-gnu-empty-initializer -Wno-gnu-folding-constant
 LDFLAGS += -g -fuse-ld=lld -nostdlib -L$(MUSL_LIB) -Wl,-morello-c64-plt
 LDLIBS += -lc -lgcc
 
@@ -18,6 +20,8 @@ SOURCES := $(wildcard src/*.c)
 OBJS := $(patsubst %.c, %.o, $(SOURCES))
 MKFS := $(patsubst %.c, %.mk, $(SOURCES))
 EXE := $(patsubst %.c, %.exe, $(SOURCES))
+
+all: test
 
 -include $(MKFS)
 

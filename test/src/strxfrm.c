@@ -7,9 +7,9 @@ int main(int argc, char **argv) {
     // is modified in the future : the test env might differ between people
     //setlocale(LC_ALL, "C.UTF-8");
 
-    char* sentence = "19 letters sentence";
-    const size_t sentence_length = 19;
-    const size_t sentence_size = sentence_length + 1;
+    const char sentence[] = "19 letters sentence";
+    const size_t sentence_length = strlen(sentence);
+    const size_t sentence_size = sizeof(sentence);
 
     char buffer[sentence_size];
     memset(buffer, 0, sizeof(buffer));

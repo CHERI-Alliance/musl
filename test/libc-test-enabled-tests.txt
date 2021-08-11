@@ -188,6 +188,7 @@ src/math/tgammal-static.exe
 src/math/trunc-static.exe
 src/math/truncf-static.exe
 src/math/truncl-static.exe
+src/musl/pleval-static.exe
 src/regression/dn_expand-empty-static.exe
 src/regression/dn_expand-ptr-0-static.exe
 src/regression/fpclassify-invalid-ld80-static.exe

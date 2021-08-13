@@ -177,6 +177,9 @@ obj/src/linux/sync_file_range.o
 obj/src/linux/vhangup.o
 obj/src/locale/big5.o
 obj/src/locale/codepages.o
+obj/src/locale/c_locale.o
+obj/src/locale/duplocale.o
+obj/src/locale/freelocale.o
 obj/src/locale/gb18030.o
 obj/src/locale/hkscs.o
 obj/src/locale/jis0208.o
@@ -184,11 +187,16 @@ obj/src/locale/ksc.o
 obj/src/locale/langinfo.o
 obj/src/locale/legacychars.o
 obj/src/locale/localeconv.o
+obj/src/locale/locale_map.o
+obj/src/locale/newlocale.o
 obj/src/locale/pleval.o
 obj/src/locale/revjis.o
+obj/src/locale/setlocale.o
 obj/src/locale/strcoll.o
 obj/src/locale/strxfrm.o
+obj/src/locale/uselocale.o
 obj/src/locale/__lctrans.o
+obj/src/locale/__mo_lookup.o
 obj/src/malloc/calloc.o
 obj/src/malloc/free.o
 obj/src/malloc/libc_calloc.o
@@ -217,6 +225,7 @@ obj/src/misc/syscall.o
 obj/src/mman/mlockall.o
 obj/src/mman/mmap.o
 obj/src/mman/mprotect.o
+obj/src/mman/mremap.o
 obj/src/mman/munlock.o
 obj/src/mman/mremap.o
 obj/src/mman/munlockall.o

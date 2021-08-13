@@ -1197,5 +1197,13 @@
         "app": "${build}/aligned_alloc.exe",
         "name": "aligned_alloc",
         "xrc": [0]
+    },
+    {
+        "app": "${build}/newlocale.exe",
+        "name": "newlocale",
+        "stdout": [
+            "123456.789"
+        ],
+        "xrc": [0]
     }
 ]

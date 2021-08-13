@@ -212,5 +212,6 @@ src/regression/sscanf-eof-static.exe
 src/regression/statvfs-static.exe
 src/regression/strverscmp-static.exe
 src/regression/syscall-sign-extend-static.exe
+src/regression/uselocale-0-static.exe
 src/regression/wcsncpy-read-overflow-static.exe
 src/regression/wcsstr-false-negative-static.exe

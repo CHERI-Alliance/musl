@@ -1,11 +1,8 @@
 #include <string.h>
-//#include <locale.h> see todo below
+#include <locale.h>
 
 int main(int argc, char **argv) {
-    // TODO set local is not ported yet. It shouldn't change anything in the
-    // current implementation, but might be an issue in the future is strxfrm
-    // is modified in the future : the test env might differ between people
-    //setlocale(LC_ALL, "C.UTF-8");
+    setlocale(LC_ALL, "C.UTF-8");
 
     const char sentence[] = "19 letters sentence";
     const size_t sentence_length = strlen(sentence);

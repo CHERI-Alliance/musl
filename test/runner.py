@@ -79,7 +79,7 @@ def build_test(_tc: dict, cwd: str, _runner: str) -> tuple:
     app: str = _tc.get('app').replace('${build}', cwd)
     params: dict = _tc.get('params', {'tracer': [], 'mie': []})
     args: list = _tc.get('args', [])
-    _tname = _tc.get('name', '%s%s' % (basename(app), ('-%s' % ('-'.join(args))) if args else ''))
+    _tname = _tc.get('name', '%s%s' % (basename(app), ('-%s' % ('-'.join([str(t) for t in args]))) if args else ''))
     params_mie: list = params.get('mie', [])
     _cmd: list = [_runner] + params_mie + ['--', app] + args
     _env: dict = _tc.get('env', {})
@@ -102,13 +102,17 @@ def check_output(output: list, expected: list) -> tuple:
 
     for k, pattern in enumerate(expected):
         checking.append(True)
+        try:
+            matcher = re.compile(pattern)
+        except:
+            matcher = None
         while cur < ln:
             line = output[cur].strip()
             if not line:
                 cur += 1
                 continue
             if checking[-1]:
-                _res = pattern in line or re.compile(pattern).match(line)
+                _res = pattern in line or (matcher.match(line) if matcher else False)
                 if _res:
                     checking[-1] = False
                     cur += 1

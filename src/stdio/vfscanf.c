@@ -297,11 +297,7 @@ int vfscanf(FILE *restrict f, const char *restrict fmt, va_list ap)
 		int_common:
 			x = __intscan(f, base, 0, ULLONG_MAX);
 			if (!shcnt(f)) goto match_fail;
-#ifdef MORELLO
-			if (t=='p' && dest) *(void **)dest = __builtin_cheri_address_set(NULL,x);
-#else
 			if (t=='p' && dest) *(void **)dest = (void *)(uintptr_t)x;
-#endif
 			else store_int(dest, size, x);
 			break;
 		case 'a': case 'A':

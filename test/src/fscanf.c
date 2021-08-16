@@ -2,6 +2,7 @@
 #include <string.h>
 #include <float.h>
 #include <math.h>
+#include <stdint.h>
 
 int floatCompare (const float f1, const float f2)
 {
@@ -31,7 +32,7 @@ int main (int argc, char *argv[])
     // some made up address trying to avoid some obvious patterns
     // 1111000011100011001011110000111000110010111100001110001100101010
     // F0E32F0E32F0E32A
-    uintcap_t expected_adress = 17357769126846718762u;
+    uintptr_t expected_adress = 17357769126846718762u;
 
     unsigned int tmp = 0;
 

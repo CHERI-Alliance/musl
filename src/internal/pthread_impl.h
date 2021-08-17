@@ -74,7 +74,7 @@ enum {
 	DT_DETACHED,
 };
 
-#define __SU (sizeof(size_t)/sizeof(int))
+#define __SU (sizeof(long)/sizeof(int))
 
 #define _a_stacksize __u.__s[0]
 #define _a_guardsize __u.__s[1]
@@ -83,12 +83,32 @@ enum {
 #define _a_sched __u.__i[3*__SU+1]
 #define _a_policy __u.__i[3*__SU+2]
 #define _a_prio __u.__i[3*__SU+3]
+
+#ifdef MORELLO
+#define _m_prev __u.__p[0]
+#define _m_next __u.__p[1]
+#define _m_lock __u.__vi[8]
+#define _m_waiters __u.__vi[9]
+#define _m_type __u.__i[10]
+#define _m_count __u.__i[11]
+#else
 #define _m_type __u.__i[0]
 #define _m_lock __u.__vi[1]
 #define _m_waiters __u.__vi[2]
 #define _m_prev __u.__p[3]
 #define _m_next __u.__p[4]
 #define _m_count __u.__i[5]
+#endif
+
+#ifdef MORELLO
+#define _c_shared __u.__p[0]
+#define _c_head __u.__p[1]
+#define _c_tail __u.__p[2]
+#define _c_seq __u.__vi[12]
+#define _c_waiters __u.__vi[13]
+#define _c_clock __u.__i[14]
+#define _c_lock __u.__vi[15]
+#else
 #define _c_shared __u.__p[0]
 #define _c_seq __u.__vi[2]
 #define _c_waiters __u.__vi[3]
@@ -96,15 +116,27 @@ enum {
 #define _c_lock __u.__vi[8]
 #define _c_head __u.__p[1]
 #define _c_tail __u.__p[5]
+#endif
+
 #define _rw_lock __u.__vi[0]
 #define _rw_waiters __u.__vi[1]
 #define _rw_shared __u.__i[2]
+
+#ifdef MORELLO
+#define _b_inst __u.__p[0]
+#define _b_lock __u.__vi[4]
+#define _b_waiters __u.__vi[5]
+#define _b_limit __u.__i[6]
+#define _b_count __u.__vi[7]
+#define _b_waiters2 __u.__vi[8]
+#else
 #define _b_lock __u.__vi[0]
 #define _b_waiters __u.__vi[1]
 #define _b_limit __u.__i[2]
 #define _b_count __u.__vi[3]
 #define _b_waiters2 __u.__vi[4]
 #define _b_inst __u.__p[3]
+#endif
 
 #ifndef TP_OFFSET
 #define TP_OFFSET 0

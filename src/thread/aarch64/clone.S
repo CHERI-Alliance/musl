@@ -9,7 +9,11 @@
 .type   __clone,%function
 __clone:
 	// align stack
+#ifdef MORELLO
+	alignd c1,c1,#4
+#else
 	and x1,x1,#-16
+#endif
 
 #ifdef MORELLO
 
@@ -51,7 +55,7 @@ __clone:
 	// set a capability properly
 
 	// load tls, flags
-	ldp c2,c3,[csp],#16
+	ldp c2,c3,[csp],#32
 
 	and x3,x3,0x00080000 // CLONE_SETTLS
 	cbz x3,2f

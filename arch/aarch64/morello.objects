@@ -683,6 +683,7 @@ obj/src/time/asctime_r.o
 obj/src/time/clock.o
 obj/src/time/clock_getres.o
 obj/src/time/clock_gettime.o
+obj/src/time/clock_nanosleep.o
 obj/src/time/difftime.o
 obj/src/time/gettimeofday.o
 obj/src/time/gmtime.o
@@ -690,6 +691,7 @@ obj/src/time/gmtime_r.o
 obj/src/time/localtime.o
 obj/src/time/localtime_r.o
 obj/src/time/mktime.o
+obj/src/time/nanosleep.o
 obj/src/time/strftime.o
 obj/src/time/strptime.o
 obj/src/time/time.o

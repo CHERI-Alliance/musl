@@ -1,6 +1,7 @@
 src/functional/argv-static.exe
 src/functional/basename-static.exe
 src/functional/clock_gettime-static.exe
+src/functional/pthread_cond.exe
 src/functional/random-static.exe
 src/functional/snprintf-static.exe
 src/functional/sscanf-static.exe

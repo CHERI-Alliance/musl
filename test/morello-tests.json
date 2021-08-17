@@ -1131,5 +1131,21 @@
         "app": "${build}/memcpy2.exe",
         "args": ["f"],
         "xrc": [0]
+    },{
+        "app": "${build}/setenv.exe",
+        "name": "setenv",
+        "xrc": [0],
+        "env": {"HELLO": "world"}
+    },
+    {
+        "app": "${build}/unsetenv.exe",
+        "name": "unsetenv",
+        "xrc": [0],
+        "env": {"HELLO": "world"}
+    },
+    {
+        "app": "${build}/clearenv.exe",
+        "name": "clearenv",
+        "xrc": [0]
     }
 ]

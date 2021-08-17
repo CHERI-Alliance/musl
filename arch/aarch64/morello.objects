@@ -109,8 +109,12 @@ obj/src/env/aarch64/morello_fini_array.o
 obj/src/env/aarch64/morello_init_array.o
 obj/src/env/aarch64/morello_init_stack_args.o
 obj/src/env/aarch64/morello_set_bounds_on_cap_array.o
+obj/src/env/clearenv.o
 obj/src/env/getenv.o
+obj/src/env/putenv.o
 obj/src/env/secure_getenv.o
+obj/src/env/setenv.o
+obj/src/env/unsetenv.o
 obj/src/env/__environ.o
 obj/src/env/__init_tls.o
 obj/src/env/__libc_start_main.o

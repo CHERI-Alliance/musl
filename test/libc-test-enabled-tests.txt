@@ -1,6 +1,7 @@
 src/functional/argv-static.exe
 src/functional/basename-static.exe
 src/functional/clock_gettime-static.exe
+src/functional/env.exe
 src/functional/pthread_cond.exe
 src/functional/random-static.exe
 src/functional/snprintf-static.exe
@@ -203,8 +204,10 @@ src/regression/mkstemp-failure-static.exe
 src/regression/printf-1e9-oob-static.exe
 src/regression/printf-fmt-g-round-static.exe
 src/regression/printf-fmt-g-zeros-static.exe
+src/regression/putenv-doublefree.exe
 src/regression/scanf-bytes-consumed-static.exe
 src/regression/scanf-match-literal-eof-static.exe
+src/regression/setenv-oom.c
 src/regression/sscanf-eof-static.exe
 src/regression/statvfs-static.exe
 src/regression/strverscmp-static.exe

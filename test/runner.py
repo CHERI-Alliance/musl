@@ -54,7 +54,7 @@ passcase = Template('''<testcase classname="${suite}" name="${name}" time="${tim
 <system-err><![CDATA[${stderr}]]></system-err>
 </testcase>''')
 failcase = Template('''<testcase classname="${suite}" name="${name}" time="${time}" status="run">
-<failure message="${name} has failed" type="failure"></failure>
+<failure message="${name} has failed" type="failure">${description}</failure>
 <system-out><![CDATA[${stdout}]]></system-out>
 <system-err><![CDATA[${stderr}]]></system-err>
 </testcase>''')
@@ -77,15 +77,15 @@ def run_process(command: list, stdin: str, timeout: int, _env: dict):
 
 def build_test(_tc: dict, cwd: str, _runner: str) -> tuple:
     app: str = _tc.get('app').replace('${build}', cwd)
-    params: dict = _tc.get('params', {'tracer': [], 'mie': []})
+    params: list = _tc.get('params', [])
     args: list = _tc.get('args', [])
-    _tname = _tc.get('name', '%s%s' % (basename(app), ('-%s' % ('-'.join([str(t) for t in args]))) if args else ''))
-    params_mie: list = params.get('mie', [])
-    _cmd: list = [_runner] + params_mie + ['--', app] + args
-    _env: dict = _tc.get('env', {})
+    _tname = _tc.get('name', '%s%s' % (basename(app).replace('.', '-'),
+        ('-%s' % ('-'.join([str(t) for t in args]))) if args else ''))
+    _cmd: list = [_runner] + params + ['--', app] + args
     _xrc: list = _tc.get('xrc', [0])
     _xout: list = _tc.get('stdout', [])
     _xerr: list = _tc.get('stderr', [])
+    _env: dict = _tc.get('env', {})
     return _tname, _cmd, _xrc, _xout, _xerr, _env
 
 def check_return_code(_rc: int, _xrc: list) -> tuple:
@@ -242,11 +242,12 @@ if __name__ == '__main__':
                 print('FAILED  %s: %s (%s sec)' % (tname, msg, time_str))
                 tres = failcase.substitute(
                     name=tname, suite=suite_name.split('-')[0], time=time_str,
+                    description='Command line: %s' % ' '.join(cmd),
                     stdout='' if out is None else out,
                     stderr='' if err is None else err)
             else:
                 tfailure = 0
-        return tres, delta, tskipped, tfailure, tsreasons
+        return tname, tres, delta, tskipped, tfailure, tsreasons
 
     if nproc == 1:
         q = [process(t) for t in suite]
@@ -256,19 +257,22 @@ if __name__ == '__main__':
 
     testcases = []  # list of results
     ntests, failures, skipped = 0, 0, 0  # counters for tests
+    failed_tests = []
     total = 0.0  # total execution time
     skip_reasons = {}  # why tests are skipped
 
     for x in q:
         if x is None:
             continue
-        sres, stime, sskipped, sfailure, ssreasons = x
+        stname, sres, stime, sskipped, sfailure, ssreasons = x
         if sres is None:
             continue
         testcases.append(sres)
         ntests += 1
         skipped += sskipped
         failures += sfailure
+        if sfailure > 0:
+            failed_tests.append(stname)
         total += stime
         for s, n in ssreasons.items():
             if s not in skip_reasons:
@@ -287,7 +291,14 @@ if __name__ == '__main__':
             timestamp=ts.astimezone().strftime('%Y-%m-%dT%H:%M:%S%z'),
             total='%.3f' % total
         ))
-    if failures > 0:
-        print('%s of %s tests failed (%s skipped: %s)' % (failures, ntests - skipped, skipped, ','.join(['%s=%s' % (k, v) for k, v in skip_reasons.items()])))
+    if skipped > 0:
+        skipped_info = ': ' + ','.join(['%s=%s' % (k, v) for k, v in skip_reasons.items()])
     else:
-        print('All %s tests passed (%s skipped: %s)' % (ntests - skipped, skipped, ','.join(['%s=%s' % (k, v) for k, v in skip_reasons.items()])))
+        skipped_info = ''
+    if failures > 0:
+        print('%s of %s tests failed (%s skipped%s)' % (failures, ntests - skipped, skipped, skipped_info))
+        print('Failed tests:')
+        for tn in failed_tests:
+            print('- failed: %s' % tn)
+    else:
+        print('All %s tests passed (%s skipped%s)' % (ntests - skipped, skipped, skipped_info))

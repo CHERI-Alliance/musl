@@ -7,7 +7,7 @@
 #define copied_value_not_equal 1
 #define null_capability 2
 #define capability_tag_cleared 3
-#define bad_alignement 6
+#define bad_alignment 6
 
 int main(int argc, char **argv)
 {
@@ -20,7 +20,7 @@ int main(int argc, char **argv)
 
     // check that p is aligned to some 16B boundary so it can hold a capability
     if ((__intcap_t)p & 0xF) {
-        return bad_alignement;
+        return bad_alignment;
     }
 
     p[0] = ptr;

@@ -7,7 +7,7 @@ MUSL_INC = $(MUSL_ROOT)/include
 
 CFLAGS += -nostdinc -isystem $(MUSL_INC) -march=morello+c64 -mabi=purecap -g -DMORELLO -fno-builtin-mempcpy
 CFLAGS += -Wall -Wpedantic -Werror
-CFLAGS += -Wno-gnu-empty-initializer -Wno-gnu-folding-constant
+CFLAGS += -Wno-gnu-empty-initializer -Wno-gnu-folding-constant -Wno-gnu-statement-expression
 LDFLAGS += -g -fuse-ld=lld -nostdlib -L$(MUSL_LIB) -Wl,-morello-c64-plt
 LDLIBS += -lc -lgcc
 

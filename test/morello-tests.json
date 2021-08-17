@@ -1051,5 +1051,85 @@
             "0x[0-9a-f]+\\s\\[[rwxRWE]{1,6},0x[0-9a-f]+\\-0x[0-9a-f]+\\]\\s\\(invalid,sealed\\)"
         ],
         "xrc": [0]
+    },
+    {
+        "app": "${build}/memcpy2.exe",
+        "args": ["0"],
+        "xrc": [0]
+    },
+    {
+        "app": "${build}/memcpy2.exe",
+        "args": ["1"],
+        "xrc": [0]
+    },
+    {
+        "app": "${build}/memcpy2.exe",
+        "args": ["2"],
+        "xrc": [0]
+    },
+    {
+        "app": "${build}/memcpy2.exe",
+        "args": ["3"],
+        "xrc": [0]
+    },
+    {
+        "app": "${build}/memcpy2.exe",
+        "args": ["4"],
+        "xrc": [0]
+    },
+    {
+        "app": "${build}/memcpy2.exe",
+        "args": ["5"],
+        "xrc": [0]
+    },
+    {
+        "app": "${build}/memcpy2.exe",
+        "args": ["6"],
+        "xrc": [0]
+    },
+    {
+        "app": "${build}/memcpy2.exe",
+        "args": ["7"],
+        "xrc": [0]
+    },
+    {
+        "app": "${build}/memcpy2.exe",
+        "args": ["8"],
+        "xrc": [0]
+    },
+    {
+        "app": "${build}/memcpy2.exe",
+        "args": ["9"],
+        "xrc": [0]
+    },
+    {
+        "app": "${build}/memcpy2.exe",
+        "args": ["a"],
+        "xrc": [0]
+    },
+    {
+        "app": "${build}/memcpy2.exe",
+        "args": ["b"],
+        "xrc": [0]
+    },
+    {
+        "app": "${build}/memcpy2.exe",
+        "args": ["c"],
+        "xrc": [0]
+    },
+    {
+        "app": "${build}/memcpy2.exe",
+        "args": ["d"],
+        "xrc": [0]
+    },
+    {
+        "app": "${build}/memcpy2.exe",
+        "args": ["e"],
+        "xrc": [0]
+    },
+    {
+        "app": "${build}/memcpy2.exe",
+        "args": ["f"],
+        "xrc": [0]
     }
 ]

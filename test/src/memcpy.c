@@ -85,9 +85,6 @@ static void test_ptr_size(void** ptr,long long size)
     }
 }
 
-
-
-
 static int init_int(int i) {return 1+i*3;}
 static int int_zero_init() {return 0;}
 static int equal_int(int a,int b) {return a==b;}
@@ -124,9 +121,6 @@ static struct complex_struct init_complex_struct(int i) {return (struct complex_
 static struct complex_struct complex_struct_zero_init() {return (struct complex_struct){ .integer = 0, .bitfield5 = 0, .capability = &bad_target, .floating_point = 0 };}
 static int equal_complex_struct(struct complex_struct a,struct complex_struct b) {return a.integer==b.integer && a.bitfield5==b.bitfield5 && a.capability==b.capability && a.floating_point==b.floating_point;}
 static void test_inner_cap(struct complex_struct a) {test_ptr_size((void**)&(a.capability),sizeof(int));}
-
-
-
 
 static void test_small_copy() //less than 32B
 {

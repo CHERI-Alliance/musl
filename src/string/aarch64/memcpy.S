@@ -19,8 +19,10 @@
 #define srcend  c4
 #define dstend  c5
 #define tmp2    x15
+#define tmpw    w15
+#define tmpc    c15
 
-#else
+#else /* MORELLO */
 
 #define dstin   x0
 #define src     x1
@@ -28,7 +30,7 @@
 #define srcend  x4
 #define dstend  x5
 
-#endif
+#endif /* MORELLO */
 
 #define count   x2
 #define A_l     x6
@@ -52,6 +54,63 @@
 #define H_h     srcend
 #define tmp1    x14
 
+
+.global memcpy
+.type memcpy,%function
+memcpy:
+
+#ifdef MORELLO
+
+    cmp     count, #16
+    b.lt    .Lcopy_misaligned   // size less than 16: fallback to non-capability copy
+    gcvalue tmp1, dstin
+    gcvalue tmp2, src
+    and     tmp1, tmp1, #15
+    and     tmp2, tmp2, #15
+    cmp     tmp1, tmp2
+    b.ne    .Lcopy_misaligned   // different alignment: fallback to non-capability copy
+
+.Lcopy_aligned:
+    alignu  dstend, dstin, #4
+    mov     dst, dstin
+.Lcopy_pre:
+    cmp     dstend, dst
+    b.eq    .Lcopy_main
+    ldrb    tmpw, [src], #1
+    strb    tmpw, [dst], #1
+    b       .Lcopy_pre
+.Lcopy_main:
+    add     dstend, dstin, count
+    alignd  dstend, dstend, #4
+.Lcopy_capabilities:
+    cmp     dstend, dst
+    b.eq    .Lcopy_tail
+    ldr     tmpc, [src], #16
+    str     tmpc, [dst], #16
+    b       .Lcopy_capabilities
+.Lcopy_tail:
+    add     dstend, dstin, count
+.Lcopy_post:
+    cmp     dstend, dst
+    b.eq    .Ldone
+    ldrb    tmpw, [src], #1
+    strb    tmpw, [dst], #1
+    b       .Lcopy_post
+
+.Lcopy_misaligned:
+    add     dstend, dstin, count
+    mov     dst, dstin
+.Lcopy_bytes:
+    cmp     dstend, dst
+    b.eq    .Ldone
+    ldrb    tmpw, [src], #1
+    strb    tmpw, [dst], #1
+    b       .Lcopy_bytes
+.Ldone:
+    ret
+
+#else /* MORELLO */
+
 /* This implementation of memcpy uses unaligned accesses and branchless
    sequences to keep the code small, simple and improve performance.
 
@@ -64,9 +123,6 @@
    The loop tail is handled by always copying 64 bytes from the end.
 */
 
-.global memcpy
-.type memcpy,%function
-memcpy:
 	add     srcend, src, count
 	add     dstend, dstin, count
 	cmp     count, 128
@@ -137,15 +193,8 @@ memcpy:
 	ldp     F_l, F_h, [src, 48]
 	cmp     count, 96
 	b.ls    .Lcopy96
-#ifdef MORELLO
-	ldr     G_l, [srcend, -64]
-	ldr     G_h, [srcend, -56]
-	str     G_l, [dstend, -64]
-	str     G_h, [dstend, -56]
-#else
 	ldp     G_l, G_h, [srcend, -64]
 	stp     G_l, G_h, [dstend, -64]
-#endif
 	ldp     H_l, H_h, [srcend, -48]
 	stp     H_l, H_h, [dstend, -48]
 .Lcopy96:
@@ -164,18 +213,9 @@ memcpy:
 	/* Copy 16 bytes and then align dst to 16-byte alignment.  */
 
 	ldp     D_l, D_h, [src]
-#ifdef MORELLO
-	gcvalue tmp1, dstin
-	bic     tmp2, tmp1, 15
-	scvalue dst, dstin, tmp2
-	and     tmp1, tmp1, 15
-	neg     tmp1, tmp1
-	add     src, src, tmp1
-#else
 	and     tmp1, dstin, 15
 	bic     dst, dstin, 15
 	sub     src, src, tmp1
-#endif
 	add     count, count, tmp1      /* Count is now 16 too large.  */
 	ldp     A_l, A_h, [src, 16]
 	stp     D_l, D_h, [dstin]
@@ -212,5 +252,7 @@ memcpy:
 	stp     B_l, B_h, [dstend, -32]
 	stp     C_l, C_h, [dstend, -16]
 	ret
+
+#endif /* MORELLO */
 
 .size memcpy,.-memcpy

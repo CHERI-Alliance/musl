@@ -994,7 +994,14 @@
     },
     {
         "app": "${build}/mremap.exe",
-        "name": "mremap",
+        "name": "mremap-extend",
+        "args": ["0"],
+        "xrc": [0]
+    },
+    {
+        "app": "${build}/mremap.exe",
+        "name": "mremap-move",
+        "args": ["1"],
         "xrc": [0]
     },
     {

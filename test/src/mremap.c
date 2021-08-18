@@ -1,53 +1,91 @@
 #define _GNU_SOURCE
-#include <stdlib.h>
 #include <sys/mman.h>
+#undef _GNU_SOURCE
+
+#include <stdlib.h>
+#include <unistd.h>
 #include <stdio.h>
+#include <string.h>
+#include <alloca.h>
+#include <stdbool.h>
 
-#define test_success 0
-#define copied_value_not_equal 1
-#define null_capability 2
-#define capability_tag_cleared 3
-#define bad_alignment 6
+#include "checkmacros.h"
 
-int main(int argc, char **argv)
+int getpagesize (void);
+
+#define SIZE 300
+
+#define CHECK_ALIGNED(cap, sz) ({ \
+	(__builtin_cheri_address_get(cap) & (sz - 1)) == 0;\
+})
+
+int x, y, z;
+
+#define ASSIGN_CAPS(dst) ({ \
+	dst[3] = &x;            \
+	dst[4] = NULL;          \
+	dst[5] = &p;            \
+	dst[6] = &q;            \
+	dst[7] = &y;            \
+	dst[8] = &z;            \
+})
+
+static int test_remap(bool move)
 {
+	const size_t page_size = getpagesize();
 
-    int dummy_var = 0;
-    int * ptr = &dummy_var;
+	int p, q;
 
-    // use mmap to allocate some int* array
-    int **p = (int **) mmap(0, 3072UL, PROT_READ|PROT_WRITE, MAP_PRIVATE|MAP_ANON, -1, 0);
+	void *mem = mmap(NULL, SIZE, PROT_READ | PROT_WRITE, MAP_PRIVATE | MAP_ANON, -1, 0);
 
-    // check that p is aligned to some 16B boundary so it can hold a capability
-    if ((__intcap_t)p & 0xF) {
-        return bad_alignment;
-    }
+	// check page alignment
+	if (!CHECK_ALIGNED(mem, page_size)) {
+		printf("mmap returned address which is not page-aligned: %#p\n", mem);
+		return 1;
+	}
 
-    p[0] = ptr;
-    *(p[0]) += 1;
+	memset(mem, 0, SIZE);
 
-    int **new_p = (int **) mremap(p, 3072UL, 16384UL, MREMAP_MAYMOVE);
+	int **ptr = (int **)mem;
+	ASSIGN_CAPS(ptr);
 
-    if (!__builtin_cheri_tag_get(new_p[0])) {
-        return capability_tag_cleared;
-    }
+	void *new = NULL;
+	if (move) {
+		void *g = mmap(NULL, SIZE * 2, PROT_READ | PROT_WRITE, MAP_PRIVATE | MAP_ANON, -1, 0);
+		memset(g, 0, SIZE * 2);
+		new = mremap(mem, SIZE, SIZE * 2, MREMAP_MAYMOVE | MREMAP_FIXED, g);
+	} else {
+		new = mremap(mem, SIZE, SIZE * 2, MREMAP_MAYMOVE);
+	}
 
-    if (new_p[0] != ptr ) {
-        return copied_value_not_equal;
-    }
+	size_t f;
 
-    if (*new_p[0] == 1) {
-        *(new_p[0]) += 1;
-    }
+	// check if moved
+	if (new != mem) {
+		printf("memory moved: %#p --> %#p\n", mem, new);
+		/* If memory is moved my mremap we won't be able to use old `mem` for tag comparison */
+		int **ref = (int **)malloc(SIZE);
+		memset(ref, 0, SIZE);
+		ASSIGN_CAPS(ref);
+		f = CHECK_MEM_TAGS(new, ref, SIZE);
+	} else {
+		printf("memory extended: %#p --> %#p\n", mem, new);
+		f = CHECK_MEM_TAGS(new, mem, SIZE);
+	}
 
-    if (*new_p[0] == 2) {
-        printf("mremap copied the capability correctly\n");
-    } else {
-        printf("Something weird went wrong when mremap copied the capability\n");
-        // in fact, I don't even know how we can reach this code, but with a bit of luck
-        // this will avoid some code to be optimised out.
-        return copied_value_not_equal;
-    }
+	if (f) {
+		printf("%s: mem tags are not equal at offset %zu\n", __func__, f - 1);
+		return 2;
+	}
+	return 0;
+}
 
-    return test_success;
+int main (int argc, char *argv[])
+{
+	switch (argv[1][0]) {
+	case '0': return test_remap(false); // extend
+	case '1': return test_remap(true); // move
+	}
+	printf("unknown test %c\n", argv[1][0]);
+	return -1;
 }

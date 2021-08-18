@@ -4,6 +4,8 @@
 #include <alloca.h>
 #include <stdio.h>
 
+#include "checkmacros.h"
+
 int x = 42;
 int y = 9;
 int z = 0;
@@ -18,45 +20,6 @@ static void *copy_bytes(void *dst, void *src, size_t n)
 	__asm__ volatile ("bl memcpy" : "=C"(res): : "cfp", "clr");
 	return res;
 }
-
-#define COMPARE_BYTES(_q, _p, n) ({ \
-	char *pb = (char *)_p;          \
-	char *qb = (char *)_q;          \
-	int u = 0;                      \
-	for(size_t k = 0; k < n; k++) { \
-		if (pb[k] != qb[k]) {       \
-			u = k + 1; break;       \
-		}                           \
-	}                               \
-	u;                              \
-})
-
-/* Get memory tag for aligned address */
-static inline uint64_t get_mem_tag(uint64_t address)
-{
-	uint64_t res;
-	__asm__ volatile (
-		"mrs      c1, DDC\n"
-		"scvalue  c1, c1, %1\n"
-		"ldr      c1, [c1]\n"
-		"gctag    %0, c1\n"
-		: "=r"(res) : "r"(address));
-	return res;
-}
-
-#define CHECK_MEM_TAGS(_q, _p, n) ({                \
-	int u = 0;                                      \
-	for(size_t k = 0; k < n && n >=16; k++) {       \
-		uintptr_t  x = (uintptr_t )_p + k;          \
-		uintptr_t  y = (uintptr_t )_q + k;          \
-		if ((x & 0xf) == 0 && (y & 0xf) == 0) {     \
-			if (get_mem_tag(x) != get_mem_tag(y)) { \
-				u = k + 1; break;                   \
-			}                                       \
-		}                                           \
-	}                                               \
-	u;                                              \
-})
 
 #define CHECK(res, dst, src, num) ({                          \
 	int u = 0;                                                \

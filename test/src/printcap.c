@@ -7,6 +7,13 @@ static int test_cap_null()
 	return n > 0 ? 0 : 2;
 }
 
+static int test_cap_null_derived()
+{
+	void *cap = __builtin_cheri_offset_set(NULL, 42);
+	int n = printf("%#p\n", cap);
+	return n > 0 ? 0 : 2;
+}
+
 static int test_csp()
 {
 	void *csp = __builtin_cheri_stack_get();
@@ -58,6 +65,7 @@ int main (int argc, char *argv[])
 	case '3': return test_cap_sealed();
 	case '4': return test_cap_sentry();
 	case '5': return test_cap_sealed_invalid();
+	case '6': return test_cap_null_derived();
 	}
 	return 1;
 }

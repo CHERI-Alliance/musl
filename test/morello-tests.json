@@ -1002,7 +1002,7 @@
         "name": "printcap-null",
         "args": ["0"],
         "stdout": [
-            "0x0 [,0x0-0xffffffffffffffff] (invalid)"
+            "0x0"
         ],
         "xrc": [0]
     },
@@ -1049,6 +1049,15 @@
         "args": ["5"],
         "stdout": [
             "0x[0-9a-f]+\\s\\[[rwxRWE]{1,6},0x[0-9a-f]+\\-0x[0-9a-f]+\\]\\s\\(invalid,sealed\\)"
+        ],
+        "xrc": [0]
+    },
+    {
+        "app": "${build}/printcap.exe",
+        "name": "printcap-null-derived",
+        "args": ["6"],
+        "stdout": [
+            "^0x[0-9a-f]+$"
         ],
         "xrc": [0]
     },

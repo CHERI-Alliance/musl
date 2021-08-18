@@ -423,6 +423,11 @@ static int fmt_fp(FILE *f, long double y, int w, int p, int fl, int t)
 static int fmt_cap(FILE *f, const void *cap) {
 	char buf[CAP_BUFFER_SIZE];
 	char *z = buf + sizeof(buf);
+	size_t tag = __builtin_cheri_tag_get(cap);
+	if (!tag && !__builtin_cheri_copy_from_high(cap)) {
+		// null-dervived capability
+		goto value;
+	}
 	/* Attributes */
 	size_t type = __builtin_cheri_type_get(cap);
 	if (type == 0x1) { // sentry
@@ -442,7 +447,7 @@ static int fmt_cap(FILE *f, const void *cap) {
 		*--z = 'e';
 		*--z = 's';
 	}
-	if (__builtin_cheri_tag_get(cap)) {
+	if (tag) {
 		if (type) {
 			*--z = '(';
 			*--z = ' ';
@@ -500,6 +505,7 @@ static int fmt_cap(FILE *f, const void *cap) {
 	*--z = '[';
 	*--z = ' ';
 	/* Value */
+value:
 	if ((uintmax_t)cap == 0) {
 		*--z = '0';
 	} else {

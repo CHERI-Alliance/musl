@@ -90,24 +90,20 @@ Link executable objects:
 
 .. code-block::
 
-   ${MORELLO_HOME}/bin/clang -fuse-ld=lld -Wl,--morello-c64-plt -o foo \
+   ${MORELLO_HOME}/bin/clang -fuse-ld=lld -march=morello+c64 -mabi=purecap -o foo \
        ${MUSL_HOME}/lib/crt1.o \
        ${MUSL_HOME}/lib/crti.o \
        ${MORELLO_HOME}/lib/clang/11.0.0/lib/linux/clang_rt.crtbegin-morello.o \
        hello.c.o \
+       ${MORELLO_HOME}/lib/clang/11.0.0/lib/linux/libclang_rt.builtins-morello.a \
        ${MORELLO_HOME}/lib/clang/11.0.0/lib/linux/clang_rt.crtend-morello.o \
        ${MUSL_HOME}/lib/crtn.o \
-       -nostdlib -L${MUSL_HOME}/lib -lc -lm -lgcc \
-       -static
+       -nostdlib -L${MUSL_HOME}/lib -lc -static
 
 The ``-nostdlib`` and ``-L${MUSL_HOME}/lib`` options are used to make sure the right
 libraries for ``-lc`` and ``-lm`` are used. The ``-static`` is necessary because only
 static linking is currently supported. See `Morello LLVM toolchain`_ for more details
-about the ``crtbegin`` and ``crtend`` objects.
-
-As a temporary workaround to address linker errors, it is possible to use ``-lgcc`` on
-the linker command line. As soon as Morello version of LLVM's compiler-rt is available
-there will be no need in this workaround.
+about the ``crtbegin`` and ``crtend`` objects and about ``libclang_rt.builtins-morello.a``.
 
 Cross-compiling
 ^^^^^^^^^^^^^^^
@@ -208,6 +204,58 @@ This includes the ``crtbegin`` and ``crtend`` objects which are provided by the 
    ${MORELLO_HOME}/bin/clang -march=morello+c64 -mabi=purecap \
        -c ${LLVM_PROJECT}/compiler-rt/lib/crt/crtend.c \
        -o ${MORELLO_HOME}/lib/clang/11.0.0/lib/linux/clang_rt.crtend-morello.o
+
+Compiling libclang_rt.builtins-morello.a
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Create ``toolchain.cmake`` file with the following contents:
+
+.. code-block::
+
+   set(CMAKE_SYSTEM_NAME Linux)
+   set(CMAKE_SYSTEM_PROCESSOR aarch64)
+   set(CMAKE_C_COMPILER_TARGET "aarch64-linux-gnueabi -march=morello+c64 -mabi=purecap
+
+This file is used in the following configure command for compiler-rt:
+
+.. code-block::
+
+   mkdir build-rt && cd build-rt
+
+   cmake -Wno-dev \
+      -DCMAKE_TOOLCHAIN_FILE=/path/to/toolchain.cmake \
+      -DCOMPILER_RT_DEFAULT_TARGET_TRIPLE=aarch64-linux-gnueabi \
+      -DCMAKE_C_FLAGS="-nostdinc -isystem /path/to/musl/include" \
+      -DLLVM_CONFIG_PATH=${MORELLO_HOME}/bin/llvm-config \
+      -DCMAKE_C_COMPILER=${MORELLO_HOME}/bin/clang \
+      -DCMAKE_C_COMPILER_WORKS=YES \
+      -DCMAKE_CXX_COMPILER=${MORELLO_HOME}/bin/clang++ \
+      -DCMAKE_CXX_COMPILER_WORKS=YES \
+      -DCMAKE_AR=${MORELLO_HOME}/bin/llvm-ar \
+      -DCMAKE_RANLIB=${MORELLO_HOME}/bin/llvm-ranlib \
+      -DCMAKE_NM=${MORELLO_HOME}/bin/llvm-nm \
+      -DCMAKE_LINKER=${MORELLO_HOME}/bin/ld.lld \
+      -DCMAKE_OBJDUMP=${MORELLO_HOME}/bin/llvm-objdump \
+      -DCMAKE_OBJCOPY=${MORELLO_HOME}/bin/llvm-objcopy \
+      -DCMAKE_EXE_LINKER_FLAGS="-fuse-ld=lld" \
+      -DCMAKE_SHARED_LINKER_FLAGS="-fuse-ld=lld" \
+      -DLLVM_TARGETS_TO_BUILD="AArch64" \
+      -DCMAKE_BUILD_TYPE=Release \
+      -DCMAKE_EXPORT_COMPILE_COMMANDS=ON \
+      -DBUILD_SHARED_LIBS=ON \
+      -DCMAKE_SKIP_BUILD_RPATH=OFF \
+      -DCMAKE_INSTALL_RPATH=\$ORIGIN/../lib \
+      -DCMAKE_BUILD_WITH_INSTALL_RPATH=ON \
+      -DLLVM_ENABLE_ASSERTIONS=ON \
+      -DCMAKE_INSTALL_PREFIX=${MORELLO_HOME}-rt \
+      -DCOMPILER_RT_BUILD_SANITIZERS=OFF \
+      -DCOMPILER_RT_BUILD_XRAY=OFF \
+      -DCMAKE_EXPORT_COMPILE_COMMANDS=ON \
+      ${LLVM_PROJECT}/compiler-rt
+
+   make clang_rt.builtins-aarch64
+
+   mv lib/linux/libclang_rt.builtins-aarch64.a ${MORELLO_HOME}/lib/clang/11.0.0/lib/linux/libclang_rt.builtins-morello.a
 
 Contributing
 ------------

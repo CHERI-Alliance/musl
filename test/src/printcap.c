@@ -33,7 +33,9 @@ static int test_cap_max()
 
 static int test_cap_sealed()
 {
-	void *fun = (void *)test_cap_sealed;
+	void *fun;
+	__asm__ volatile ("adrp    %0, test_cap_sealed" : "+C"(fun));
+	__asm__ volatile ("add     %0, %0, :lo12:test_cap_sealed" : "+C"(fun));
 	__asm__ volatile ("seal %0, %0, LPB" : "+C"(fun));
 	int n = printf("%#p\n", fun);
 	return n > 0 ? 0 : 2;
@@ -41,7 +43,9 @@ static int test_cap_sealed()
 
 static int test_cap_sentry()
 {
-	void *fun = (void *)test_cap_sentry;
+	void *fun;
+	__asm__ volatile ("adrp    %0, test_cap_sentry" : "+C"(fun));
+	__asm__ volatile ("add     %0, %0, :lo12:test_cap_sentry" : "+C"(fun));
 	__asm__ volatile ("seal %0, %0, RB" : "+C"(fun));
 	int n = printf("%#p\n", fun);
 	return n > 0 ? 0 : 2;

@@ -75,13 +75,13 @@ def run_process(command: list, stdin: str, timeout: int, _env: dict):
     return code, stdout, stderr
 
 
-def build_test(_tc: dict, cwd: str, _runner: str) -> tuple:
+def build_test(_tc: dict, cwd: str, _runner: str, _mie_extra_params: str) -> tuple:
     app: str = _tc.get('app').replace('${build}', cwd)
     params: list = _tc.get('params', [])
     args: list = _tc.get('args', [])
     _tname = _tc.get('name', '%s%s' % (basename(app).replace('.', '-'),
         ('-%s' % ('-'.join([str(t) for t in args]))) if args else ''))
-    _cmd: list = [_runner] + params + ['--', app] + args
+    _cmd: list = [_runner] + params + (_mie_extra_params.split(' ')) + ['--', app] + args
     _xrc: list = _tc.get('xrc', [0])
     _xout: list = _tc.get('stdout', [])
     _xerr: list = _tc.get('stderr', [])
@@ -176,6 +176,7 @@ if __name__ == '__main__':
         .add('suite', help='a name of the test suite for the JUnit XML test report') \
         .add('--only-test', help='name of the test to run', dest='thetest', default=None) \
         .add('--nproc', help='number of processes to run in parallel', dest='nproc', default='8') \
+        .add('--mie-args', help='params for emulator', dest='params', default='') \
         .parse()
 
     # folder -- current working directory
@@ -187,13 +188,14 @@ if __name__ == '__main__':
     # to allow running specific test
     thetest = options.get('thetest')
     nproc: int = options.get('nproc', fmt=lambda t: int(t))
+    mie_extra_params = options.get('params')
 
     with open(script, 'rt') as f:
         suite: list = json.load(f)
 
     def process(tc):
 
-        tname, cmd, xrc, xout, xerr, env = build_test(tc, folder, runner)
+        tname, cmd, xrc, xout, xerr, env = build_test(tc, folder, runner, mie_extra_params)
 
         if thetest and tname != thetest:
             # to allow running specific test

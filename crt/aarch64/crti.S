@@ -1,4 +1,4 @@
-#include "crt_regs.S"
+#include "crt_regs.inc"
 
 .section .init
 .global _init

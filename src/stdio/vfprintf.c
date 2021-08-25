@@ -101,7 +101,7 @@ static const unsigned char states[]['z'-'A'+1] = {
 
 union arg
 {
-	uintptr_t i;
+	uintmax_t i;
 	long double f;
 	void *p;
 };
@@ -124,7 +124,7 @@ static void pop_arg(union arg *arg, int type, va_list *ap)
 	break; case IMAX:	arg->i = va_arg(*ap, intmax_t);
 	break; case UMAX:	arg->i = va_arg(*ap, uintmax_t);
 	break; case PDIFF:	arg->i = va_arg(*ap, ptrdiff_t);
-	break; case UIPTR:	arg->i = (uintptr_t)va_arg(*ap, void *);
+	break; case UIPTR:	arg->p = (uintptr_t)va_arg(*ap, void *);
 	break; case DBL:	arg->f = va_arg(*ap, double);
 	break; case LDBL:	arg->f = va_arg(*ap, long double);
 	}
@@ -420,17 +420,23 @@ static int fmt_fp(FILE *f, long double y, int w, int p, int fl, int t)
 
 #ifdef MORELLO
 #define CAP_BUFFER_SIZE 90
+
+// todo: this won't be necessary after this has been fixed
+// https://github.com/CTSRD-CHERI/llvm-project/issues/566
+typedef long cheri_otype_t;
+#define CHERI_OTYPE_SENTRY ((cheri_otype_t)1)
+
 static int fmt_cap(FILE *f, const void *cap) {
 	char buf[CAP_BUFFER_SIZE];
 	char *z = buf + sizeof(buf);
-	size_t tag = __builtin_cheri_tag_get(cap);
-	if (!tag && !__builtin_cheri_copy_from_high(cap)) {
+	_Bool tag = __builtin_cheri_tag_get(cap);
+	if (!tag && __builtin_cheri_equal_exact(cap, (uintcap_t)(ptraddr_t)cap)) {
 		// null-dervived capability
 		goto value;
 	}
 	/* Attributes */
 	size_t type = __builtin_cheri_type_get(cap);
-	if (type == 0x1) { // sentry
+	if (type == CHERI_OTYPE_SENTRY) { // sentry
 		*--z = ')';
 		*--z = 'y';
 		*--z = 'r';

@@ -15,7 +15,6 @@ libc functionality. Current limitations include:
 * No support for dynamic linking and dynamic loading (only static linking to ``libc.a``
   is supported).
 * No support for networking.
-* No support for multi-threaded applications.
 * Only objects listed in ``arch/aarch64/morello.objects`` are ported to Morello.
 
 Kernel ABI

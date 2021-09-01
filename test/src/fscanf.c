@@ -18,6 +18,7 @@ int main (int argc, char *argv[])
     float small_float = 0.0f;
     double big_float = 0.0f;
     void * capability = &small_int; //filling it to later check parts being set to NULL
+    char* undefined_string = NULL;
 
     // inputs expected on stdin
     char* expected_words[4] = {"match","those","words","exactly"};
@@ -188,7 +189,22 @@ tag : %d\nperms : %lu\nlength : %lu",
             return 3;
         }
         break;
-        //TODO test the %m option when malloc is ported
+    case '9': // %m
+        if ((tmp=fscanf(stdin,"%ms",&undefined_string)) != 1) {
+            printf("fscanf returned %d\n",tmp);
+            return 1;
+        }
+        if (__builtin_cheri_tag_get(undefined_string) == 0 ||
+            __builtin_cheri_perms_get(undefined_string) == 0 ||
+            __builtin_cheri_length_get(undefined_string) < strlen(expected_words[0])+1 )
+        {
+            return 3;
+        }
+        if (strcmp(undefined_string,expected_words[0]) != 0) {
+            printf("expected : %s\nreceived : %s\n",expected_words[0],undefined_string);
+            return 2;
+        }
+        break;
     default:
         return 3;
     }

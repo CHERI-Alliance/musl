@@ -794,6 +794,13 @@
         "stdin": "F0E32F0E32F0E32A"
     },
     {
+        "app": "${build}/fscanf.exe",
+        "name": "fscanf-alloc",
+        "args": ["9"],
+        "xrc": [0],
+        "stdin": "match"
+    },
+    {
         "app":  "${build}/sscanf.exe",
         "name": "sscanf",
         "xrc": [0]

@@ -126,8 +126,6 @@ int vfscanf(FILE *restrict f, const char *restrict fmt, va_list ap)
 			s = 0;
 			alloc = !!dest;
 			p++;
-			//TODO temporarily disable 'm' until we have malloc support
-			goto input_fail;
 		} else {
 			alloc = 0;
 		}
@@ -227,12 +225,12 @@ int vfscanf(FILE *restrict f, const char *restrict fmt, va_list ap)
 			i = 0;
 			k = t=='c' ? width+1U : 31;
 			if (size == SIZE_l) {
-				/*if (alloc) { //TODO enable when malloc is ported
+				if (alloc) {
 					wcs = malloc(k*sizeof(wchar_t));
 					if (!wcs) goto alloc_fail;
-				} else {*/
+				} else {
 					wcs = dest;
-				//}
+				}
 				st = (mbstate_t){0};
 				while (scanset[(c=shgetc(f))+1]) {
 					switch (mbrtowc(&wc, &(char){c}, 1, &st)) {
@@ -242,15 +240,15 @@ int vfscanf(FILE *restrict f, const char *restrict fmt, va_list ap)
 						continue;
 					}
 					if (wcs) wcs[i++] = wc;
-					/*if (alloc && i==k) { //TODO enable when malloc is ported
+					if (alloc && i==k) {
 						k+=k+1;
 						wchar_t *tmp = realloc(wcs, k*sizeof(wchar_t));
 						if (!tmp) goto alloc_fail;
 						wcs = tmp;
-					}*/
+					}
 				}
 				if (!mbsinit(&st)) goto input_fail;
-			/*} else if (alloc) { //TODO enable when malloc is ported
+			} else if (alloc) {
 				s = malloc(k);
 				if (!s) goto alloc_fail;
 				while (scanset[(c=shgetc(f))+1]) {
@@ -261,7 +259,7 @@ int vfscanf(FILE *restrict f, const char *restrict fmt, va_list ap)
 						if (!tmp) goto alloc_fail;
 						s = tmp;
 					}
-				}*/
+				}
 			} else if ((s = dest)) {
 				while (scanset[(c=shgetc(f))+1])
 					s[i++] = c;
@@ -271,10 +269,10 @@ int vfscanf(FILE *restrict f, const char *restrict fmt, va_list ap)
 			shunget(f);
 			if (!shcnt(f)) goto match_fail;
 			if (t == 'c' && shcnt(f) != width) goto match_fail;
-			/*if (alloc) { //TODO enable when malloc is ported
+			if (alloc) {
 				if (size == SIZE_l) *(wchar_t **)dest = wcs;
 				else *(char **)dest = s;
-			}*/
+			}
 			if (t != 'c') {
 				if (wcs) wcs[i] = 0;
 				if (s) s[i] = 0;

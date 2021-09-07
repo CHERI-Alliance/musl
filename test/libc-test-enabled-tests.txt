@@ -3,6 +3,9 @@ src/functional/basename-static.exe
 src/functional/clock_gettime-static.exe
 src/functional/env.exe
 src/functional/pthread_cond.exe
+src/functional/pthread_mutex.exe
+src/functional/pthread_mutex_pi.exe
+src/functional/pthread_tsd.exe
 src/functional/random-static.exe
 src/functional/snprintf-static.exe
 src/functional/sscanf-static.exe

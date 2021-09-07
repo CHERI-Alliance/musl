@@ -159,6 +159,7 @@ obj/src/legacy/getdtablesize.o
 obj/src/legacy/getpagesize.o
 obj/src/legacy/isastream.o
 obj/src/legacy/ulimit.o
+obj/src/legacy/valloc.o
 obj/src/linux/arch_prctl.o
 obj/src/linux/fallocate.o
 obj/src/linux/flock.o
@@ -199,6 +200,7 @@ obj/src/malloc/mallocng/realloc.o
 obj/src/malloc/memalign.o
 obj/src/malloc/posix_memalign.o
 obj/src/malloc/realloc.o
+obj/src/malloc/reallocarray.o
 obj/src/malloc/replaced.o
 obj/src/math/aarch64/ceil.o
 obj/src/math/aarch64/ceilf.o

@@ -64,13 +64,14 @@ static void *__simple_malloc(size_t n)
 			brk += -brk & PAGE_SIZE-1;
 			cur = end = brk;
 		}
-#endif
 
-		if (brk && brk == end && req < SIZE_MAX-brk
+		if (brk == end && req < SIZE_MAX-brk
 		    && !traverses_stack_p(brk, brk+req)
 		    && __syscall(SYS_brk, brk+req)==brk+req) {
 			brk = end += req;
-		} else {
+		} else
+#endif
+		{
 			int new_area = 0;
 			req = n + PAGE_SIZE-1 & -PAGE_SIZE;
 			/* Only make a new area rather than individual mmap

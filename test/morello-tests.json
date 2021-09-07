@@ -1212,5 +1212,15 @@
             "123456.789"
         ],
         "xrc": [0]
+    },
+    {
+        "app": "${build}/valloc.exe",
+        "name": "valloc",
+        "xrc": [0]
+    },
+    {
+        "app": "${build}/reallocarray.exe",
+        "name": "reallocarray",
+        "xrc": [0]
     }
 ]

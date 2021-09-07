@@ -1,5 +1,6 @@
 #include <stdlib.h>
 #include <sys/mman.h>
+#include <unistd.h>
 
 #define MEM_PROT    PROT_READ | PROT_WRITE
 #define MEM_FLAGS   MAP_PRIVATE | MAP_ANONYMOUS
@@ -10,7 +11,8 @@ int main(int argc, char *argv[])
 	if (__builtin_cheri_tag_get(p) != 1ul) {
 		return 1;
 	}
-	if (__builtin_cheri_length_get(p) != 128ul) {
+	size_t expected_size = 128ul + (-128ul & (getpagesize() - 1));
+	if (__builtin_cheri_length_get(p) != expected_size) {
 		return 1;
 	}
 	p[0] = 0;

@@ -16,7 +16,7 @@ int getpagesize (void);
 #define SIZE 300
 
 #define CHECK_ALIGNED(cap, sz) ({ \
-	(__builtin_cheri_address_get(cap) & (sz - 1)) == 0;\
+	((__builtin_cheri_address_get(cap) & (sz - 1)) == 0) && ((__builtin_cheri_length_get(cap) % sz) == 0);\
 })
 
 int x, y, z;

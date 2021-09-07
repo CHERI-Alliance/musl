@@ -312,12 +312,7 @@ void *malloc(size_t n)
 
 	if (n >= MMAP_THRESHOLD) {
 		size_t needed = n + IB + GRP_SIZE;
-		size_t needed_aligned = needed + 4095 & -4096; // make it so we are allowed the full last (4k) page so we can read and write the footer info.
-		// we can't just keep the "needed" value and change malloc's logic too easily. The only data we keep about the size of the mmap'ed chunk is
-		// maplen, which is a multiple of 4kiB. Except... if we use the capability bound ? What if, instead of using maplen to get the *end in enframe
-		// we use the limit encoded in the capability ?
-		//TODO this is to be fixed in mmap/libshim, not in malloc. Mmap should return a cap whose bound is a multiple of pagesize.
-		void *p = mmap(0, needed_aligned, PROT_READ|PROT_WRITE,
+		void *p = mmap(0, needed, PROT_READ|PROT_WRITE,
 			MAP_PRIVATE|MAP_ANON, -1, 0);
 		if (p==MAP_FAILED) return 0;
 		wrlock();
@@ -325,7 +320,7 @@ void *malloc(size_t n)
 		g = alloc_meta();
 		if (!g) {
 			unlock();
-			munmap(p, needed_aligned);
+			munmap(p, needed);
 			return 0;
 		}
 		g->mem = p;
@@ -333,7 +328,7 @@ void *malloc(size_t n)
 		g->last_idx = 0;
 		g->freeable = 1;
 		g->sizeclass = 63;
-		g->maplen = needed_aligned/4096;
+		g->maplen = (needed+4095)/4096;
 		g->avail_mask = g->freed_mask = 0;
 		// use a global counter to cycle offset in
 		// individually-mmapped allocations.

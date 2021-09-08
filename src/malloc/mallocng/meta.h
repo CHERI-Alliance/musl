@@ -17,13 +17,21 @@ extern const uint16_t size_classes[];
 
 #ifdef MORELLO
 #define MAP_KEY_OFFSET UNIT
-#endif
+struct group {
+	struct meta *meta;
+	unsigned int capability_map_index;
+	unsigned char active_idx:5;
+	char pad[GRP_SIZE - sizeof(struct meta *) - sizeof(int)- 1];
+	unsigned char storage[];
+};
+#else
 struct group {
 	struct meta *meta;
 	unsigned char active_idx:5;
 	char pad[GRP_SIZE - sizeof(struct meta *) - 1];
 	unsigned char storage[];
 };
+#endif
 
 struct meta {
 	struct meta *prev, *next;
@@ -58,6 +66,11 @@ struct malloc_context {
 	size_t usage_by_class[48];
 	uint8_t unmap_seq[32], bounces[32];
 	uint8_t seq;
+#ifdef MORELLO
+	uint8_t map_count;
+	uint8_t allocated_map_table_count; // we allocate more as we need, up to 44
+	struct group** capability_map_meta_table[44]; // support at least an hexabyte of memory
+#endif
 	uintptr_t brk;
 };
 
@@ -333,7 +346,7 @@ void* restrict_capability(void* wide_capability, size_t user_size);
  * This is safe to call multiple time. If a mapping already exist, no new
  * one will be created
  */
-void map_narrow_to_wide(void* wide_capability);
+size_t map_narrow_to_wide(void* wide_capability);
 
 /*
  * This clear the map created by map_narrow_to_wide. This is required to

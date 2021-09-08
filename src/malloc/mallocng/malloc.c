@@ -46,14 +46,25 @@ struct meta *alloc_meta(void)
 {
 	struct meta *m;
 	unsigned char *p;
+	size_t pagesize = PGSZ;
 	if (!ctx.init_done) {
 #ifndef PAGESIZE
 		ctx.pagesize = get_page_size();
 #endif
 		ctx.secret = get_random_secret();
+#ifdef MORELLO
+		ctx.map_count = 1;
+		// Initialize the first table holding the capability to the groups
+		ctx.allocated_map_table_count = 0;
+		void* new_map_table = mmap(0,
+				pagesize << ctx.allocated_map_table_count,
+				PROT_READ|PROT_WRITE, MAP_PRIVATE|MAP_ANON, -1, 0);
+			if (new_map_table==MAP_FAILED) return 0;
+		ctx.capability_map_meta_table[ctx.allocated_map_table_count] = new_map_table;
+		ctx.allocated_map_table_count++;
+#endif
 		ctx.init_done = 1;
 	}
-	size_t pagesize = PGSZ;
 	if (pagesize < 4096) pagesize = 4096;
 	if ((m = dequeue_head(&ctx.free_meta_head))) return m;
 	if (!ctx.avail_meta_count) {

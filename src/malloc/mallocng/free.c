@@ -98,10 +98,12 @@ static struct mapinfo nontrivial_free(struct meta *g, int i)
 	return (struct mapinfo){ 0 };
 }
 
-void free(void *p)
+void free(void *user_p)
 {
-	if (!p) return;
+	if (!user_p) return;
 
+	void* p = get_wide_capability(user_p);
+	unmap_narrow_to_wide(p);
 	struct meta *g = get_meta(p);
 	int idx = get_slot_index(p);
 	size_t stride = get_stride(g);

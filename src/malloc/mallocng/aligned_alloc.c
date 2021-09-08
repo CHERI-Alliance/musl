@@ -21,17 +21,18 @@ void *aligned_alloc(size_t align, size_t len)
 
 	if (align <= UNIT) align = UNIT;
 
-	unsigned char *p = malloc(len + align - UNIT);
+	unsigned char *user_p = malloc(len + align - UNIT);
+	unsigned char *p = get_wide_capability(user_p);
 	struct meta *g = get_meta(p);
 	int idx = get_slot_index(p);
 	size_t stride = get_stride(g);
 	unsigned char *start = g->mem->storage + stride*idx;
 	unsigned char *end = g->mem->storage + stride*(idx+1) - IB;
-	size_t adj = -(uintptr_t)p & (align-1);
+	ptraddr_t adj = -(uintptr_t)p & (align-1);
 
 	if (!adj) {
 		set_size(p, end, len);
-		return p;
+		return user_p;
 	}
 	p += adj;
 	uint32_t offset = (size_t)(p-g->mem->storage)/UNIT;
@@ -53,5 +54,6 @@ void *aligned_alloc(size_t align, size_t len)
 	// allocations anyway.
 	*(uint16_t *)(start - 2) = (size_t)(p-start)/UNIT;
 	start[-3] = 7<<5;
-	return p;
+	user_p = restrict_capability(p,len);
+	return user_p;
 }

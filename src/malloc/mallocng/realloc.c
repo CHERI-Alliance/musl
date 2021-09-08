@@ -4,11 +4,12 @@
 #include <string.h>
 #include "meta.h"
 
-void *realloc(void *p, size_t n)
+void *realloc(void *user_p, size_t n)
 {
-	if (!p) return malloc(n);
+	if (!user_p) return malloc(n);
 	if (size_overflows(n)) return 0;
 
+	void* p = get_wide_capability(user_p);
 	struct meta *g = get_meta(p);
 	int idx = get_slot_index(p);
 	size_t stride = get_stride(g);
@@ -22,7 +23,7 @@ void *realloc(void *p, size_t n)
 	if (n <= avail_size && n<MMAP_THRESHOLD
 	    && size_to_class(n)+1 >= g->sizeclass) {
 		set_size(p, end, n);
-		return p;
+		return restrict_capability(p,n);
 	}
 
 	// use mremap if old and new size are both mmap-worthy
@@ -30,6 +31,7 @@ void *realloc(void *p, size_t n)
 		assert(g->sizeclass==63);
 		size_t base = (unsigned char *)p-start;
 		size_t needed = (n + base + GRP_SIZE + IB + 4095) & -4096;
+		unmap_narrow_to_wide(p);
 		new = g->maplen*4096UL == needed ? g->mem :
 			mremap(g->mem, g->maplen*4096UL, needed, MREMAP_MAYMOVE);
 		if (new!=MAP_FAILED) {
@@ -39,13 +41,15 @@ void *realloc(void *p, size_t n)
 			end = g->mem->storage + (needed - GRP_SIZE) - IB;
 			*end = 0;
 			set_size(p, end, n);
-			return p;
+			map_narrow_to_wide(p);
+			user_p = restrict_capability(p,n);
+			return user_p;
 		}
 	}
 
 	new = malloc(n);
 	if (!new) return 0;
-	memcpy(new, p, n < old_size ? n : old_size);
-	free(p);
+	memcpy(new, user_p, n < old_size ? n : old_size);
+	free(user_p);
 	return new;
 }

@@ -381,12 +381,16 @@ void *malloc(size_t n)
 success:
 	ctr = ctx.mmap_counter;
 	unlock();
-	return enframe(g, idx, n, ctr); //TODO we will have to deal with the bound of this capability. Ideally we want to
+	void* p = enframe(g, idx, n, ctr); //TODO we will have to deal with the bound of this capability. Ideally we want to
 	// restrict it so the user can't access the metadata or footer, but if we do so, will we be able to free or realloc ?
+	map_narrow_to_wide(p);
+	void* user_p = restrict_capability(p,n);
+	return user_p;
 }
 
-int is_allzero(void *p)
+int is_allzero(void *user_p)
 {
+	void* p = get_wide_capability(user_p);
 	struct meta *g = get_meta(p);
 	return g->sizeclass >= 48 ||
 		get_stride(g) < UNIT*size_classes[g->sizeclass];

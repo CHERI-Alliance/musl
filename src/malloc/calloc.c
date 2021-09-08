@@ -37,9 +37,9 @@ void *calloc(size_t m, size_t n)
 		return 0;
 	}
 	n *= m;
-	void *p = malloc(n);
-	if (!p || (!__malloc_replaced && __malloc_allzerop(p)))
-		return p;
-	n = mal0_clear(p, n);
-	return memset(p, 0, n);
+	void *user_p = malloc(n);
+	if (!user_p || (!__malloc_replaced && __malloc_allzerop(user_p)))
+		return user_p;
+	n = mal0_clear(user_p, n);
+	return memset(user_p, 0, n);
 }

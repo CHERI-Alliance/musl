@@ -19,6 +19,7 @@ int test_mkostemp();
 int test_mkstemps();
 int test_mkostemps();
 int test_mkdtemp();
+int test_tmpfile();
 
 int main(int argc, char **argv) {
     if (argc < 2) return -1;
@@ -41,6 +42,8 @@ int main(int argc, char **argv) {
             return test_mkostemps();
         case '5': // temp-mkdtemp
             return test_mkdtemp();
+        case '6': // temp-tmpfile
+            return test_tmpfile();
     }
 
     return -1;
@@ -171,6 +174,19 @@ int test_mkdtemp() {
         rmdir(dirname);
 
         if (!stat(dirname, &statbuf)) return 3;
+    }
+
+    return 0;
+}
+
+int test_tmpfile() {
+    for (int i = 0; i < NUMITERS; i++) {
+        FILE *file;
+
+        file = tmpfile();
+
+        if (!file) return 1;
+        if (fclose(file)) return 2;
     }
 
     return 0;

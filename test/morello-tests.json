@@ -865,6 +865,12 @@
         "xrc": [0]
     },
     {
+        "app": "${build}/temp.exe",
+        "name": "temp-tmpfile",
+        "args": ["6"],
+        "xrc": [0]
+    },
+    {
         "app": "${build}/stat.exe",
         "name": "stat",
         "args": ["0"],

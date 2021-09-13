@@ -1290,5 +1290,47 @@
         "name": "evct_fcvt_gcvt",
         "args": ["1"],
         "xrc": [0]
+    },
+    {
+        "app": "${build}/malloc_bounds.exe",
+        "name": "malloc_bounds_small",
+        "args": ["0"],
+        "xrc": [0]
+    },
+    {
+        "app": "${build}/malloc_bounds.exe",
+        "name": "malloc_bounds_large",
+        "args": ["1"],
+        "xrc": [0]
+    },
+    {
+        "app": "${build}/malloc_bounds.exe",
+        "name": "aligned_malloc_bounds_small",
+        "args": ["2"],
+        "xrc": [0]
+    },
+    {
+        "app": "${build}/malloc_bounds.exe",
+        "name": "aligned_malloc_bounds_large",
+        "args": ["3"],
+        "xrc": [0]
+    },
+    {
+        "app": "${build}/malloc_bounds.exe",
+        "name": "realloc_bounds_small",
+        "args": ["4"],
+        "xrc": [0]
+    },
+    {
+        "app": "${build}/malloc_bounds.exe",
+        "name": "realloc_bounds_large",
+        "args": ["5"],
+        "xrc": [0]
+    },
+    {
+        "app": "${build}/malloc_bounds.exe",
+        "name": "realloc_bounds_change_regime",
+        "args": ["6"],
+        "xrc": [0]
     }
 ]

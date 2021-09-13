@@ -25,6 +25,7 @@ struct group {
 	unsigned char storage[];
 };
 #else
+#define MAP_KEY_OFFSET 0
 struct group {
 	struct meta *meta;
 	unsigned char active_idx:5;
@@ -138,6 +139,10 @@ static inline uint32_t activate_group(struct meta *m)
 	return m->avail_mask = mask & act;
 }
 
+#ifdef MORELLO
+size_t get_morello_alignment(size_t len);
+#endif
+
 static inline int get_slot_index(const unsigned char *p)
 {
 	return p[-3] & 31;
@@ -216,18 +221,21 @@ static inline size_t get_stride(const struct meta *g)
 
 static inline void set_size(unsigned char *p, unsigned char *end, size_t n)
 {
-	int reserved = end-p-n;
-	if (reserved) end[-reserved] = 0;
-	if (reserved >= 5) {
-		*(uint32_t *)(end-4) = reserved;
-		end[-5] = 0;
-		reserved = 5;
+	int reserved = end-p-n; // reserved is what "slack" we are left after accounting the offset ?
+	if (reserved) end[-reserved] = 0; //and so we force writting a 0 after the last byte the user has requested
+	if (reserved >= 5) { //if reserved is too big (we only have 3 bits to represent it at p-3)
+		*(uint32_t *)(end-4) = reserved; // then we store it near the end
+		end[-5] = 0; // write the null byte
+		reserved = 5; // and set reserved to the special value to indicate one must read the field at end-4
 	}
 	p[-3] = (p[-3]&31) + (reserved<<5);
 }
 
 static inline void *enframe(struct meta *g, int idx, size_t n, int ctr)
 {
+	#ifdef MORELLO
+	n += MAP_KEY_OFFSET;
+	#endif
 	size_t stride = get_stride(g);
 	size_t slack = (stride-IB-n)/UNIT;
 	unsigned char *p = g->mem->storage + stride*idx;
@@ -236,7 +244,16 @@ static inline void *enframe(struct meta *g, int idx, size_t n, int ctr)
 	// reuse, facilitate trapping double-free.
 	// TODO As far as I can tell, this offset thing is only usefull to reduce address reuse. I can't find
 	// anything that use it. I can probably use that to point to the user pointer *after* bound alignment
+	size_t required_alignment = UNIT;
+#ifdef MORELLO
+	required_alignment = get_morello_alignment(n);
+	size_t align_multiplier = (required_alignment/UNIT) ? (required_alignment/UNIT) : 1;
+	int off = (p[-3] ? *(uint16_t *)(p-2) + align_multiplier : ctr) & 255;
+	off &= ~(align_multiplier-1); //round down to alignment multiple
+	off += (__builtin_align_up(p,required_alignment) - p) / UNIT; //round up p to align it
+#else
 	int off = (p[-3] ? *(uint16_t *)(p-2) + 1 : ctr) & 255;
+#endif
 	assert(!p[-4]);
 	if (off > slack) {
 		size_t m = slack;
@@ -245,6 +262,7 @@ static inline void *enframe(struct meta *g, int idx, size_t n, int ctr)
 		if (off > slack) off -= slack+1;
 		assert(off <= slack);
 	}
+	assert((uintptr_t)(p+UNIT*off)%required_alignment == 0); //make sure the offsetted p is aligned correctly
 	if (off) {
 		// store offset in unused header at offset zero
 		// if enframing at non-zero offset.

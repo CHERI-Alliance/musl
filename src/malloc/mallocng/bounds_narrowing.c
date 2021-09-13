@@ -13,6 +13,12 @@
 
 //TODO investigate thread safety
 
+size_t get_morello_alignment(size_t len) {
+	size_t res = ~__builtin_cheri_representable_alignment_mask(len) + 1;
+	res = res < UNIT ? UNIT : res;
+	return res;
+}
+
 void** get_cap_from_index(size_t global_index)
 {
 	if(!ctx.init_done) {
@@ -52,7 +58,7 @@ void** get_cap_from_index(size_t global_index)
 void* get_wide_capability(void* user_capability)
 {
 	//TODO placeholder
-	return user_capability;
+	return (unsigned char*)user_capability - MAP_KEY_OFFSET;
 }
 
 /*
@@ -70,7 +76,7 @@ we strip the vmmap tag from returned pointers to prevent
 the protections or mappings of the underlying memory from being changed by the process
 */
 	//*((unsigned int*) ((char*)user_capability - MAP_KEY_OFFSET)) = group->capability_map_index;
-	return wide_capability;
+	return (unsigned char*)wide_capability + MAP_KEY_OFFSET;
 }
 
 /*
@@ -147,7 +153,7 @@ void unmap_narrow_to_wide(void* wide_capability)
 				size_t stride = get_stride(moving_group->meta);
 				unsigned char *start = moving_group->storage + stride*idx;
 				if (*(start-3) == 0b11100000) {
-					unsigned int offset = (*(uint16_t *)(start-2)) * UNIT - MAP_KEY_OFFSET;
+					unsigned int offset = (*(uint16_t *)(start-2)) * UNIT;
 					//TODO enable this when we have the aligned user cap
 					//*(start + offset) = hole_index;
 				}

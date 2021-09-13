@@ -314,15 +314,23 @@ static int alloc_slot(int sc, size_t req)
 
 void *malloc(size_t n)
 {
-	if (size_overflows(n)) return 0;
+	size_t morello_aligned_n = n;
+#ifdef MORELLO
+	morello_aligned_n += MAP_KEY_OFFSET;
+	// Make sure that when the bounds are narrowed, the user don't have access to the next slot
+	morello_aligned_n = __builtin_cheri_round_representable_length(morello_aligned_n);
+	size_t alignment_requirement = get_morello_alignment(morello_aligned_n) - UNIT;
+	morello_aligned_n += alignment_requirement;
+#endif
+	if (size_overflows(morello_aligned_n)) return 0;
 	struct meta *g;
 	uint32_t mask, first;
 	int sc;
 	int idx;
 	int ctr;
 
-	if (n >= MMAP_THRESHOLD) {
-		size_t needed = n + IB + GRP_SIZE;
+	if (morello_aligned_n >= MMAP_THRESHOLD) {
+		size_t needed = morello_aligned_n + IB + GRP_SIZE;
 		void *p = mmap(0, needed, PROT_READ|PROT_WRITE,
 			MAP_PRIVATE|MAP_ANON, -1, 0);
 		if (p==MAP_FAILED) return 0;
@@ -348,7 +356,7 @@ void *malloc(size_t n)
 		goto success;
 	}
 
-	sc = size_to_class(n);
+	sc = size_to_class(morello_aligned_n);
 
 	rdlock();
 	g = ctx.active[sc];
@@ -382,7 +390,7 @@ void *malloc(size_t n)
 	}
 	upgradelock();
 
-	idx = alloc_slot(sc, n);
+	idx = alloc_slot(sc, morello_aligned_n);
 	if (idx < 0) {
 		unlock();
 		return 0;

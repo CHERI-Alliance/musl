@@ -28,10 +28,12 @@ void *aligned_alloc(size_t align, size_t len)
 	size_t stride = get_stride(g);
 	unsigned char *start = g->mem->storage + stride*idx;
 	unsigned char *end = g->mem->storage + stride*(idx+1) - IB;
-	ptraddr_t adj = -(uintptr_t)p & (align-1);
+
+	ptraddr_t adj = -((uintptr_t)p + MAP_KEY_OFFSET) & (align-1);
+
 
 	if (!adj) {
-		set_size(p, end, len);
+		set_size(p, end, len + MAP_KEY_OFFSET);
 		return user_p;
 	}
 	p += adj;
@@ -47,7 +49,7 @@ void *aligned_alloc(size_t align, size_t len)
 		p[-4] = 1;
 	}
 	p[-3] = idx;
-	set_size(p, end, len);
+	set_size(p, end, len + MAP_KEY_OFFSET);
 	// store offset to aligned enframing. this facilitates cycling
 	// offset and also iteration of heap for debugging/measurement.
 	// for extreme overalignment it won't fit but these are classless

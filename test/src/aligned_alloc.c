@@ -38,6 +38,7 @@ int main(int argc, char **argv) {
     void * alligned_memory = aligned_alloc(alignement,4*alignement);
     testptr_size(&alligned_memory,4*alignement);
     if (((__intcap_t)alligned_memory % alignement) != 0) {
+        printf("p : %p\n",alligned_memory);
         return bad_alignment;
     }
     //TODO: for now aligned_malloc return a wide bound that spans more than the alloc-ed memory

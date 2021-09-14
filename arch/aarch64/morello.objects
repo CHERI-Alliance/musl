@@ -990,3 +990,4 @@ obj/src/unistd/unlinkat.o
 obj/src/unistd/usleep.o
 obj/src/unistd/write.o
 obj/src/unistd/writev.o
+obj/src/unistd/_exit.o

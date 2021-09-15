@@ -1233,5 +1233,26 @@
         "app": "${build}/pty.exe",
         "name": "pty",
         "xrc": [0]
+    },
+    {
+        "app": "${build}/stdio_misc.exe",
+        "name": "perror",
+        "args": ["0"],
+        "xrc": [0],
+        "stderr": [
+            "Error: No such file or directory"
+        ]
+    },
+    {
+        "app": "${build}/stdio_misc.exe",
+        "name": "ctermid",
+        "args": ["1"],
+        "xrc": [0]
+    },
+    {
+        "app": "${build}/stdio_misc.exe",
+        "name": "fopencookie",
+        "args": ["2"],
+        "xrc": [0]
     }
 ]

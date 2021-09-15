@@ -940,6 +940,7 @@ obj/src/time/__tm_to_secs.o
 obj/src/time/__tz.o
 obj/src/time/__year_to_secs.o
 obj/src/unistd/close.o
+obj/src/unistd/ctermid.o
 obj/src/unistd/dup.o
 obj/src/unistd/dup2.o
 obj/src/unistd/dup3.o

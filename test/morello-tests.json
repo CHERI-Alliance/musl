@@ -1228,5 +1228,10 @@
         "app": "${build}/reallocarray.exe",
         "name": "reallocarray",
         "xrc": [0]
+    },
+    {
+        "app": "${build}/pty.exe",
+        "name": "pty",
+        "xrc": [0]
     }
 ]

@@ -440,8 +440,11 @@ obj/src/misc/getauxptr.o
 obj/src/misc/getauxval.o
 obj/src/misc/gethostid.o
 obj/src/misc/getpriority.o
+obj/src/misc/ioctl.o
 obj/src/misc/issetugid.o
 obj/src/misc/lockf.o
+obj/src/misc/ptsname.o
+obj/src/misc/pty.o
 obj/src/misc/setpriority.o
 obj/src/misc/syscall.o
 obj/src/mman/mlockall.o

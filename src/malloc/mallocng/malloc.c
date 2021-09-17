@@ -400,8 +400,7 @@ void *malloc(size_t n)
 success:
 	ctr = ctx.mmap_counter;
 	unlock();
-	void* p = enframe(g, idx, n, ctr); //TODO we will have to deal with the bound of this capability. Ideally we want to
-	// restrict it so the user can't access the metadata or footer, but if we do so, will we be able to free or realloc ?
+	void* p = enframe(g, idx, n, ctr);
 	map_narrow_to_wide(p);
 	void* user_p = restrict_capability(p,n);
 	return user_p;

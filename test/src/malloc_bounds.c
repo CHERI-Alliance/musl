@@ -29,8 +29,9 @@ void testptr_size(void* ptr,size_t alloc_size, size_t alignement){
     if((perm & minimal_perm) != minimal_perm){
         exit(incorrect_permission);
     }
-    //size_t morello_size = __builtin_cheri_round_representable_length(alloc_size);
-    if(__builtin_cheri_length_get(ptr) < alloc_size){ //TODO use exact bounds when the narrowing is completed
+    int key_map_offset = sizeof(void*);
+    size_t morello_size = __builtin_cheri_round_representable_length(alloc_size + key_map_offset);
+    if(__builtin_cheri_length_get(ptr) != morello_size){
         exit(incorrect_bound);
     }
     if(alignement && (uintcap_t)ptr % alignement != 0) {

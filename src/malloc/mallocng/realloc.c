@@ -67,7 +67,6 @@ void *realloc(void *user_p, size_t n)
 		}
 	}
 */
-
 	new = malloc(n);
 	if (!new) return 0;
 	memcpy(new, user_p, n < old_size ? n : old_size);

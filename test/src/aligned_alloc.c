@@ -10,14 +10,15 @@
 #define bad_alignment 6
 #define bad_test_number 10
 
-void testptr_size(void** ptr,long long min_size){
-    if(*ptr == NULL){
+void testptr_size(void* ptr, size_t alloc_size)
+{
+    if(ptr == NULL){
         exit(null_capability);
     }
-    if(!__builtin_cheri_tag_get(*ptr)){
+    if(!__builtin_cheri_tag_get(ptr)){
         exit(capability_tag_cleared);
     }
-    unsigned long perm = __builtin_cheri_perms_get(*ptr);
+    unsigned long perm = __builtin_cheri_perms_get(ptr);
     unsigned long minimal_perm =
         __CHERI_CAP_PERMISSION_PERMIT_LOAD__ |
         __CHERI_CAP_PERMISSION_PERMIT_STORE__ |
@@ -28,7 +29,9 @@ void testptr_size(void** ptr,long long min_size){
         exit(incorrect_permission);
     }
 
-    if(__builtin_cheri_length_get(*ptr) < min_size){
+    int key_map_offset = sizeof(void*);
+    size_t morello_size = __builtin_cheri_round_representable_length(alloc_size + key_map_offset);
+    if(__builtin_cheri_length_get(ptr) != morello_size){
         exit(incorrect_bound);
     }
 }
@@ -36,13 +39,9 @@ void testptr_size(void** ptr,long long min_size){
 int main(int argc, char **argv) {
     size_t alignement = 64; // must be a power of 2
     void * alligned_memory = aligned_alloc(alignement,4*alignement);
-    testptr_size(&alligned_memory,4*alignement);
+    testptr_size(alligned_memory,4*alignement);
     if (((__intcap_t)alligned_memory % alignement) != 0) {
-        printf("p : %p\n",alligned_memory);
         return bad_alignment;
     }
-    //TODO: for now aligned_malloc return a wide bound that spans more than the alloc-ed memory
-    // eventually, we want to test that the bounds returned are narrowed both when the requested
-    // length is representable and when the requested length is not representable
     return test_success;
 }

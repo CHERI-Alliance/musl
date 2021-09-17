@@ -1,14 +1,25 @@
 #include <stdlib.h>
 #include <stdio.h>
 
-void testptr_size(void** ptr,long long min_size){
-    if(*ptr == NULL){
-        exit(1);
+#define test_success 0
+#define unexpected_value 1
+#define null_capability 2
+#define capability_tag_cleared 3
+#define incorrect_permission 4
+#define incorrect_bound 5
+#define bad_alignment 6
+#define bad_morello_alignment 7
+#define bad_test_number 10
+
+void testptr_size(void* ptr, size_t alloc_size)
+{
+    if(ptr == NULL){
+        exit(null_capability);
     }
-    if(!__builtin_cheri_tag_get(*ptr)){
-        exit(2);
+    if(!__builtin_cheri_tag_get(ptr)){
+        exit(capability_tag_cleared);
     }
-    unsigned long perm = __builtin_cheri_perms_get(*ptr);
+    unsigned long perm = __builtin_cheri_perms_get(ptr);
     unsigned long minimal_perm =
         __CHERI_CAP_PERMISSION_PERMIT_LOAD__ |
         __CHERI_CAP_PERMISSION_PERMIT_STORE__ |
@@ -16,15 +27,17 @@ void testptr_size(void** ptr,long long min_size){
         __CHERI_CAP_PERMISSION_PERMIT_LOAD_CAPABILITY__;
 
     if((perm & minimal_perm) != minimal_perm){
-        exit(3);
+        exit(incorrect_permission);
     }
 
-    if(min_size != -1 && __builtin_cheri_length_get(*ptr) < min_size){
-        exit(4);
+    int key_map_offset = sizeof(void*);
+    size_t morello_size = __builtin_cheri_round_representable_length(alloc_size + key_map_offset);
+    if(alloc_size != -1 && __builtin_cheri_length_get(ptr) != morello_size){
+        exit(incorrect_bound);
     }
 }
 
-void testptr(void** ptr){
+void testptr(void* ptr){
     testptr_size(ptr,-1);
 }
 
@@ -38,16 +51,16 @@ int main(int argc, char **argv) {
         // test allocating seveal slot of the same size
         all_ptr[0] = malloc(150);
         all_ptr[1] = malloc(150);
-        testptr_size(&(all_ptr[0]),150);
-        testptr(&(all_ptr[1]));
+        testptr_size(all_ptr[0],150);
+        testptr(all_ptr[1]);
 
         // test the limit of a slot's size
         all_ptr[2] = malloc(511);
-        testptr(&(all_ptr[2]));
+        testptr(all_ptr[2]);
 
         // test a dedicated mmap
         all_ptr[3] = malloc(32768);
-        testptr(&(all_ptr[3]));
+        testptr(all_ptr[3]);
 
         break;
     case '1'://basic test for free
@@ -88,7 +101,7 @@ int main(int argc, char **argv) {
                 char expected = (j%2 ? j : -j); //I have to put this value in a variable. Making a direct comparison fails.
                 if (val != expected){
                     printf("Some byte seems corrupted. Value : [%hhd, %#02X], j : %d, expected : %d\n", val, val, j, expected);
-                    return 2;
+                    return unexpected_value;
                 }
             }
         }
@@ -104,7 +117,7 @@ int main(int argc, char **argv) {
                 char expected = (j%2 ? j : -j);
                 if (val != expected){
                     printf("Some byte seems corrupted after some free(). Value : [%hhd, %#02X], j : %d, expected : %d\n", val, val, j, expected);
-                    return 3;
+                    return unexpected_value;
                 }
             }
         }
@@ -125,7 +138,7 @@ int main(int argc, char **argv) {
         //and not be able to mess with the metadata, not with other adjacent slots. Currently this narrow bound mechanism is not implemented
         //because free need the wide capability to work. Some mechanism have to be added to find the wide capability from the narrowed one.
     default:
-        return 1;
+        return bad_test_number;
     }
-    return 0;
+    return test_success;
 }

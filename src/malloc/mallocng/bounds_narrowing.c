@@ -13,7 +13,8 @@
 
 //TODO investigate thread safety
 
-size_t get_morello_alignment(size_t len) {
+size_t get_morello_alignment(size_t len)
+{
 	size_t res = ~__builtin_cheri_representable_alignment_mask(len) + 1;
 	res = res < UNIT ? UNIT : res;
 	return res;
@@ -57,8 +58,27 @@ void** get_cap_from_index(size_t global_index)
  */
 void* get_wide_capability(void* user_capability)
 {
-	//TODO placeholder
-	return (unsigned char*)user_capability - MAP_KEY_OFFSET;
+	unsigned int index = *((unsigned int*) ((unsigned char*)user_capability - MAP_KEY_OFFSET));
+
+	void* tentative_group_capability = *get_cap_from_index(index);
+	//Check tag & bounds
+	tentative_group_capability;
+
+	// Now we have to make sure this group capability match the one the user gave us
+	// this means the user's capability is in this group.
+
+	//TODO more test : test if it actually match a slot's (offsetted) start
+	//TODO also test if the user's bounds or permissions have been further narrowed (ie : not the original returned by malloc)
+	// https://github.com/capablevms/cheri_misidioms/blob/master/cheri_misidioms.ltx#L88
+
+	unsigned int offset = (void*)((unsigned char*)user_capability - MAP_KEY_OFFSET) - tentative_group_capability;
+
+	// return a capability with the bounds allowing the full group, but with the address
+	// being the same as the user's provided one so that it looks like we just expanded the bounds
+	void* wide_capability = tentative_group_capability + offset;
+	//Check that this capability is valid, so the user pointer is in the group range
+	*wide_capability;
+	return wide_capability;
 }
 
 /*
@@ -75,8 +95,13 @@ P 21-22 : https://www.cl.cam.ac.uk/techreports/UCAM-CL-TR-932.pdf
 we strip the vmmap tag from returned pointers to prevent
 the protections or mappings of the underlying memory from being changed by the process
 */
-	//*((unsigned int*) ((char*)user_capability - MAP_KEY_OFFSET)) = group->capability_map_index;
-	return (unsigned char*)wide_capability + MAP_KEY_OFFSET;
+	struct meta *meta = get_meta(wide_capability);
+	*((unsigned int*) wide_capability) = meta->mem->capability_map_index;
+
+	//We expect enough memory to have been reserved so that the upper bound won't hit anything
+	void* user_p = __builtin_cheri_bounds_set(wide_capability, user_size + MAP_KEY_OFFSET);
+
+	return (unsigned char*)user_p + MAP_KEY_OFFSET;
 }
 
 /*
@@ -152,11 +177,11 @@ void unmap_narrow_to_wide(void* wide_capability)
 			for (int idx = 0; idx <= moving_group->meta->last_idx; idx++) {
 				size_t stride = get_stride(moving_group->meta);
 				unsigned char *start = moving_group->storage + stride*idx;
+				unsigned int offset = 0;
 				if (*(start-3) == 0b11100000) {
-					unsigned int offset = (*(uint16_t *)(start-2)) * UNIT;
-					//TODO enable this when we have the aligned user cap
-					//*(start + offset) = hole_index;
+					offset = (*(uint16_t *)(start-2)) * UNIT;
 				}
+				*(start + offset) = hole_index;
 			}
 		}
 

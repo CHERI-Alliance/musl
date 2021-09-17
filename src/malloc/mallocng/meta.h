@@ -233,11 +233,10 @@ static inline void set_size(unsigned char *p, unsigned char *end, size_t n)
 
 static inline void *enframe(struct meta *g, int idx, size_t n, int ctr)
 {
-	#ifdef MORELLO
-	n += MAP_KEY_OFFSET;
-	#endif
+	size_t offsetted_n = n + MAP_KEY_OFFSET;
+
 	size_t stride = get_stride(g);
-	size_t slack = (stride-IB-n)/UNIT;
+	size_t slack = (stride-IB-offsetted_n)/UNIT;
 	unsigned char *p = g->mem->storage + stride*idx;
 	unsigned char *end = p+stride-IB;
 	// cycle offset within slot to increase interval to address
@@ -246,7 +245,7 @@ static inline void *enframe(struct meta *g, int idx, size_t n, int ctr)
 	// anything that use it. I can probably use that to point to the user pointer *after* bound alignment
 	size_t required_alignment = UNIT;
 #ifdef MORELLO
-	required_alignment = get_morello_alignment(n);
+	required_alignment = get_morello_alignment(offsetted_n);
 	size_t align_multiplier = (required_alignment/UNIT) ? (required_alignment/UNIT) : 1;
 	int off = (p[-3] ? *(uint16_t *)(p-2) + align_multiplier : ctr) & 255;
 	off &= ~(align_multiplier-1); //round down to alignment multiple
@@ -275,7 +274,7 @@ static inline void *enframe(struct meta *g, int idx, size_t n, int ctr)
 	}
 	*(uint16_t *)(p-2) = (size_t)(p-g->mem->storage)/UNIT;
 	p[-3] = idx;
-	set_size(p, end, n);
+	set_size(p, end, offsetted_n);
 	return p;
 }
 

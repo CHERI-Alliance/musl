@@ -1254,5 +1254,23 @@
         "name": "fopencookie",
         "args": ["2"],
         "xrc": [0]
+    },
+    {
+        "app": "${build}/stdlib_misc.exe",
+        "name": "setkey_encrypt",
+        "args": ["0"],
+        "xrc": [0]
+    },
+    {
+        "app": "${build}/stdlib_misc.exe",
+        "name": "realpath",
+        "args": ["1"],
+        "xrc": [0]
+    },
+    {
+        "app": "${build}/stdlib_misc.exe",
+        "name": "system",
+        "args": ["2"],
+        "xrc": [0]
     }
 ]

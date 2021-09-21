@@ -75,6 +75,7 @@ obj/src/conf/fpathconf.o
 obj/src/conf/legacy.o
 obj/src/conf/sysconf.o
 obj/src/crypt/crypt_des.o
+obj/src/crypt/encrypt.o
 obj/src/ctype/isalnum.o
 obj/src/ctype/isalpha.o
 obj/src/ctype/isascii.o
@@ -440,11 +441,13 @@ obj/src/misc/getauxptr.o
 obj/src/misc/getauxval.o
 obj/src/misc/gethostid.o
 obj/src/misc/getpriority.o
+obj/src/misc/getsubopt.o
 obj/src/misc/ioctl.o
 obj/src/misc/issetugid.o
 obj/src/misc/lockf.o
 obj/src/misc/ptsname.o
 obj/src/misc/pty.o
+obj/src/misc/realpath.o
 obj/src/misc/setpriority.o
 obj/src/misc/syscall.o
 obj/src/mman/mlockall.o

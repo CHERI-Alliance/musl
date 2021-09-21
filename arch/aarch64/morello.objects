@@ -697,9 +697,13 @@ obj/src/stdio/__toread.o
 obj/src/stdio/__towrite.o
 obj/src/stdio/__uflow.o
 obj/src/stdlib/abs.o
+obj/src/stdlib/atof.o
 obj/src/stdlib/atoi.o
 obj/src/stdlib/bsearch.o
 obj/src/stdlib/div.o
+obj/src/stdlib/ecvt.o
+obj/src/stdlib/fcvt.o
+obj/src/stdlib/gcvt.o
 obj/src/stdlib/labs.o
 obj/src/stdlib/ldiv.o
 obj/src/stdlib/llabs.o

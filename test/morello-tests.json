@@ -1278,5 +1278,17 @@
         "name": "system",
         "args": ["2"],
         "xrc": [0]
+    },
+    {
+        "app": "${build}/float_convert.exe",
+        "name": "atof",
+        "args": ["0"],
+        "xrc": [0]
+    },
+    {
+        "app": "${build}/float_convert.exe",
+        "name": "evct_fcvt_gcvt",
+        "args": ["1"],
+        "xrc": [0]
     }
 ]

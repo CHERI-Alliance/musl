@@ -877,6 +877,7 @@ obj/src/string/strncasecmp.o
 obj/src/string/strncat.o
 obj/src/string/strncmp.o
 obj/src/string/strncpy.o
+obj/src/string/strndup.o
 obj/src/string/strnlen.o
 obj/src/string/strpbrk.o
 obj/src/string/strrchr.o
@@ -897,6 +898,7 @@ obj/src/string/wcschr.o
 obj/src/string/wcscmp.o
 obj/src/string/wcscpy.o
 obj/src/string/wcscspn.o
+obj/src/string/wcsdup.o
 obj/src/string/wcslen.o
 obj/src/string/wcsncasecmp.o
 obj/src/string/wcsncasecmp_l.o

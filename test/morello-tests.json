@@ -1339,5 +1339,17 @@
         "name": "malloc_regression_map_key_not_reset",
         "args": ["0"],
         "xrc": [0]
+    },
+    {
+        "app": "${build}/strdup.exe",
+        "name": "strdup_strndup",
+        "args": ["0"],
+        "xrc": [0]
+    },
+    {
+        "app": "${build}/strdup.exe",
+        "name": "wcsdup",
+        "args": ["1"],
+        "xrc": [0]
     }
 ]

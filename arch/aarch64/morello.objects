@@ -733,6 +733,7 @@ obj/src/string/strchrnul.o
 obj/src/string/strcmp.o
 obj/src/string/strcpy.o
 obj/src/string/strcspn.o
+obj/src/string/strdup.o
 obj/src/string/strerror_r.o
 obj/src/string/strlcat.o
 obj/src/string/strlcpy.o

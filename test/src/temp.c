@@ -20,6 +20,7 @@ int test_mkstemps();
 int test_mkostemps();
 int test_mkdtemp();
 int test_tmpfile();
+int test_tempname();
 
 int main(int argc, char **argv) {
     if (argc < 2) return -1;
@@ -44,6 +45,8 @@ int main(int argc, char **argv) {
             return test_mkdtemp();
         case '6': // temp-tmpfile
             return test_tmpfile();
+        case '7': // temp-tmpfile
+            return test_tempname();
     }
 
     return -1;
@@ -187,6 +190,24 @@ int test_tmpfile() {
 
         if (!file) return 1;
         if (fclose(file)) return 2;
+    }
+
+    return 0;
+}
+
+int test_tempname() {
+    // tempnam
+    for (int i = 0; i < NUMITERS; i++) {
+        char *name = tempnam(TMP_DIR, "test");
+        if (!name) return 1;
+
+        free(name);
+    }
+
+    // tmpnam
+    for (int i = 0; i < NUMITERS; i++) {
+        char name[L_tmpnam];
+        if (!tmpnam(name)) return 1;
     }
 
     return 0;

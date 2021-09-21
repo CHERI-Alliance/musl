@@ -871,6 +871,12 @@
         "xrc": [0]
     },
     {
+        "app": "${build}/temp.exe",
+        "name": "temp-tempname",
+        "args": ["7"],
+        "xrc": [0]
+    },
+    {
         "app": "${build}/stat.exe",
         "name": "stat",
         "args": ["0"],

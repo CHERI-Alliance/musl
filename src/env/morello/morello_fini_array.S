@@ -1,4 +1,3 @@
-#ifdef MORELLO
 	.text
 	.globl	morello_fini_array      // -- Begin function morello_fini_array
 	.p2align	2
@@ -29,4 +28,3 @@ morello_fini_array:                     // @morello_fini_array
 	.ident	"clang version 11.0.0 "
 	.section	".note.GNU-stack","",@progbits
 	.addrsig
-#endif

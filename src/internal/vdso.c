@@ -1,3 +1,4 @@
+#ifdef MORELLO
 #include <elf.h>
 #include <link.h>
 #include <limits.h>
@@ -90,4 +91,5 @@ void *__vdsosym(const char *vername, const char *name)
 	return 0;
 }
 
-#endif
+#endif // VDSO_USEFUL
+#endif // MORELLO

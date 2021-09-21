@@ -15,7 +15,7 @@ libc functionality. Current limitations include:
 * No support for dynamic linking and dynamic loading (only static linking to ``libc.a``
   is supported).
 * No support for networking.
-* Only objects listed in ``arch/aarch64/morello.objects`` are ported to Morello.
+* Only objects listed in ``arch/morello/morello.objects`` are ported to Morello.
 
 Kernel ABI
 ^^^^^^^^^^
@@ -44,9 +44,9 @@ To configure the build, run
    export MORELLO_HOME=/path/to/morello/llvm
    # where Musl will be installed
    export MUSL_HOME=/path/to/install/musl
-   configure command
+   # configure command
    CC=${MORELLO_HOME}/bin/clang ./configure \
-       --disable-shared --enable-morello --enable-libshim  --prefix=${MUSL_HOME}
+       --disable-shared --enable-morello --enable-libshim --prefix=${MUSL_HOME}
 
 We use ``--disable-shared`` because dynamic linking and dynamic loading is currently not
 supported. We use ``--enable-morello`` to build the Morello version of the library. When
@@ -68,6 +68,19 @@ and
 is downloaded and built. The ``libshim`` objects are then added to ``libc.a`` which can then
 be used in a usual way.
 
+Building Musl libc without libshim
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+To produce build without libshim, use the following configure command:
+
+.. code-block::
+
+   # configure command
+   CC=${MORELLO_HOME}/bin/clang ./configure \
+       --disable-shared --enable-morello --disable-libshim --prefix=${MUSL_HOME}
+
+The rest of the build process is the same. Please note that this configuration is
+experimental.
 
 Building applications with this library
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -213,7 +226,7 @@ Create ``toolchain.cmake`` file with the following contents:
 
    set(CMAKE_SYSTEM_NAME Linux)
    set(CMAKE_SYSTEM_PROCESSOR aarch64)
-   set(CMAKE_C_COMPILER_TARGET "aarch64-linux-gnueabi -march=morello+c64 -mabi=purecap
+   set(CMAKE_C_COMPILER_TARGET "aarch64-linux-gnueabi -march=morello+c64 -mabi=purecap")
 
 This file is used in the following configure command for compiler-rt:
 
@@ -224,7 +237,7 @@ This file is used in the following configure command for compiler-rt:
    cmake -Wno-dev \
       -DCMAKE_TOOLCHAIN_FILE=/path/to/toolchain.cmake \
       -DCOMPILER_RT_DEFAULT_TARGET_TRIPLE=aarch64-linux-gnueabi \
-      -DCMAKE_C_FLAGS="-nostdinc -isystem /path/to/musl/include" \
+      -DCMAKE_C_FLAGS="-nostdinc -isystem ${MUSL_HOME}/include" \
       -DLLVM_CONFIG_PATH=${MORELLO_HOME}/bin/llvm-config \
       -DCMAKE_C_COMPILER=${MORELLO_HOME}/bin/clang \
       -DCMAKE_C_COMPILER_WORKS=YES \
@@ -259,6 +272,16 @@ This file is used in the following configure command for compiler-rt:
 Contributing
 ------------
 
+Running unit tests
+^^^^^^^^^^^^^^^^^^
+
+Prerequisites: Python 3.6+, `Morello IE <https://developer.arm.com/architectures/cpu-architecture/a-profile/morello/development-tools#instruction-emulator>`_.
+
+.. code-block::
+
+   export MORELLOIE=/path/to/morelloie/bin/morelloie
+   make -C test test
+
 Sorting ``morello.objects``
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
@@ -269,7 +292,7 @@ E.g. from musl root directory:
 
 .. code-block::
 
-   LC_COLLATE=C sort -uf arch/aarch64/morello.objects -o arch/aarch64/morello.objects
+   LC_COLLATE=C sort -uf arch/morello/morello.objects -o arch/morello/morello.objects
 
 Original README
 ---------------

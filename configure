@@ -157,7 +157,7 @@ target=
 optimize=auto
 debug=no
 morello=yes
-morello_objects="\$(shell cat arch/aarch64/morello.objects | tr '\n' ' ')"
+morello_objects="\$(shell cat arch/morello/morello.objects | tr '\n' ' ')"
 morello_subobject_bounds=no
 libshim=no
 warnings=yes
@@ -187,7 +187,7 @@ case "$arg" in
 --disable-optimize) optimize=no ;;
 --enable-debug|--enable-debug=yes) debug=yes ;;
 --disable-debug|--enable-debug=no) debug=no ;;
---enable-morello|--enable-morello=yes) morello=yes ; morello_objects="\$(shell cat arch/aarch64/morello.objects | tr '\n' ' ')" ;;
+--enable-morello|--enable-morello=yes) morello=yes ; morello_objects="\$(shell cat arch/morello/morello.objects | tr '\n' ' ')" ;;
 --disable-morello|--enable-morello=no) morello=no ; morello_objects="" ;;
 --morello-subobject-bounds=on) morello_subobject_bounds=yes ;;
 --morello-subobject-bounds=off) morello_subobject_bounds=no ;;
@@ -464,6 +464,7 @@ test "$morello" = yes
 if test "$morello" = yes ; then
     if test "$ARCH" = "aarch64" ; then
         tryflag CFLAGS_MORELLO "-march=morello+c64 -mabi=purecap"
+        ARCH=morello
     else
         fail "$0: Morello can only be enabled for AArch64 target"
     fi
@@ -481,10 +482,10 @@ if test "$morello_subobject_bounds" = yes ; then
 fi
 
 if test "$libshim" = yes ; then
-    if test "$ARCH" = "aarch64" && test "$morello" = yes ; then
-        tryflag CFLAGS_AUTO "-DMUSL_USE_LIBSHIM"
+    if test "$ARCH" = "morello" && test "$morello" = yes ; then
+        tryflag CFLAGS_MORELLO "-DLIBSHIM"
     else
-        fail "$0: Libshim is only for AArch64-Morello targets"
+        fail "$0: Libshim is only applicable for Morello targets"
     fi
 fi
 

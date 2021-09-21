@@ -1,10 +1,6 @@
 #include <features.h>
 #include "libc.h"
 
-#ifdef MORELLO
-void morello_init_stack_args(long *argv_ptr, char **argv_cap);
-#endif
-
 #define START "_start"
 
 #include "crt_arch.h"

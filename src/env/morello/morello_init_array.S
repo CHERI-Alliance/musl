@@ -1,5 +1,3 @@
-#ifdef MORELLO
-
 	.globl	morello_init_array
 	.type	morello_init_array,@function
 morello_init_array:
@@ -15,7 +13,7 @@ morello_init_array:
 .LBB0_2:                                // %for.body
                                         // =>This Inner Loop Header: Depth=1
 	ldr	x0, [c20]
-	cvtd    c0, x0
+	cvtp    c0, x0
 	blr	c0
 	add	c20, c20, #16           // =16
 	cmp	c20, c19
@@ -27,5 +25,3 @@ morello_init_array:
 	ret	c30
 .Lfunc_end0:
 	.size	morello_init_array, .Lfunc_end0-morello_init_array
-
-#endif

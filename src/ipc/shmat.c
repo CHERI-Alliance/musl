@@ -10,8 +10,8 @@ void *shmat(int id, const void *addr, int flag)
 #else
 void *shmat(int id, const void *addr, int flag)
 {
-	unsigned long ret;
+	uintptr_t ret;
 	ret = syscall(SYS_ipc, IPCOP_shmat, id, flag, &addr, addr);
-	return (ret > -(unsigned long)SHMLBA) ? (void *)ret : (void *)addr;
+	return (ret > -(uintptr_t)SHMLBA) ? (void *)ret : (void *)addr;
 }
 #endif

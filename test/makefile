@@ -2,8 +2,10 @@ override SHELL = /bin/bash
 
 MORELLO_TESTS_PROCS = 8
 
-MUSL_LIB = $(MUSL_ROOT)/lib
-MUSL_INC = $(MUSL_ROOT)/include
+include $(CURDIR)/../config.mak
+
+override MUSL_LIB = $(prefix)/lib
+override MUSL_INC = $(prefix)/include
 
 CFLAGS += -nostdinc -isystem $(MUSL_INC) -march=morello+c64 -mabi=purecap -g -DMORELLO -fno-builtin-mempcpy
 CFLAGS += -Wall -Wpedantic -Werror
@@ -34,17 +36,12 @@ test: $(EXE) check_morelloie
 
 build: $(EXE)
 
-check_musl_root:
-ifndef MUSL_ROOT
-	$(error MUSL_ROOT is undefined)
-endif
-
 check_morelloie:
 ifndef MORELLOIE
 	$(error MORELLOIE is undefined - please supply path to emulator binary)
 endif
 
-%.o: %.c check_musl_root
+%.o: %.c
 	$(CC) $(CFLAGS) -c $< -o $@
 
 %.exe: %.o
@@ -57,4 +54,4 @@ clean:
 	@rm -vf suite-morello-results.xml $(EXE) $(OBJS)
 	@rm -vrf /tmp/morello-musl-tests-*
 
-.PHONY: clean check_morelloie check_musl_root test build
+.PHONY: clean check_morelloie test build

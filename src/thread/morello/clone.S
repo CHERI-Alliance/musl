@@ -9,35 +9,20 @@
 .type   __clone,%function
 __clone:
 	// align stack
-#ifdef MORELLO
 	alignd c1,c1,#4
-#else
-	and x1,x1,#-16
-#endif
 
-#ifdef MORELLO
-
-#ifdef MUSL_USE_LIBSHIM
+#ifdef LIBSHIM
 	// store tls, flags
 	stp c5,c2,[c1,#-32]!
 #endif
 
 	// store func, arg
 	stp c0,c3,[c1,#-32]!
-#else
-	stp x0,x3,[x1,#-16]!
-#endif // MORELLO
 
 	uxtw x0,w2
-#ifdef MORELLO
 	mov c2,c4
 	mov c3,c5
 	mov c4,c6
-#else
-	mov x2,x4
-	mov x3,x5
-	mov x4,x6
-#endif // MORELLO
 	mov x8,#220 // SYS_clone
 
 	svc #0
@@ -47,10 +32,9 @@ __clone:
 	ret
 
 	// child
-#ifdef MORELLO
 1:	ldp c1,c0,[csp],#32
 
-#ifdef MUSL_USE_LIBSHIM
+#ifdef LIBSHIM
 	// for now we have to manually set tls, as the kernel is not going to
 	// set a capability properly
 
@@ -63,11 +47,6 @@ __clone:
 #endif
 
 2:	blr c1
-#else
-1:	ldp x1,x0,[sp],#16
-
-	blr x1
-#endif
 
 	mov x8,#93 // SYS_exit
 	svc #0

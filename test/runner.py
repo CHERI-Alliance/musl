@@ -70,10 +70,17 @@ def run_process(command: list, stdin: str, timeout: int, _env: dict):
         stderr=subprocess.PIPE,
         stdin=subprocess.PIPE,
         env={**_env, **dict(os.environ)})
-    stdout, stderr = child.communicate(stdin, timeout=timeout)
-    code = child.returncode
+    stdout, stderr = None, None
+    try:
+        stdout, stderr = child.communicate(stdin, timeout=timeout)
+        code = child.returncode
+    except subprocess.TimeoutExpired:
+        if not stdout:
+            stdout = 'timeout %s sec expired' % timeout
+        if not stderr:
+            stderr = 'timeout %s sec expired' % timeout
+        code = 255
     return code, stdout, stderr
-
 
 def build_test(_tc: dict, cwd: str, _runner: str, _mie_extra_params: str) -> tuple:
     app: str = _tc.get('app').replace('${build}', cwd)

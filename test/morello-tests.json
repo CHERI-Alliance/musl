@@ -980,7 +980,8 @@
     {
         "app": "${build}/pthread.exe",
         "name": "pthread-basic",
-        "xrc": [0]
+        "xrc": [0],
+        "timeout": 600
     },
     {
         "app": "${build}/printf_plain_text.exe",

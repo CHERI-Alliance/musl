@@ -65,21 +65,27 @@ skipcase = Template('''<testcase classname="${suite}" name="${name}" time="${tim
 </testcase>''')
 
 def run_process(command: list, stdin: str, timeout: int, _env: dict):
-    child = subprocess.Popen(command, universal_newlines=True,
-        stdout=subprocess.PIPE,
-        stderr=subprocess.PIPE,
-        stdin=subprocess.PIPE,
-        env={**_env, **dict(os.environ)})
-    stdout, stderr = None, None
     try:
-        stdout, stderr = child.communicate(stdin, timeout=timeout)
-        code = child.returncode
-    except subprocess.TimeoutExpired:
+        result = subprocess.run(command,
+            universal_newlines=True,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE,
+            input=stdin,
+            timeout=timeout,
+            env={**_env, **dict(os.environ)})
+        stdout = result.stdout
+        stderr = result.stderr
+        code = result.returncode
+    except subprocess.TimeoutExpired as err:
+        stdout = err.stdout
+        stderr = err.stderr
+
         if not stdout:
             stdout = 'timeout %s sec expired' % timeout
         if not stderr:
             stderr = 'timeout %s sec expired' % timeout
         code = 255
+
     return code, stdout, stderr
 
 def build_test(_tc: dict, cwd: str, _runner: str, _mie_extra_params: str) -> tuple:

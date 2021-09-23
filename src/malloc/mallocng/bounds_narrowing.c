@@ -178,12 +178,18 @@ void unmap_narrow_to_wide(void* wide_capability)
 				if (*(start-3) == 0b11100000) {
 					offset = (*(uint16_t *)(start-2)) * UNIT;
 				}
-				*(start + offset) = hole_index;
+				if(!__builtin_cheri_tag_get(*(void**)(start + offset))) {
+					//In this slot we *can* have a group that was enframed by malloc
+					//instead of having a user index. Checking for the tag is an easy
+					//way to sort user data vs internal enframe
+					*(start + offset) = hole_index;
+				}
 			}
 		}
 
 		ctx.map_count--;
 		assert(ctx.map_count > 0);
+		*get_cap_from_index(ctx.map_count) = NULL;
 		meta->mem->capability_map_index = GROUP_MAP_NOT_SET;
 	}
 }

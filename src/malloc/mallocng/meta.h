@@ -234,7 +234,8 @@ static inline void set_size(unsigned char *p, unsigned char *end, size_t n)
 
 static inline void *enframe(struct meta *g, int idx, size_t n, int ctr)
 {
-	size_t offsetted_n = n + MAP_KEY_OFFSET;
+	size_t offsetted_n = n + MAP_KEY_OFFSET; //TODO Given that groups are naturally nested into each other to
+	//get the space for small groups, this might waste a decent amount of memory for tiny mallocs
 
 	size_t stride = get_stride(g);
 	size_t slack = (stride-IB-offsetted_n)/UNIT;

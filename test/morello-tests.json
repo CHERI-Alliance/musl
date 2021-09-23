@@ -1381,5 +1381,11 @@
         "name": "rewinddir-seekdir-telldir",
         "args": ["4"],
         "xrc": [0]
+    },
+    {
+        "app": "${build}/malloc_regression.exe",
+        "name": "malloc_regression_corrupt_nested_group",
+        "args": ["1"],
+        "xrc": [0]
     }
 ]

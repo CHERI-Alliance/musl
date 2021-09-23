@@ -281,6 +281,9 @@ static struct meta *alloc_group(int sc, size_t req)
 		}
 		struct meta *g = ctx.active[j];
 		p = enframe(g, idx, UNIT*size_classes[j]-IB, ctx.mmap_counter);
+#ifdef MORELLO
+		((struct group *)p)->capability_map_index = GROUP_MAP_NOT_SET;
+#endif
 		m->maplen = 0;
 		p[-3] = (p[-3]&31) | (6<<5);
 		for (int i=0; i<=cnt; i++)

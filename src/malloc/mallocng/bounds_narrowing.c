@@ -9,7 +9,6 @@
 #include "meta.h"
 
 #ifdef MORELLO
-#define GROUP_MAP_NOT_SET 0
 
 //TODO investigate thread safety
 
@@ -60,9 +59,7 @@ void* get_wide_capability(void* user_capability)
 {
 	unsigned int index = *((unsigned int*) ((unsigned char*)user_capability - MAP_KEY_OFFSET));
 
-	void* tentative_group_capability = *get_cap_from_index(index);
-	//Check tag & bounds
-	tentative_group_capability;
+	unsigned char* tentative_group_capability = *get_cap_from_index(index);
 
 	// Now we have to make sure this group capability match the one the user gave us
 	// this means the user's capability is in this group.
@@ -71,13 +68,13 @@ void* get_wide_capability(void* user_capability)
 	//TODO also test if the user's bounds or permissions have been further narrowed (ie : not the original returned by malloc)
 	// https://github.com/capablevms/cheri_misidioms/blob/master/cheri_misidioms.ltx#L88
 
-	unsigned int offset = (void*)((unsigned char*)user_capability - MAP_KEY_OFFSET) - tentative_group_capability;
+	unsigned int offset = ((unsigned char*)user_capability - MAP_KEY_OFFSET) - tentative_group_capability;
 
 	// return a capability with the bounds allowing the full group, but with the address
 	// being the same as the user's provided one so that it looks like we just expanded the bounds
 	void* wide_capability = tentative_group_capability + offset;
-	//Check that this capability is valid, so the user pointer is in the group range
-	*wide_capability;
+
+	assert(__builtin_cheri_tag_get(wide_capability));
 	return wide_capability;
 }
 

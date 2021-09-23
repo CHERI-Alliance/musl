@@ -1333,5 +1333,11 @@
         "name": "realloc_bounds_change_regime",
         "args": ["6"],
         "xrc": [0]
+    },
+    {
+        "app": "${build}/malloc_regression.exe",
+        "name": "malloc_regression_map_key_not_reset",
+        "args": ["0"],
+        "xrc": [0]
     }
 ]

@@ -17,6 +17,7 @@ extern const uint16_t size_classes[];
 
 #ifdef MORELLO
 #define MAP_KEY_OFFSET UNIT
+#define GROUP_MAP_NOT_SET 0
 struct group {
 	struct meta *meta;
 	unsigned int capability_map_index;

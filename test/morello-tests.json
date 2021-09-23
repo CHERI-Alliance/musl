@@ -1351,5 +1351,35 @@
         "name": "wcsdup",
         "args": ["1"],
         "xrc": [0]
+    },
+    {
+        "app": "${build}/dirent.exe",
+        "name": "scandir",
+        "args": ["0"],
+        "xrc": [0]
+    },
+    {
+        "app": "${build}/dirent.exe",
+        "name": "opendir-closedir",
+        "args": ["1"],
+        "xrc": [0]
+    },
+    {
+        "app": "${build}/dirent.exe",
+        "name": "fdopendir-dirfd",
+        "args": ["2"],
+        "xrc": [0]
+    },
+    {
+        "app": "${build}/dirent.exe",
+        "name": "readdir-readdir_r",
+        "args": ["3"],
+        "xrc": [0]
+    },
+    {
+        "app": "${build}/dirent.exe",
+        "name": "rewinddir-seekdir-telldir",
+        "args": ["4"],
+        "xrc": [0]
     }
 ]

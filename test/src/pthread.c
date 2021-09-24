@@ -9,28 +9,40 @@
 static void *test(void *args);
 
 int main() {
+    int ret;
+
     pthread_attr_t attr;
-    if(pthread_attr_init(&attr)) return 1;
+    printf("pthread_attr_init(%p)...\n", (void *) &attr);
+    if ((ret = pthread_attr_init(&attr))) return 1;
+    printf("pthread_attr_init() returned %d\n", ret);
 
     pthread_t thread;
     char *arg_str = "hello world from args!";
-    if(pthread_create(&thread, &attr, test, arg_str)) return 2;
+    printf("pthread_create(%p, %p, %p, %p)...\n", (void *) &thread, (void *) &attr, (void *) test, (void *) arg_str);
+    if ((ret = pthread_create(&thread, &attr, test, arg_str))) return 2;
+    printf("pthread_create() returned %d\n", ret);
 
     void *thread_ret;
-    if(pthread_join(thread, &thread_ret)) return 3;
+    printf("pthread_join(%p, %p)...\n", (void *) thread, (void *) &thread_ret);
+    if ((ret = pthread_join(thread, &thread_ret))) return 3;
+    printf("pthread_join() returned %d\n", ret);
 
+    printf("thread_ret == %p\n", thread_ret);
     if ((uintptr_t) thread_ret != MAGIC) return 4;
 
+    printf("main thread returning 0\n");
     return 0;
 }
 
 static void *test(void *args) {
     char *str = (char *) args;
-    printf("in thread: [%s]\n", str);
+    printf("[thread] str == %s\n", str);
 
     if (strcmp(str, "hello world from args!")) {
+        printf("[thread] returning %p\n", (void *) NULL);
         return (void *) NULL;
     }
 
+    printf("[thread] returning %p\n", (void *) MAGIC);
     return (void *) MAGIC;
 }

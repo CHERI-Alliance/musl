@@ -1399,5 +1399,25 @@
         "name": "regcomp",
         "args": ["2"],
         "xrc": [0]
+    },
+    {
+        "app": "${build}/select.exe",
+        "name": "poll",
+        "args": ["0"],
+        "xrc": [0]
+    },
+    {
+        "app": "${build}/select.exe",
+        "name": "select",
+        "args": ["1"],
+        "stdin": "asdf",
+        "xrc": [0]
+    },
+    {
+        "app": "${build}/select.exe",
+        "name": "pselect",
+        "args": ["2"],
+        "stdin": "jkl;",
+        "xrc": [0]
     }
 ]

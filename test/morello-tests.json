@@ -1387,5 +1387,17 @@
         "name": "malloc_regression_corrupt_nested_group",
         "args": ["1"],
         "xrc": [0]
+    },
+    {
+        "app": "${build}/regex.exe",
+        "name": "fnmatch",
+        "args": ["0"],
+        "xrc": [0]
+    },
+    {
+        "app": "${build}/regex.exe",
+        "name": "regcomp",
+        "args": ["2"],
+        "xrc": [0]
     }
 ]

@@ -650,7 +650,11 @@ obj/src/process/waitid.o
 obj/src/process/waitpid.o
 obj/src/process/_Fork.o
 obj/src/regex/fnmatch.o
+obj/src/regex/glob.o
+obj/src/regex/regcomp.o
 obj/src/regex/regerror.o
+obj/src/regex/regexec.o
+obj/src/regex/tre-mem.o
 obj/src/sched/affinity.o
 obj/src/sched/sched_getcpu.o
 obj/src/sched/sched_getparam.o

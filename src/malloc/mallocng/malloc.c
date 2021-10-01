@@ -22,9 +22,6 @@ const uint16_t size_classes[] = {
 	2340, 2730, 3276, 4095,
 	4680, 5460, 6552, 8191,
 };
-// There's a hidden dependency on the biggest sizeclass not being (much) above 8k.
-// there are 32 slots in one group, so that make the start of the last biggest group
-// just below 64k. The offset to access the start of each slot is encoded with 16 bits
 
 static const uint8_t small_cnt_tab[][3] = {
 	{ 30, 30, 30 },
@@ -46,25 +43,14 @@ struct meta *alloc_meta(void)
 {
 	struct meta *m;
 	unsigned char *p;
-	size_t pagesize = PGSZ;
 	if (!ctx.init_done) {
 #ifndef PAGESIZE
 		ctx.pagesize = get_page_size();
 #endif
 		ctx.secret = get_random_secret();
-#ifdef MORELLO
-		ctx.map_count = 1;
-		// Initialize the first table holding the capability to the groups
-		ctx.allocated_map_table_count = 0;
-		void* new_map_table = mmap(0,
-				pagesize << ctx.allocated_map_table_count,
-				PROT_READ|PROT_WRITE, MAP_PRIVATE|MAP_ANON, -1, 0);
-			if (new_map_table==MAP_FAILED) return 0;
-		ctx.capability_map_meta_table[ctx.allocated_map_table_count] = new_map_table;
-		ctx.allocated_map_table_count++;
-#endif
 		ctx.init_done = 1;
 	}
+	size_t pagesize = PGSZ;
 	if (pagesize < 4096) pagesize = 4096;
 	if ((m = dequeue_head(&ctx.free_meta_head))) return m;
 	if (!ctx.avail_meta_count) {
@@ -72,7 +58,6 @@ struct meta *alloc_meta(void)
 		if (!ctx.avail_meta_area_count && ctx.brk!=-1) {
 			uintptr_t new = ctx.brk + pagesize;
 			int need_guard = 0;
-#ifndef MORELLO
 			if (!ctx.brk) {
 				need_guard = 1;
 				ctx.brk = brk(0);
@@ -91,7 +76,6 @@ struct meta *alloc_meta(void)
 				ctx.avail_meta_area_count = pagesize>>12;
 				need_unprotect = 0;
 			}
-#endif
 		}
 		if (!ctx.avail_meta_area_count) {
 			size_t n = 2UL << ctx.meta_alloc_shift;
@@ -134,7 +118,7 @@ static uint32_t try_avail(struct meta **pm)
 	if (!m) return 0;
 	uint32_t mask = m->avail_mask;
 	if (!mask) {
-		if (!m) return 0; //TODO isn't this redundant with 3 line above ?
+		if (!m) return 0;
 		if (!m->freed_mask) {
 			dequeue(pm, m);
 			m = *pm;
@@ -165,7 +149,7 @@ static uint32_t try_avail(struct meta **pm)
 			} else {
 				int cnt = m->mem->active_idx + 2;
 				int size = size_classes[m->sizeclass]*UNIT;
-				int span = GRP_SIZE + size*cnt;
+				int span = UNIT + size*cnt;
 				// activate up to next 4k boundary
 				while ((span^(span+size-1)) < 4096) {
 					cnt++;
@@ -219,11 +203,11 @@ static struct meta *alloc_group(int sc, size_t req)
 
 	// If we selected a count of 1 above but it's not sufficient to use
 	// mmap, increase to 2. Then it might be; if not it will nest.
-	if (cnt==1 && size*cnt+GRP_SIZE <= pagesize/2) cnt = 2;
+	if (cnt==1 && size*cnt+UNIT <= pagesize/2) cnt = 2;
 
 	// All choices of size*cnt are "just below" a power of two, so anything
 	// larger than half the page size should be allocated as whole pages.
-	if (size*cnt+GRP_SIZE > pagesize/2) {
+	if (size*cnt+UNIT > pagesize/2) {
 		// check/update bounce counter to start/increase retention
 		// of freed maps, and inhibit use of low-count, odd-size
 		// small mappings and single-slot groups if activated.
@@ -247,16 +231,16 @@ static struct meta *alloc_group(int sc, size_t req)
 			else if ((sc&3)==0 && size*cnt>8*pagesize) cnt = 3;
 			else if ((sc&3)==0 && size*cnt>2*pagesize) cnt = 5;
 		}
-		size_t needed = size*cnt + GRP_SIZE;
+		size_t needed = size*cnt + UNIT;
 		needed += -needed & (pagesize-1);
 
 		// produce an individually-mmapped allocation if usage is low,
 		// bounce counter hasn't triggered, and either it saves memory
 		// or it avoids eagar slot allocation without wasting too much.
 		if (!nosmall && cnt<=7) {
-			req += IB + GRP_SIZE;
+			req += IB + UNIT;
 			req += -req & (pagesize-1);
-			if (req<size+GRP_SIZE || (req>=4*pagesize && 2*cnt>usage)) {
+			if (req<size+UNIT || (req>=4*pagesize && 2*cnt>usage)) {
 				cnt = 1;
 				needed = req;
 			}
@@ -269,25 +253,22 @@ static struct meta *alloc_group(int sc, size_t req)
 		}
 		m->maplen = needed>>12;
 		ctx.mmap_counter++;
-		active_idx = (4096-GRP_SIZE)/size-1;
+		active_idx = (4096-UNIT)/size-1;
 		if (active_idx > cnt-1) active_idx = cnt-1;
 		if (active_idx < 0) active_idx = 0;
 	} else {
-		int j = size_to_class(GRP_SIZE+cnt*size-IB);
-		int idx = alloc_slot(j, GRP_SIZE+cnt*size-IB);
+		int j = size_to_class(UNIT+cnt*size-IB);
+		int idx = alloc_slot(j, UNIT+cnt*size-IB);
 		if (idx < 0) {
 			free_meta(m);
 			return 0;
 		}
 		struct meta *g = ctx.active[j];
 		p = enframe(g, idx, UNIT*size_classes[j]-IB, ctx.mmap_counter);
-#ifdef MORELLO
-		((struct group *)p)->capability_map_index = GROUP_MAP_NOT_SET;
-#endif
 		m->maplen = 0;
 		p[-3] = (p[-3]&31) | (6<<5);
 		for (int i=0; i<=cnt; i++)
-			p[GRP_SIZE+i*size-4] = 0;
+			p[UNIT+i*size-4] = 0;
 		active_idx = cnt-1;
 	}
 	ctx.usage_by_class[sc] += cnt;
@@ -317,23 +298,15 @@ static int alloc_slot(int sc, size_t req)
 
 void *malloc(size_t n)
 {
-	size_t morello_aligned_n = n;
-#ifdef MORELLO
-	morello_aligned_n += MAP_KEY_OFFSET;
-	// Make sure that when the bounds are narrowed, the user don't have access to the next slot
-	morello_aligned_n = __builtin_cheri_round_representable_length(morello_aligned_n);
-	size_t alignment_requirement = get_morello_alignment(morello_aligned_n) - UNIT;
-	morello_aligned_n += alignment_requirement;
-#endif
-	if (size_overflows(morello_aligned_n)) return 0;
+	if (size_overflows(n)) return 0;
 	struct meta *g;
 	uint32_t mask, first;
 	int sc;
 	int idx;
 	int ctr;
 
-	if (morello_aligned_n >= MMAP_THRESHOLD) {
-		size_t needed = morello_aligned_n + IB + GRP_SIZE;
+	if (n >= MMAP_THRESHOLD) {
+		size_t needed = n + IB + UNIT;
 		void *p = mmap(0, needed, PROT_READ|PROT_WRITE,
 			MAP_PRIVATE|MAP_ANON, -1, 0);
 		if (p==MAP_FAILED) return 0;
@@ -359,7 +332,7 @@ void *malloc(size_t n)
 		goto success;
 	}
 
-	sc = size_to_class(morello_aligned_n);
+	sc = size_to_class(n);
 
 	rdlock();
 	g = ctx.active[sc];
@@ -393,7 +366,7 @@ void *malloc(size_t n)
 	}
 	upgradelock();
 
-	idx = alloc_slot(sc, morello_aligned_n);
+	idx = alloc_slot(sc, n);
 	if (idx < 0) {
 		unlock();
 		return 0;
@@ -403,15 +376,11 @@ void *malloc(size_t n)
 success:
 	ctr = ctx.mmap_counter;
 	unlock();
-	void* p = enframe(g, idx, n, ctr);
-	map_narrow_to_wide(p);
-	void* user_p = restrict_capability(p,n);
-	return user_p;
+	return enframe(g, idx, n, ctr);
 }
 
-int is_allzero(void *user_p)
+int is_allzero(void *p)
 {
-	void* p = get_wide_capability(user_p);
 	struct meta *g = get_meta(p);
 	return g->sizeclass >= 48 ||
 		get_stride(g) < UNIT*size_classes[g->sizeclass];

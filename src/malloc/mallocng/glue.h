@@ -7,7 +7,6 @@
 #include <unistd.h>
 #include <elf.h>
 #include <string.h>
-#include <sys/auxv.h>
 #include "atomic.h"
 #include "syscall.h"
 #include "libc.h"
@@ -32,9 +31,7 @@
 #define assert(x) do { if (!(x)) a_crash(); } while(0)
 #endif
 
-#ifndef MORELLO
 #define brk(p) ((uintptr_t)__syscall(SYS_brk, p))
-#endif
 
 #define mmap __mmap
 #define madvise __madvise
@@ -44,13 +41,10 @@
 
 static inline uint64_t get_random_secret()
 {
-	uint64_t secret = (size_t)&secret * 1103515245;
-#ifdef MORELLO
-	void * random = getauxptr(AT_RANDOM);
-#else
-	uintptr_t random = getauxval(AT_RANDOM);
-#endif
-	if (random) secret = *((uint64_t*)((char*)random + 8));
+	uint64_t secret = (uintptr_t)&secret * 1103515245;
+	for (size_t i=0; libc.auxv[i]; i+=2)
+		if (libc.auxv[i]==AT_RANDOM)
+			memcpy(&secret, (char *)libc.auxv[i+1]+8, sizeof secret);
 	return secret;
 }
 

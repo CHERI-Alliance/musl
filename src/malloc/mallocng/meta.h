@@ -12,37 +12,23 @@ extern const uint16_t size_classes[];
 #define MMAP_THRESHOLD 131052
 
 #define UNIT 16
-#define GRP_SIZE 32
 #define IB 4
 
-#ifdef MORELLO
-#define MAP_KEY_OFFSET UNIT
-#define GROUP_MAP_NOT_SET 0
-struct group {
-	struct meta *meta;
-	unsigned int capability_map_index;
-	unsigned char active_idx:5;
-	char pad[GRP_SIZE - sizeof(struct meta *) - sizeof(int)- 1];
-	unsigned char storage[];
-};
-#else
-#define MAP_KEY_OFFSET 0
 struct group {
 	struct meta *meta;
 	unsigned char active_idx:5;
-	char pad[GRP_SIZE - sizeof(struct meta *) - 1];
+	char pad[UNIT - sizeof(struct meta *) - 1];
 	unsigned char storage[];
 };
-#endif
 
 struct meta {
 	struct meta *prev, *next;
 	struct group *mem;
 	volatile int avail_mask, freed_mask;
-	size_t last_idx:5;
-	size_t freeable:1;
-	size_t sizeclass:6;
-	size_t maplen:8*sizeof(size_t)-12;
+	uintptr_t last_idx:5;
+	uintptr_t freeable:1;
+	uintptr_t sizeclass:6;
+	uintptr_t maplen:8*sizeof(uintptr_t)-12;
 };
 
 struct meta_area {
@@ -68,11 +54,6 @@ struct malloc_context {
 	size_t usage_by_class[48];
 	uint8_t unmap_seq[32], bounces[32];
 	uint8_t seq;
-#ifdef MORELLO
-	uint8_t map_count;
-	uint8_t allocated_map_table_count; // we allocate more as we need, up to 44
-	struct group** capability_map_meta_table[44]; // support at least an hexabyte of memory
-#endif
 	uintptr_t brk;
 };
 
@@ -140,30 +121,10 @@ static inline uint32_t activate_group(struct meta *m)
 	return m->avail_mask = mask & act;
 }
 
-#ifdef MORELLO
-size_t get_morello_alignment(size_t len);
-#endif
-
 static inline int get_slot_index(const unsigned char *p)
 {
 	return p[-3] & 31;
 }
-
-/*
-
-|
-|
-|--------- p
-|    |
-| -2 | offset
-| -3 . slot index (5 low bit) and reserve (3 high bit)
-| -4 . idk, but this is checked against 0
-|    |
-|    |
-|    |
-| -8 | offset, if p -4 != 0
-
-*/
 
 static inline struct meta *get_meta(const unsigned char *p)
 {
@@ -175,7 +136,7 @@ static inline struct meta *get_meta(const unsigned char *p)
 		offset = *(uint32_t *)(p - 8);
 		assert(offset > 0xffff);
 	}
-	const struct group *base = (const void *)(p - UNIT*offset - GRP_SIZE);
+	const struct group *base = (const void *)(p - UNIT*offset - UNIT);
 	const struct meta *meta = base->meta;
 	assert(meta->mem == base);
 	assert(index <= meta->last_idx);
@@ -214,7 +175,7 @@ static inline size_t get_nominal_size(const unsigned char *p, const unsigned cha
 static inline size_t get_stride(const struct meta *g)
 {
 	if (!g->last_idx && g->maplen) {
-		return g->maplen*4096UL - GRP_SIZE;
+		return g->maplen*4096UL - UNIT;
 	} else {
 		return UNIT*size_classes[g->sizeclass];
 	}
@@ -222,39 +183,25 @@ static inline size_t get_stride(const struct meta *g)
 
 static inline void set_size(unsigned char *p, unsigned char *end, size_t n)
 {
-	int reserved = end-p-n; // reserved is what "slack" we are left after accounting the offset ?
-	if (reserved) end[-reserved] = 0; //and so we force writting a 0 after the last byte the user has requested
-	if (reserved >= 5) { //if reserved is too big (we only have 3 bits to represent it at p-3)
-		*(uint32_t *)(end-4) = reserved; // then we store it near the end
-		end[-5] = 0; // write the null byte
-		reserved = 5; // and set reserved to the special value to indicate one must read the field at end-4
+	int reserved = end-p-n;
+	if (reserved) end[-reserved] = 0;
+	if (reserved >= 5) {
+		*(uint32_t *)(end-4) = reserved;
+		end[-5] = 0;
+		reserved = 5;
 	}
 	p[-3] = (p[-3]&31) + (reserved<<5);
 }
 
 static inline void *enframe(struct meta *g, int idx, size_t n, int ctr)
 {
-	size_t offsetted_n = n + MAP_KEY_OFFSET; //TODO Given that groups are naturally nested into each other to
-	//get the space for small groups, this might waste a decent amount of memory for tiny mallocs
-
 	size_t stride = get_stride(g);
-	size_t slack = (stride-IB-offsetted_n)/UNIT;
+	size_t slack = (stride-IB-n)/UNIT;
 	unsigned char *p = g->mem->storage + stride*idx;
 	unsigned char *end = p+stride-IB;
 	// cycle offset within slot to increase interval to address
 	// reuse, facilitate trapping double-free.
-	// TODO As far as I can tell, this offset thing is only usefull to reduce address reuse. I can't find
-	// anything that use it. I can probably use that to point to the user pointer *after* bound alignment
-	size_t required_alignment = UNIT;
-#ifdef MORELLO
-	required_alignment = get_morello_alignment(offsetted_n);
-	size_t align_multiplier = (required_alignment/UNIT) ? (required_alignment/UNIT) : 1;
-	int off = (p[-3] ? *(uint16_t *)(p-2) + align_multiplier : ctr) & 255;
-	off &= ~(align_multiplier-1); //round down to alignment multiple
-	off += (__builtin_align_up(p,required_alignment) - p) / UNIT; //round up p to align it
-#else
 	int off = (p[-3] ? *(uint16_t *)(p-2) + 1 : ctr) & 255;
-#endif
 	assert(!p[-4]);
 	if (off > slack) {
 		size_t m = slack;
@@ -263,7 +210,6 @@ static inline void *enframe(struct meta *g, int idx, size_t n, int ctr)
 		if (off > slack) off -= slack+1;
 		assert(off <= slack);
 	}
-	assert((uintptr_t)(p+UNIT*off)%required_alignment == 0); //make sure the offsetted p is aligned correctly
 	if (off) {
 		// store offset in unused header at offset zero
 		// if enframing at non-zero offset.
@@ -276,13 +222,13 @@ static inline void *enframe(struct meta *g, int idx, size_t n, int ctr)
 	}
 	*(uint16_t *)(p-2) = (size_t)(p-g->mem->storage)/UNIT;
 	p[-3] = idx;
-	set_size(p, end, offsetted_n);
+	set_size(p, end, n);
 	return p;
 }
 
 static inline int size_to_class(size_t n)
 {
-	n = (n+IB-1)/UNIT;
+	n = (n+IB-1)>>4;
 	if (n<10) return n;
 	n++;
 	int i = (28-a_clz_32(n))*4 + 8;
@@ -338,42 +284,5 @@ static inline int is_bouncing(int sc)
 {
 	return (sc-7U < 32 && ctx.bounces[sc-7] >= 100);
 }
-
-/*
- * This function attempt to find the wide capability related to the
- * user's capability. If used correctly, it should return the same
- * capability used in restrict_capability to get the user capability
- * This will check that the user didn't tamper with the index.
- * What happen on a corrupted index is yet undetermined, but in
- * no case will it return a valid capability on something else that
- * the correct wide capability
- */
-void* get_wide_capability(void* user_capability);
-
-/*
- * This function narrow the bounds of a wide capability and set up
- * the index in the userspace. It require the mapping to already
- * for the related group.
- */
-void* restrict_capability(void* wide_capability, size_t user_size);
-
-/*
- * This function is to be called upon the creation of a new group before
- * it can be used. ie : one of its slot is given to the user. This adds an
- * entry to the map which allow one to get the wide pointer to the group
- * using an unique index saved in the group.
- * This is safe to call multiple time. If a mapping already exist, no new
- * one will be created
- */
-size_t map_narrow_to_wide(void* wide_capability);
-
-/*
- * This clear the map created by map_narrow_to_wide. This is required to
- * avoid memory leak gven that group can be destroyed, which would lead
- * to wrong map entries.
- * This is safe to call multiple time. If the map is already cleared it
- * won't try to clear it again.
- */
-void unmap_narrow_to_wide(void* wide_capability);
 
 #endif

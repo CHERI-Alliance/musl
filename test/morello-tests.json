@@ -1397,6 +1397,12 @@
     },
     {
         "app": "${build}/regex.exe",
+        "name": "glob",
+        "args": ["1"],
+        "xrc": [0]
+    },
+    {
+        "app": "${build}/regex.exe",
         "name": "regcomp",
         "args": ["2"],
         "xrc": [0]

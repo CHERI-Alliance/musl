@@ -21,7 +21,7 @@ void *aligned_alloc(size_t align, size_t len)
 
 	if (align <= UNIT) align = UNIT;
 
-	unsigned char *p = malloc(len + align - UNIT);
+	unsigned char *p = __expand_ddc(malloc(len + align - UNIT));
 	struct meta *g = get_meta(p);
 	int idx = get_slot_index(p);
 	size_t stride = get_stride(g);
@@ -53,5 +53,9 @@ void *aligned_alloc(size_t align, size_t len)
 	// allocations anyway.
 	*(uint16_t *)(start - 2) = (size_t)(p-start)/UNIT;
 	start[-3] = 7<<5;
+#ifdef MORELLO
+	return __builtin_cheri_bounds_set(p, len);
+#else
 	return p;
+#endif
 }

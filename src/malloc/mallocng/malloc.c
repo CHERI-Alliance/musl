@@ -22,6 +22,9 @@ const uint16_t size_classes[] = {
 	2340, 2730, 3276, 4095,
 	4680, 5460, 6552, 8191,
 };
+// There's a hidden dependency on the biggest sizeclass not being (much) above 8k.
+// there are 32 slots in one group, so that make the start of the last biggest group
+// just below 64k. The offset to access the start of each slot is encoded with 16 bits
 
 static const uint8_t small_cnt_tab[][3] = {
 	{ 30, 30, 30 },
@@ -55,6 +58,7 @@ struct meta *alloc_meta(void)
 	if ((m = dequeue_head(&ctx.free_meta_head))) return m;
 	if (!ctx.avail_meta_count) {
 		int need_unprotect = 1;
+#ifndef MORELLO
 		if (!ctx.avail_meta_area_count && ctx.brk!=-1) {
 			uintptr_t new = ctx.brk + pagesize;
 			int need_guard = 0;
@@ -77,6 +81,7 @@ struct meta *alloc_meta(void)
 				need_unprotect = 0;
 			}
 		}
+#endif
 		if (!ctx.avail_meta_area_count) {
 			size_t n = 2UL << ctx.meta_alloc_shift;
 			p = mmap(0, n*pagesize, PROT_NONE,
@@ -118,7 +123,7 @@ static uint32_t try_avail(struct meta **pm)
 	if (!m) return 0;
 	uint32_t mask = m->avail_mask;
 	if (!mask) {
-		if (!m) return 0;
+		if (!m) return 0; //TODO isn't this redundant with 3 line above ?
 		if (!m->freed_mask) {
 			dequeue(pm, m);
 			m = *pm;
@@ -376,12 +381,31 @@ void *malloc(size_t n)
 success:
 	ctr = ctx.mmap_counter;
 	unlock();
+#ifdef MORELLO
+	return __builtin_cheri_bounds_set(enframe(g, idx, n, ctr), n);
+#else
 	return enframe(g, idx, n, ctr);
+#endif
 }
 
 int is_allzero(void *p)
 {
+	p = __expand_ddc(p);
 	struct meta *g = get_meta(p);
 	return g->sizeclass >= 48 ||
 		get_stride(g) < UNIT*size_classes[g->sizeclass];
 }
+
+#ifdef MORELLO
+// we are not including lite_malloc object anymore
+void *__libc_malloc(size_t n)
+{
+	return __libc_malloc_impl(n);
+}
+static void *default_malloc(size_t n)
+{
+	return __libc_malloc_impl(n);
+}
+#undef malloc
+weak_alias(default_malloc, malloc);
+#endif

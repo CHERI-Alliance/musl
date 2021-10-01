@@ -1,4 +1,5 @@
 #include <stdlib.h>
+#include <stdint.h>
 #include <stdio.h>
 
 #define test_success 0
@@ -9,6 +10,8 @@
 #define incorrect_bound 5
 #define bad_alignment 6
 #define bad_test_number 10
+
+#include "caplength.h"
 
 void testptr_size(void* ptr, size_t alloc_size)
 {
@@ -29,18 +32,20 @@ void testptr_size(void* ptr, size_t alloc_size)
         exit(incorrect_permission);
     }
 
-    int key_map_offset = sizeof(void*);
-    size_t morello_size = __builtin_cheri_round_representable_length(alloc_size + key_map_offset);
-    if(__builtin_cheri_length_get(ptr) != morello_size){
+    int key_map_offset = 0;
+    size_t morello_size = WOULD_BE_LENGTH(alloc_size + key_map_offset, ptr);
+    if(__builtin_cheri_length_get(ptr) != morello_size) {
+        printf("expected length: %zu (%zu) actual length: %zu\n", morello_size, alloc_size, __builtin_cheri_length_get(ptr));
         exit(incorrect_bound);
     }
 }
 
 int main(int argc, char **argv) {
-    size_t alignement = 64; // must be a power of 2
-    void * alligned_memory = aligned_alloc(alignement,4*alignement);
-    testptr_size(alligned_memory,4*alignement);
-    if (((__intcap_t)alligned_memory % alignement) != 0) {
+    size_t alignment = 64 * 4; // must be a power of 2
+    void * aligned_memory = aligned_alloc(alignment, alignment);
+    testptr_size(aligned_memory, alignment);
+    if (((__intcap_t)aligned_memory & (alignment - 1)) != 0) {
+        printf("expected alignment: %zu, actual alignment: %zu\n", alignment, (size_t)((uintcap_t)aligned_memory & (alignment - 1)));
         return bad_alignment;
     }
     return test_success;

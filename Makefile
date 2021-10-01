@@ -19,7 +19,7 @@ syslibdir = /lib
 
 MALLOC_DIR = mallocng
 SRC_DIRS = $(addprefix $(srcdir)/,src/* src/malloc/$(MALLOC_DIR) crt ldso $(COMPAT_SRC_DIRS))
-BASE_GLOBS = $(addsuffix /*.c,$(SRC_DIRS))
+BASE_GLOBS = $(addsuffix /*.[cS],$(SRC_DIRS))
 ARCH_GLOBS = $(addsuffix /$(ARCH)/*.[csS],$(SRC_DIRS))
 BASE_SRCS = $(sort $(wildcard $(BASE_GLOBS)))
 ARCH_SRCS = $(sort $(wildcard $(ARCH_GLOBS)))
@@ -77,6 +77,10 @@ LDSO_PATHNAME = $(syslibdir)/ld-musl-$(ARCH)$(SUBARCH).so.1
 
 -include config.mak
 -include $(srcdir)/arch/$(ARCH)/arch.mak
+
+ifeq ($(ARCH),morello)
+AOBJS := $(filter-out %/lite_malloc.o,$(AOBJS))
+endif
 
 ifeq ($(ARCH),)
 

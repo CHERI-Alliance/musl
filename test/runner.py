@@ -54,7 +54,7 @@ passcase = Template('''<testcase classname="${suite}" name="${name}" time="${tim
 <system-err><![CDATA[${stderr}]]></system-err>
 </testcase>''')
 failcase = Template('''<testcase classname="${suite}" name="${name}" time="${time}" status="run">
-<failure message="${name} has failed" type="failure">${description}</failure>
+<failure message="${name} has failed with return code ${rc}" type="failure">${description}</failure>
 <system-out><![CDATA[${stdout}]]></system-out>
 <system-err><![CDATA[${stderr}]]></system-err>
 </testcase>''')
@@ -257,7 +257,7 @@ if __name__ == '__main__':
                 print('FAILED  %s: %s (%s sec)' % (tname, msg, time_str))
                 tres = failcase.substitute(
                     name=tname, suite=suite_name.split('-')[0], time=time_str,
-                    description='Command line: %s' % ' '.join(cmd),
+                    description='Command line: %s' % ' '.join(cmd), rc=rc,
                     stdout='' if out is None else out,
                     stderr='' if err is None else err)
             else:

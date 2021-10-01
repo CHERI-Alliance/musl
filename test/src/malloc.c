@@ -11,6 +11,8 @@
 #define bad_morello_alignment 7
 #define bad_test_number 10
 
+#include "caplength.h"
+
 void testptr_size(void* ptr, size_t alloc_size)
 {
     if(ptr == NULL){
@@ -30,8 +32,8 @@ void testptr_size(void* ptr, size_t alloc_size)
         exit(incorrect_permission);
     }
 
-    int key_map_offset = sizeof(void*);
-    size_t morello_size = __builtin_cheri_round_representable_length(alloc_size + key_map_offset);
+    int key_map_offset = 0;
+    size_t morello_size = WOULD_BE_LENGTH(alloc_size + key_map_offset, ptr);
     if(alloc_size != -1 && __builtin_cheri_length_get(ptr) != morello_size){
         exit(incorrect_bound);
     }

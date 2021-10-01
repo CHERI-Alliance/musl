@@ -11,7 +11,14 @@ extern const uint16_t size_classes[];
 
 #define MMAP_THRESHOLD 131052
 
+void *__expand_ddc(void *p);
+
+#ifdef MORELLO
+#define UNIT 32
+#else
 #define UNIT 16
+#endif
+
 #define IB 4
 
 struct group {
@@ -25,10 +32,10 @@ struct meta {
 	struct meta *prev, *next;
 	struct group *mem;
 	volatile int avail_mask, freed_mask;
-	uintptr_t last_idx:5;
-	uintptr_t freeable:1;
-	uintptr_t sizeclass:6;
-	uintptr_t maplen:8*sizeof(uintptr_t)-12;
+	size_t last_idx:5;
+	size_t freeable:1;
+	size_t sizeclass:6;
+	size_t maplen:8*sizeof(size_t)-12;
 };
 
 struct meta_area {
@@ -54,7 +61,11 @@ struct malloc_context {
 	size_t usage_by_class[48];
 	uint8_t unmap_seq[32], bounces[32];
 	uint8_t seq;
+#ifdef MORELLO
+	uintptr_t __padding;
+#else
 	uintptr_t brk;
+#endif
 };
 
 __attribute__((__visibility__("hidden")))
@@ -126,6 +137,22 @@ static inline int get_slot_index(const unsigned char *p)
 	return p[-3] & 31;
 }
 
+/*
+
+|
+|
+|--------- p
+|    |
+| -2 | offset
+| -3 . slot index (5 low bit) and reserve (3 high bit)
+| -4 . idk, but this is checked against 0
+|    |
+|    |
+|    |
+| -8 | offset, if p -4 != 0
+
+*/
+
 static inline struct meta *get_meta(const unsigned char *p)
 {
 	assert(!((uintptr_t)p & 15));
@@ -183,12 +210,12 @@ static inline size_t get_stride(const struct meta *g)
 
 static inline void set_size(unsigned char *p, unsigned char *end, size_t n)
 {
-	int reserved = end-p-n;
-	if (reserved) end[-reserved] = 0;
-	if (reserved >= 5) {
-		*(uint32_t *)(end-4) = reserved;
-		end[-5] = 0;
-		reserved = 5;
+	int reserved = end-p-n; // reserved is what "slack" we are left after accounting the offset ?
+	if (reserved) end[-reserved] = 0; //and so we force writing a 0 after the last byte the user has requested
+	if (reserved >= 5) { //if reserved is too big (we only have 3 bits to represent it at p-3)
+		*(uint32_t *)(end-4) = reserved; // then we store it near the end
+		end[-5] = 0; // write the null byte
+		reserved = 5; // and set reserved to the special value to indicate one must read the field at end-4
 	}
 	p[-3] = (p[-3]&31) + (reserved<<5);
 }

@@ -268,10 +268,9 @@ obj/src/locale/__mo_lookup.o
 obj/src/malloc/calloc.o
 obj/src/malloc/free.o
 obj/src/malloc/libc_calloc.o
-obj/src/malloc/lite_malloc.o
 obj/src/malloc/mallocng/aligned_alloc.o
-obj/src/malloc/mallocng/bounds_narrowing.o
 obj/src/malloc/mallocng/donate.o
+obj/src/malloc/mallocng/expand.o
 obj/src/malloc/mallocng/free.o
 obj/src/malloc/mallocng/malloc.o
 obj/src/malloc/mallocng/malloc_usable_size.o

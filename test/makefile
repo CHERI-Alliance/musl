@@ -6,6 +6,7 @@ include $(CURDIR)/../config.mak
 
 override MUSL_LIB = $(prefix)/lib
 override MUSL_INC = $(prefix)/include
+override MUSL_BITS = crt1.o crti.o crtn.o libc.a rcrt1.o Scrt1.o
 
 CFLAGS += -nostdinc -isystem $(MUSL_INC) -march=morello+c64 -mabi=purecap -g -DMORELLO -fno-builtin-mempcpy
 CFLAGS += -Wall -Wpedantic -Werror
@@ -31,7 +32,7 @@ all: test
 
 -include $(MKFS)
 
-test: $(EXE) check_morelloie
+test: $(EXE) check_morelloie $(CURDIR)/runner.py
 	python3 runner.py --nproc $(MORELLO_TESTS_PROCS) --mie-args "$(MIE_ARGS)" src morello-tests.json $(MORELLOIE) musl.custom.morello
 
 build: $(EXE)
@@ -44,7 +45,7 @@ endif
 %.o: %.c
 	$(CC) $(CFLAGS) -c $< -o $@
 
-%.exe: %.o
+%.exe: %.o $(addprefix $(MUSL_LIB)/,$(MUSL_BITS))
 	$(CC) $(LDFLAGS) $(CRT_PRE) $< $(RT_BUILTINS) $(CRT_POST) -o $@ $(LDLIBS) -static
 
 run-%: src/%.exe

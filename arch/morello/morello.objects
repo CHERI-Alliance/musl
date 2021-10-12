@@ -564,6 +564,7 @@ obj/src/multibyte/mbsinit.o
 obj/src/multibyte/mbsrtowcs.o
 obj/src/multibyte/mbtowc.o
 obj/src/multibyte/wcrtomb.o
+obj/src/multibyte/wcsrtombs.o
 obj/src/multibyte/wctob.o
 obj/src/multibyte/wctomb.o
 obj/src/network/accept.o

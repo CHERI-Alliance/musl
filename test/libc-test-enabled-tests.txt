@@ -1,5 +1,6 @@
 src/functional/argv-static.exe
 src/functional/basename-static.exe
+src/functional/clocale_mbfuncs-static.exe
 src/functional/clock_gettime-static.exe
 src/functional/env-static.exe
 src/functional/fcntl-static.exe

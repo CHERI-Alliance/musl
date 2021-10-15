@@ -1338,7 +1338,8 @@
         "app": "${build}/malloc_regression.exe",
         "name": "malloc_regression_map_key_not_reset",
         "args": ["0"],
-        "xrc": [0]
+        "xrc": [0],
+        "skip": "jenkins"
     },
     {
         "app": "${build}/strdup.exe",

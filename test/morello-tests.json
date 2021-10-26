@@ -918,6 +918,11 @@
         "xrc": [0]
     },
     {
+        "app": "${build}/getauxptrcheri.exe",
+        "name": "at-cheri-auxv",
+        "xrc": [0]
+    },
+    {
         "app": "${build}/mainargv.exe",
         "name": "mainargv",
         "args": ["one", "2", "three"],

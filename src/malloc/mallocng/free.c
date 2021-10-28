@@ -101,7 +101,14 @@ static struct mapinfo nontrivial_free(struct meta *g, int i)
 void free(void *p)
 {
 	if (!p) return;
-	p = __expand_ddc((void *)p);
+
+#ifdef MORELLO
+	wrlock();
+	p = expand_bounds(p);
+	mallocmap_delete(p, &(ctx.capmap));
+	unlock();
+#endif
+
 	struct meta *g = get_meta(p);
 	int idx = get_slot_index(p);
 	size_t stride = get_stride(g);

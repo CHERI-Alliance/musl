@@ -50,6 +50,11 @@ struct meta *alloc_meta(void)
 #ifndef PAGESIZE
 		ctx.pagesize = get_page_size();
 #endif
+
+#ifdef MORELLO
+		mallocmap_create(1024, &(ctx.capmap));
+#endif
+
 		ctx.secret = get_random_secret();
 		ctx.init_done = 1;
 	}
@@ -269,7 +274,7 @@ static struct meta *alloc_group(int sc, size_t req)
 			return 0;
 		}
 		struct meta *g = ctx.active[j];
-		p = enframe(g, idx, UNIT*size_classes[j]-IB, ctx.mmap_counter);
+		p = enframe(g, idx, UNIT*size_classes[j]-IB, ctx.mmap_counter, UNIT);
 		m->maplen = 0;
 		p[-3] = (p[-3]&31) | (6<<5);
 		for (int i=0; i<=cnt; i++)
@@ -301,7 +306,7 @@ static int alloc_slot(int sc, size_t req)
 	return 0;
 }
 
-void *malloc(size_t n)
+void *malloc_aligned(size_t n, size_t align)
 {
 	if (size_overflows(n)) return 0;
 	struct meta *g;
@@ -310,8 +315,13 @@ void *malloc(size_t n)
 	int idx;
 	int ctr;
 
-	if (n >= MMAP_THRESHOLD) {
-		size_t needed = n + IB + UNIT;
+	size_t padded_n = n;
+	if (align > UNIT) {
+		padded_n += align - UNIT;
+	}
+
+	if (padded_n >= MMAP_THRESHOLD) {
+		size_t needed = padded_n + IB;
 		void *p = mmap(0, needed, PROT_READ|PROT_WRITE,
 			MAP_PRIVATE|MAP_ANON, -1, 0);
 		if (p==MAP_FAILED) return 0;
@@ -337,7 +347,7 @@ void *malloc(size_t n)
 		goto success;
 	}
 
-	sc = size_to_class(n);
+	sc = size_to_class(padded_n);
 
 	rdlock();
 	g = ctx.active[sc];
@@ -371,7 +381,7 @@ void *malloc(size_t n)
 	}
 	upgradelock();
 
-	idx = alloc_slot(sc, n);
+	idx = alloc_slot(sc, padded_n);
 	if (idx < 0) {
 		unlock();
 		return 0;
@@ -380,17 +390,45 @@ void *malloc(size_t n)
 
 success:
 	ctr = ctx.mmap_counter;
-	unlock();
+
 #ifdef MORELLO
-	return __builtin_cheri_bounds_set(enframe(g, idx, n, ctr), n);
-#else
-	return enframe(g, idx, n, ctr);
+	void *p = __builtin_cheri_bounds_set(enframe(g, idx, n, ctr, align), n);
+
+	int r = mallocmap_insert(p, g->mem, &(ctx.capmap));
+	if (!r) {
+		return 0;
+	}
 #endif
+
+	unlock();
+
+#ifdef MORELLO
+	return p;
+#else
+	return enframe(g, idx, n, ctr, align);
+#endif
+}
+
+void *malloc(size_t n) {
+#ifdef MORELLO
+	n = __builtin_cheri_round_representable_length(n);
+	size_t align = ~__builtin_cheri_representable_alignment_mask(n) + 1;
+	if (align < UNIT) align = UNIT;
+#else
+	size_t align = UNIT;
+#endif
+
+	return malloc_aligned(n, align);
 }
 
 int is_allzero(void *p)
 {
-	p = __expand_ddc(p);
+#ifdef MORELLO
+	rdlock();
+	p = expand_bounds(p);
+	unlock();
+#endif
+
 	struct meta *g = get_meta(p);
 	return g->sizeclass >= 48 ||
 		get_stride(g) < UNIT*size_classes[g->sizeclass];

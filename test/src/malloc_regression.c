@@ -3,15 +3,7 @@
 #include <dirent.h>
 #include <fcntl.h>
 
-#define test_success 0
-#define unexpected_value 1
-#define null_capability 2
-#define capability_tag_cleared 3
-#define incorrect_permission 4
-#define incorrect_bound 5
-#define bad_alignment 6
-#define bad_morello_alignment 7
-#define bad_test_number 10
+#include "alloc_helpers.h"
 
 int group_map_not_cleaned_on_create()
 {
@@ -25,7 +17,7 @@ int group_map_not_cleaned_on_create()
         list[cnt] = malloc(sizeof(int));
         *list[cnt] = cnt;
     }
-    return test_success;
+    return TEST_SUCCESS;
 }
 
 int unmap_move_corrupt_nested_group()
@@ -34,7 +26,7 @@ int unmap_move_corrupt_nested_group()
 
     int n = scandir("/proc/self", &namelist, NULL, alphasort);
     printf("%d\n", n);
-    return test_success;
+    return TEST_SUCCESS;
 }
 
 int main(int argc, char **argv) {
@@ -47,7 +39,7 @@ int main(int argc, char **argv) {
         return unmap_move_corrupt_nested_group();
     break;
     default:
-        return bad_test_number;
+        return BAD_TEST_NUMBER;
     }
-    return test_success;
+    return TEST_SUCCESS;
 }

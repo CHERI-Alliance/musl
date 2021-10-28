@@ -8,7 +8,13 @@ void *realloc(void *p, size_t n)
 {
 	if (!p) return malloc(n);
 
-	p = __expand_ddc((void *)p);
+	// preserve original user pointer
+	void *userp = p;
+#ifdef MORELLO
+	rdlock();
+	p = expand_bounds(p);
+	unlock();
+#endif
 
 	if (size_overflows(n)) return 0;
 
@@ -21,18 +27,29 @@ void *realloc(void *p, size_t n)
 	size_t avail_size = end-(unsigned char *)p;
 	void *new;
 
-/* TODO Those optimisation of realloc create a bunch of alignement issue
- * We will deal with them in a future commit. For now we fallback to using memcpy
- * Also consider those security issues : https://github.com/capablevms/cheri_misidioms/blob/master/cheri_misidioms.ltx#L88 */
+#ifdef MORELLO
+	n = __builtin_cheri_round_representable_length(n);
+	size_t new_alignment = __builtin_cheri_representable_alignment_mask(n);
+
+	if ((new_alignment & (ptraddr_t) userp) != (ptraddr_t) userp) {
+		// alignment has to change, just fall back to malloc and free
+		goto malloc_then_free;
+	}
+#endif
+
 	// only resize in-place if size class matches
 	if (n <= avail_size && n<MMAP_THRESHOLD
 	    && size_to_class(n)+1 >= g->sizeclass) {
 		set_size(p, end, n);
+
 #ifdef MORELLO
-	return __builtin_cheri_bounds_set(p, n);
-#else
-	return p;
+		wrlock();
+		mallocmap_delete(userp, &(ctx.capmap));
+		p = __builtin_cheri_bounds_set(p, n);
+		mallocmap_insert(p, g->mem, &(ctx.capmap));
+		unlock();
 #endif
+		return p;
 	}
 
 	// use mremap if old and new size are both mmap-worthy
@@ -42,13 +59,6 @@ void *realloc(void *p, size_t n)
 		size_t needed = (n + base + UNIT + IB + 4095) & -4096;
 		new = g->maplen*4096UL == needed ? g->mem :
 			mremap(g->mem, g->maplen*4096UL, needed, MREMAP_MAYMOVE);
-			//TODO for huge size/small pages, the alignement requirement might be of more than one page
-			//TODO even without the above point, realloc for a bigger size is very likely to make things unalign
-			// (think of a 512 allign going up to 1024 because of the increased size). This would force a memove
-			// I'll have to check with other people, but afaik, when one use realloc, they are likely to use it
-			// several time on the same object, usually doubling the size each time. In this case, it might be
-			// best to overalign the user's pointer to a whole page from the start (or above a certain size)
-			// so that we can just remap instead of copy for the following realloc ?
 		if (new!=MAP_FAILED) {
 			g->mem = new;
 			g->maplen = needed/4096;
@@ -57,20 +67,21 @@ void *realloc(void *p, size_t n)
 			*end = 0;
 			set_size(p, end, n);
 #ifdef MORELLO
-			return __builtin_cheri_bounds_set(p, n);
-#else
-			return p;
+			wrlock();
+			mallocmap_delete(userp, &(ctx.capmap));
+			p = __builtin_cheri_bounds_set(p, n);
+			mallocmap_insert(p, g->mem, &(ctx.capmap));
+			unlock();
 #endif
+			return p;
 		}
 	}
 
+malloc_then_free:
 	new = malloc(n);
 	if (!new) return 0;
 	memcpy(new, p, n < old_size ? n : old_size);
-	free(p);
-#ifdef MORELLO
-	return __builtin_cheri_bounds_set(new, n);
-#else
+	free(userp);
+
 	return new;
-#endif
 }

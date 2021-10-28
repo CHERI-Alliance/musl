@@ -1209,6 +1209,12 @@
         "xrc": [0]
     },
     {
+        "app": "${build}/realloc.exe",
+        "name": "realloc-align-increase",
+        "args": ["4"],
+        "xrc": [0]
+    },
+    {
         "app": "${build}/calloc.exe",
         "name": "calloc",
         "xrc": [0]

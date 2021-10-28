@@ -96,4 +96,6 @@ static inline void malloc_atfork(int who)
 	else unlock();
 }
 
+void *malloc_aligned(size_t n, size_t align);
+
 #endif

@@ -1,17 +1,20 @@
 #ifndef MALLOC_META_H
 #define MALLOC_META_H
 
+#define _GNU_SOURCE
+
 #include <stdint.h>
 #include <errno.h>
 #include <limits.h>
+#include <search.h>
+
 #include "glue.h"
+#include "mallocmap.h"
 
 __attribute__((__visibility__("hidden")))
 extern const uint16_t size_classes[];
 
 #define MMAP_THRESHOLD 131052
-
-void *__expand_ddc(void *p);
 
 #ifdef MORELLO
 #define UNIT 32
@@ -63,6 +66,7 @@ struct malloc_context {
 	uint8_t seq;
 #ifdef MORELLO
 	uintptr_t __padding;
+	struct __mallocmap_tab capmap;
 #else
 	uintptr_t brk;
 #endif
@@ -82,6 +86,15 @@ struct meta *alloc_meta(void);
 
 __attribute__((__visibility__("hidden")))
 int is_allzero(void *);
+
+#ifdef MORELLO
+static inline void *expand_bounds(void *p) {
+	struct group *g = (struct group *) mallocmap_find(p, &(ctx.capmap));
+	assert(g);
+
+	return __builtin_cheri_address_set(g, (size_t) p);
+}
+#endif
 
 static inline void queue(struct meta **phead, struct meta *m)
 {
@@ -136,22 +149,6 @@ static inline int get_slot_index(const unsigned char *p)
 {
 	return p[-3] & 31;
 }
-
-/*
-
-|
-|
-|--------- p
-|    |
-| -2 | offset
-| -3 . slot index (5 low bit) and reserve (3 high bit)
-| -4 . idk, but this is checked against 0
-|    |
-|    |
-|    |
-| -8 | offset, if p -4 != 0
-
-*/
 
 static inline struct meta *get_meta(const unsigned char *p)
 {
@@ -220,7 +217,7 @@ static inline void set_size(unsigned char *p, unsigned char *end, size_t n)
 	p[-3] = (p[-3]&31) + (reserved<<5);
 }
 
-static inline void *enframe(struct meta *g, int idx, size_t n, int ctr)
+static inline void *enframe(struct meta *g, int idx, size_t n, int ctr, size_t align)
 {
 	size_t stride = get_stride(g);
 	size_t slack = (stride-IB-n)/UNIT;
@@ -229,6 +226,16 @@ static inline void *enframe(struct meta *g, int idx, size_t n, int ctr)
 	// cycle offset within slot to increase interval to address
 	// reuse, facilitate trapping double-free.
 	int off = (p[-3] ? *(uint16_t *)(p-2) + 1 : ctr) & 255;
+
+	if (align > UNIT) {
+#ifdef MORELLO
+		unsigned char *aligned_p = __builtin_align_up(p, align);
+#else
+		unsigned char *aligned_p = -(uintptr_t)p + (-(uintptr_t)p & (align - 1));
+#endif
+		off = (aligned_p - p) / UNIT;
+	}
+
 	assert(!p[-4]);
 	if (off > slack) {
 		size_t m = slack;

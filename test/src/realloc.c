@@ -9,44 +9,7 @@
 // capabilities, then fill will add them regardless if it is more than this maximum
 #define FILL_THICKNESS 128
 
-#define test_success 0
-#define unexpected_value 1
-#define null_capability 2
-#define capability_tag_cleared 3
-#define incorrect_permission 4
-#define incorrect_bound 5
-#define bad_alignment 6
-#define bad_morello_alignment 7
-#define bad_test_number 10
-
-#include "caplength.h"
-
-void testptr_size(void* ptr, size_t alloc_size)
-{
-    if(ptr == NULL){
-        exit(null_capability);
-    }
-    if(!__builtin_cheri_tag_get(ptr)){
-        exit(capability_tag_cleared);
-    }
-    unsigned long perm = __builtin_cheri_perms_get(ptr);
-    unsigned long minimal_perm =
-        __CHERI_CAP_PERMISSION_PERMIT_LOAD__ |
-        __CHERI_CAP_PERMISSION_PERMIT_STORE__ |
-        __CHERI_CAP_PERMISSION_PERMIT_STORE_CAPABILITY__ |
-        __CHERI_CAP_PERMISSION_PERMIT_LOAD_CAPABILITY__;
-
-    if((perm & minimal_perm) != minimal_perm){
-        exit(incorrect_permission);
-    }
-
-    int key_map_offset = 0;
-    size_t morello_size = WOULD_BE_LENGTH(alloc_size + key_map_offset, ptr);
-    if(__builtin_cheri_length_get(ptr) != morello_size){
-        printf("expected length: %zu (%zu) actual length: %zu\n", morello_size, alloc_size, __builtin_cheri_length_get(ptr));
-        exit(incorrect_bound);
-    }
-}
+#include "alloc_helpers.h"
 
 void fill(char* ptr, size_t size)
 {
@@ -88,7 +51,7 @@ void check_fill(char* ptr, size_t size)
         // The only thing we can reliably check is the validity tag. Accessing them can segfault
         if(!__builtin_cheri_tag_get(*first_slot) || !__builtin_cheri_tag_get(*last_slot)){
             printf("tag first slot : %d\ntag last slot : %d\n",__builtin_cheri_tag_get(*first_slot),__builtin_cheri_tag_get(*last_slot));
-            exit(capability_tag_cleared);
+            exit(CAPABILITY_TAG_CLEARED);
         }
     }
 
@@ -98,7 +61,7 @@ void check_fill(char* ptr, size_t size)
             // the two capability are legit missmatch, don't report them
             if ( size>=48 && (ptr+i) >= (char*)first_slot && (ptr+i) < ((char*)first_slot+16) )
                 continue;
-            exit(unexpected_value);
+            exit(UNEXPECTED_VALUE);
         }
     }
     for(int i = size-1; i >= size-1-effective_thickness; i--){
@@ -106,7 +69,7 @@ void check_fill(char* ptr, size_t size)
             // the two capability are legit missmatch, don't report them
             if ( size>=48 && (ptr+i) >= (char*)last_slot && (ptr+i) < ((char*)last_slot+16) )
                 continue;
-            exit(unexpected_value);
+            exit(UNEXPECTED_VALUE);
         }
     }
 }
@@ -117,7 +80,7 @@ void* basic_test(size_t size1, size_t size2)
     void* ptr = malloc(size1);
     fill(ptr,smaller_size);
     ptr = realloc(ptr,size2);
-    testptr_size(ptr,size2);
+    testptr(ptr,size2);
     check_fill(ptr,smaller_size);
     return ptr;
 }
@@ -170,6 +133,12 @@ void test_change_regime()
     free(all_ptr[1]);
 }
 
+void test_alignment_increase() {
+    // Morello alignment requirement increases when resizing to the larger size
+    void *ptr = basic_test(32768 - 32, 32768);
+    free(ptr);
+}
+
 int main(int argc, char **argv)
 {
     switch (argv[1][0]) {
@@ -185,8 +154,11 @@ int main(int argc, char **argv)
     case '3': // realloc, but change of regime (sizeclass <-> big alloc)
         test_change_regime();
         break;
+    case '4':
+        test_alignment_increase();
+        break;
     default:
-        return bad_test_number;
+        return BAD_TEST_NUMBER;
     }
-    return test_success;
+    return TEST_SUCCESS;
 }

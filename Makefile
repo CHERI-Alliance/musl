@@ -183,13 +183,13 @@ $(LIBSHIM): lib/libshim
 lib/libshim: lib/libshim-libc lib/libarchcap
 	git clone --depth 1 $(LIBSHIM_GIT) $@
 ifneq ($(LIBSHIM_REF),null)
-	cd $@ && git pull $(LIBSHIM_GIT) $(LIBSHIM_REF)
+	cd $@ && git pull --rebase $(LIBSHIM_GIT) $(LIBSHIM_REF)
 endif
 
 lib/libarchcap:
 	git clone --depth 1 $(LIBARCHCAP_GIT) $@
 ifneq ($(LIBARCHCAP_REF),null)
-	cd $@ && git pull $(LIBARCHCAP_GIT) $(LIBARCHCAP_REF)
+	cd $@ && git pull --rebase $(LIBARCHCAP_GIT) $(LIBARCHCAP_REF)
 endif
 
 # install libc headers for libshim build

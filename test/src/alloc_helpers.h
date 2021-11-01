@@ -10,11 +10,22 @@
 #define BAD_MORELLO_ALIGNMENT 7
 #define BAD_TEST_NUMBER 10
 
-// TODO: make sure these are the minimal permissions we want
-#define MINIMAL_PERMS (__CHERI_CAP_PERMISSION_PERMIT_LOAD__ | \
-        			   __CHERI_CAP_PERMISSION_PERMIT_STORE__ | \
-        		       __CHERI_CAP_PERMISSION_PERMIT_STORE_CAPABILITY__ | \
-        			   __CHERI_CAP_PERMISSION_PERMIT_LOAD_CAPABILITY__)
+#define USER_PTR_PERMS_PRESENT ((unsigned long) \
+    __CHERI_CAP_PERMISSION_PERMIT_LOAD__ | \
+    __CHERI_CAP_PERMISSION_PERMIT_STORE__ | \
+    __CHERI_CAP_PERMISSION_PERMIT_STORE_CAPABILITY__ | \
+    __CHERI_CAP_PERMISSION_PERMIT_STORE_LOCAL__ | \
+    __CHERI_CAP_PERMISSION_PERMIT_LOAD_CAPABILITY__ | \
+    __ARM_CAP_PERMISSION_MUTABLE_LOAD__)
+
+#define USER_PTR_PERMS_REMOVED ((unsigned long) \
+    __ARM_CAP_PERMISSION_EXECUTIVE__ | \
+    __CHERI_CAP_PERMISSION_ACCESS_SYSTEM_REGISTERS__ | \
+    __ARM_CAP_PERMISSION_COMPARTMENT_ID__ | \
+    __ARM_CAP_PERMISSION_BRANCH_SEALED_PAIR__ | \
+    __CHERI_CAP_PERMISSION_PERMIT_UNSEAL__ | \
+    __CHERI_CAP_PERMISSION_PERMIT_SEAL__ | \
+    __CHERI_CAP_PERMISSION_PERMIT_EXECUTE__)
 
 inline static void testptr_aligned(void* ptr, size_t alloc_size, size_t alignment) {
     if (!ptr) {
@@ -28,9 +39,13 @@ inline static void testptr_aligned(void* ptr, size_t alloc_size, size_t alignmen
     }
 
     unsigned long perm = __builtin_cheri_perms_get(ptr);
+    if ((perm & USER_PTR_PERMS_PRESENT) != USER_PTR_PERMS_PRESENT) {
+        printf("user pointer is missing some required permission(s). ptr: %p, perms: %lx\n", ptr, perm);
+        exit(INCORRECT_PERMISSION);
+    }
 
-    if ((perm & MINIMAL_PERMS) != MINIMAL_PERMS) {
-        printf("invalid permissions on user pointer. ptr: %p, perms: %lx\n", ptr, perm);
+    if ((perm & ~USER_PTR_PERMS_REMOVED) != perm) {
+        printf("user pointer has permission(s) which it shouldn't have. ptr: %p, perms: %lx\n", ptr, perm);
         exit(INCORRECT_PERMISSION);
     }
 
@@ -58,5 +73,5 @@ inline static void testptr_aligned(void* ptr, size_t alloc_size, size_t alignmen
 }
 
 inline static void testptr(void *ptr, size_t alloc_size) {
-	testptr_aligned(ptr, alloc_size, 0);
+    testptr_aligned(ptr, alloc_size, 0);
 }

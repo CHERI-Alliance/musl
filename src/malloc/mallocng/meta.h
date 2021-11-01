@@ -88,11 +88,28 @@ __attribute__((__visibility__("hidden")))
 int is_allzero(void *);
 
 #ifdef MORELLO
+#define USER_PTR_PERMS_REMOVED ((unsigned long) \
+	__ARM_CAP_PERMISSION_EXECUTIVE__ | \
+	__CHERI_CAP_PERMISSION_ACCESS_SYSTEM_REGISTERS__ | \
+	__ARM_CAP_PERMISSION_COMPARTMENT_ID__ | \
+	__ARM_CAP_PERMISSION_BRANCH_SEALED_PAIR__ | \
+	__CHERI_CAP_PERMISSION_PERMIT_UNSEAL__ | \
+	__CHERI_CAP_PERMISSION_PERMIT_SEAL__ | \
+	__CHERI_CAP_PERMISSION_PERMIT_EXECUTE__)
+
 static inline void *expand_bounds(void *p) {
 	struct group *g = (struct group *) mallocmap_find(p, &(ctx.capmap));
 	assert(g);
 
 	return __builtin_cheri_address_set(g, (size_t) p);
+}
+
+static inline void *restrict_user_ptr(void *p, size_t len) {
+	return __builtin_cheri_bounds_set(p, len);
+}
+
+static inline void *restrict_perms(void *p) {
+	return __builtin_cheri_perms_and(p, ~USER_PTR_PERMS_REMOVED);
 }
 #endif
 

@@ -92,6 +92,9 @@ struct meta *alloc_meta(void)
 			p = mmap(0, n*pagesize, PROT_NONE,
 				MAP_PRIVATE|MAP_ANON, -1, 0);
 			if (p==MAP_FAILED) return 0;
+#ifdef MORELLO
+			p = restrict_perms(p);
+#endif
 			ctx.avail_meta_areas = p + pagesize;
 			ctx.avail_meta_area_count = (n-1)*(pagesize>>12);
 			ctx.meta_alloc_shift++;
@@ -261,6 +264,9 @@ static struct meta *alloc_group(int sc, size_t req)
 			free_meta(m);
 			return 0;
 		}
+#ifdef MORELLO
+			p = restrict_perms(p);
+#endif
 		m->maplen = needed>>12;
 		ctx.mmap_counter++;
 		active_idx = (4096-UNIT)/size-1;
@@ -325,6 +331,9 @@ void *malloc_aligned(size_t n, size_t align)
 		void *p = mmap(0, needed, PROT_READ|PROT_WRITE,
 			MAP_PRIVATE|MAP_ANON, -1, 0);
 		if (p==MAP_FAILED) return 0;
+#ifdef MORELLO
+		p = restrict_perms(p);
+#endif
 		wrlock();
 		step_seq();
 		g = alloc_meta();
@@ -392,7 +401,8 @@ success:
 	ctr = ctx.mmap_counter;
 
 #ifdef MORELLO
-	void *p = __builtin_cheri_bounds_set(enframe(g, idx, n, ctr, align), n);
+	void *p = enframe(g, idx, n, ctr, align);
+	p = restrict_user_ptr(p, n);
 
 	int r = mallocmap_insert(p, g->mem, &(ctx.capmap));
 	if (!r) {

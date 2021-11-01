@@ -45,7 +45,7 @@ void *realloc(void *p, size_t n)
 #ifdef MORELLO
 		wrlock();
 		mallocmap_delete(userp, &(ctx.capmap));
-		p = __builtin_cheri_bounds_set(p, n);
+		p = restrict_user_ptr(p, n);
 		mallocmap_insert(p, g->mem, &(ctx.capmap));
 		unlock();
 #endif
@@ -60,6 +60,9 @@ void *realloc(void *p, size_t n)
 		new = g->maplen*4096UL == needed ? g->mem :
 			mremap(g->mem, g->maplen*4096UL, needed, MREMAP_MAYMOVE);
 		if (new!=MAP_FAILED) {
+#ifdef MORELLO
+			new = restrict_perms(new);
+#endif
 			g->mem = new;
 			g->maplen = needed/4096;
 			p = g->mem->storage + base;
@@ -69,7 +72,7 @@ void *realloc(void *p, size_t n)
 #ifdef MORELLO
 			wrlock();
 			mallocmap_delete(userp, &(ctx.capmap));
-			p = __builtin_cheri_bounds_set(p, n);
+			p = restrict_user_ptr(p, n);
 			mallocmap_insert(p, g->mem, &(ctx.capmap));
 			unlock();
 #endif

@@ -174,11 +174,9 @@ int mallocmap_insert(void *key, void *data, struct __mallocmap_tab *htab) {
 
 		if (e->data == NOT_PRESENT) {
 			// Replace tombstone
-			e->key = key;
-			e->data = data;
 			htab->tombs--;
 
-			return 1;
+			break;
 		}
 
 		if (e->key == key) {
@@ -200,6 +198,7 @@ int mallocmap_insert(void *key, void *data, struct __mallocmap_tab *htab) {
 			// Resize failed, return error.
 			htab->used--;
 			e->key = NOT_PRESENT;
+
 			return 0;
 		}
 	}

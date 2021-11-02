@@ -1432,5 +1432,17 @@
         "args": ["2"],
         "stdin": "jkl;",
         "xrc": [0]
+    },
+    {
+        "app": "${build}/malloc_stress.exe",
+        "name": "malloc_stress_test_large_allocation",
+        "args": ["0"],
+        "xrc": [0]
+    },
+    {
+        "app": "${build}/malloc_stress.exe",
+        "name": "malloc_stress_test_many_allocations",
+        "args": ["1"],
+        "xrc": [0]
     }
 ]

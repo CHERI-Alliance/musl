@@ -1455,5 +1455,10 @@
         "name": "malloc_stress_test_all_sizeclasses",
         "args": ["2"],
         "xrc": [0]
+    },
+    {
+        "app": "${build}/checksealed.exe",
+        "name": "check-sealed-funcs",
+        "xrc": [0]
     }
 ]

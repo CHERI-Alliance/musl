@@ -26,7 +26,8 @@ void __init_libc(char **envp, char *pn)
 	uintptr_t *auxv, aux[AUX_CNT] = { 0 };
 	__environ = envp;
 	for (i=0; envp[i]; i++);
-	libc.auxv = auxv = (void *)(envp+i+1);
+	auxv = (void *)(envp+i+1);
+	libc.auxv = (auxv_entry *) auxv;
 	for (i=0; auxv[i]; i+=2) if (auxv[i]<AUX_CNT) aux[auxv[i]] = auxv[i+1];
 	__hwcap = aux[AT_HWCAP];
 	if (aux[AT_SYSINFO]) __sysinfo = aux[AT_SYSINFO];

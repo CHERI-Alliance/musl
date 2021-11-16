@@ -5,6 +5,7 @@
 #include <stdio.h>
 #include <limits.h>
 #include <stdint.h>
+#include <sys/auxv.h>
 
 struct __locale_map;
 
@@ -24,7 +25,7 @@ struct __libc {
 	char secure;
 	volatile signed char need_locks;
 	int threads_minus_1;
-	uintptr_t *auxv;
+	auxv_entry *auxv;
 	struct tls_module *tls_head;
 	size_t tls_size, tls_align, tls_cnt;
 	size_t page_size;

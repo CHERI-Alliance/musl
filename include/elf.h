@@ -971,8 +971,14 @@ typedef struct {
 
 typedef struct {
   uint64_t a_type;
+#ifdef MORELLO
+  uint64_t __padding;
+#endif
   union {
       uint64_t a_val;
+#ifdef MORELLO
+      void *a_ptr;
+#endif
   } a_un;
 } Elf64_auxv_t;
 

@@ -1,15 +1,35 @@
+#ifdef MORELLO
+
 #include <sys/auxv.h>
 #include <errno.h>
 #include "libc.h"
 
 void *__getauxptr(unsigned long item)
 {
-	uintptr_t *auxv = libc.auxv;
-	if (item == AT_SECURE) return libc.secure;
-	for (; *auxv; auxv+=2)
-		if (*auxv==item) return auxv[1];
+	// error if asking for a non-pointer from getauxptr()
+	switch (item) {
+		case AT_ENTRY:
+		case AT_SYSINFO_EHDR:
+		case AT_EXECFN:
+		case AT_RANDOM:
+		case AT_PLATFORM:
+		case AT_CHERI_EXEC_RW_CAP:
+		case AT_CHERI_EXEC_RX_CAP:
+		case AT_CHERI_INTERP_RW_CAP:
+		case AT_CHERI_INTERP_RX_CAP:
+		case AT_CHERI_SEAL_CAP:
+		{
+			auxv_entry *auxv = libc.auxv;
+			for (; auxv->a_type; auxv++)
+				if (auxv->a_type == item) return auxv->a_un.a_ptr;
+		}
+	}
+
+
 	errno = ENOENT;
 	return 0;
 }
 
 weak_alias(__getauxptr, getauxptr);
+
+#endif

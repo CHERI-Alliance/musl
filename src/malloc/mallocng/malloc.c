@@ -162,7 +162,7 @@ static uint32_t try_avail(struct meta **pm)
 			} else {
 				int cnt = m->mem->active_idx + 2;
 				int size = size_classes[m->sizeclass]*UNIT;
-				int span = UNIT + size*cnt;
+				int span = GRP_SIZE + size*cnt;
 				// activate up to next 4k boundary
 				while ((span^(span+size-1)) < 4096) {
 					cnt++;
@@ -216,11 +216,11 @@ static struct meta *alloc_group(int sc, size_t req)
 
 	// If we selected a count of 1 above but it's not sufficient to use
 	// mmap, increase to 2. Then it might be; if not it will nest.
-	if (cnt==1 && size*cnt+UNIT <= pagesize/2) cnt = 2;
+	if (cnt==1 && size*cnt+GRP_SIZE <= pagesize/2) cnt = 2;
 
 	// All choices of size*cnt are "just below" a power of two, so anything
 	// larger than half the page size should be allocated as whole pages.
-	if (size*cnt+UNIT > pagesize/2) {
+	if (size*cnt+GRP_SIZE > pagesize/2) {
 		// check/update bounce counter to start/increase retention
 		// of freed maps, and inhibit use of low-count, odd-size
 		// small mappings and single-slot groups if activated.
@@ -251,9 +251,9 @@ static struct meta *alloc_group(int sc, size_t req)
 		// bounce counter hasn't triggered, and either it saves memory
 		// or it avoids eagar slot allocation without wasting too much.
 		if (!nosmall && cnt<=7) {
-			req += IB + UNIT;
+			req += IB + GRP_SIZE;
 			req += -req & (pagesize-1);
-			if (req<size+UNIT || (req>=4*pagesize && 2*cnt>usage)) {
+			if (req<size+GRP_SIZE || (req>=4*pagesize && 2*cnt>usage)) {
 				cnt = 1;
 				needed = req;
 			}
@@ -269,12 +269,12 @@ static struct meta *alloc_group(int sc, size_t req)
 #endif
 		m->maplen = needed>>12;
 		ctx.mmap_counter++;
-		active_idx = (4096-UNIT)/size-1;
+		active_idx = (4096-GRP_SIZE)/size-1;
 		if (active_idx > cnt-1) active_idx = cnt-1;
 		if (active_idx < 0) active_idx = 0;
 	} else {
-		int j = size_to_class(UNIT+cnt*size-IB);
-		int idx = alloc_slot(j, UNIT+cnt*size-IB);
+		int j = size_to_class(GRP_SIZE+cnt*size-IB);
+		int idx = alloc_slot(j, GRP_SIZE+cnt*size-IB);
 		if (idx < 0) {
 			free_meta(m);
 			return 0;
@@ -284,7 +284,7 @@ static struct meta *alloc_group(int sc, size_t req)
 		m->maplen = 0;
 		p[-3] = (p[-3]&31) | (6<<5);
 		for (int i=0; i<=cnt; i++)
-			p[UNIT+i*size-4] = 0;
+			p[GRP_SIZE+i*size-4] = 0;
 		active_idx = cnt-1;
 	}
 	ctx.usage_by_class[sc] += cnt;
@@ -323,7 +323,7 @@ void *malloc_aligned(size_t n, size_t align)
 
 	size_t padded_n = n;
 	if (align > UNIT) {
-		padded_n += align - UNIT;
+		padded_n += align;
 	}
 
 	if (padded_n >= MMAP_THRESHOLD) {

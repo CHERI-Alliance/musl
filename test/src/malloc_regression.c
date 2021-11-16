@@ -13,8 +13,10 @@ int group_map_not_cleaned_on_create()
         if (cnt >= len) {
             len = (len * 2) + 1;
             list = realloc(list, len * sizeof(int *));
+            testptr(list, len * sizeof(int *));
         }
         list[cnt] = malloc(sizeof(int));
+        testptr(list[cnt], sizeof(int));
         *list[cnt] = cnt;
     }
     return TEST_SUCCESS;

@@ -1,5 +1,9 @@
 #pragma once
 
+#include <stdio.h>
+
+#define MMAP_THRESHOLD 131052
+
 #define TEST_SUCCESS 0
 #define UNEXPECTED_VALUE 1
 #define NULL_CAPABILITY 2

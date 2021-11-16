@@ -28,13 +28,15 @@ void *realloc(void *p, size_t n)
 	void *new;
 
 #ifdef MORELLO
-	n = __builtin_cheri_round_representable_length(n);
-	size_t new_alignment = __builtin_cheri_representable_alignment_mask(n);
+	size_t morello_n = __builtin_cheri_round_representable_length(n);
+	size_t new_alignment = __builtin_cheri_representable_alignment_mask(morello_n);
 
 	if ((new_alignment & (ptraddr_t) userp) != (ptraddr_t) userp) {
 		// alignment has to change, just fall back to malloc and free
 		goto malloc_then_free;
 	}
+
+	n = morello_n;
 #endif
 
 	// only resize in-place if size class matches
@@ -56,7 +58,7 @@ void *realloc(void *p, size_t n)
 	if (g->sizeclass>=48 && n>=MMAP_THRESHOLD) {
 		assert(g->sizeclass==63);
 		size_t base = (unsigned char *)p-start;
-		size_t needed = (n + base + UNIT + IB + 4095) & -4096;
+		size_t needed = (n + base + GRP_SIZE + IB + 4095) & -4096;
 		new = g->maplen*4096UL == needed ? g->mem :
 			mremap(g->mem, g->maplen*4096UL, needed, MREMAP_MAYMOVE);
 		if (new!=MAP_FAILED) {
@@ -66,7 +68,7 @@ void *realloc(void *p, size_t n)
 			g->mem = new;
 			g->maplen = needed/4096;
 			p = g->mem->storage + base;
-			end = g->mem->storage + (needed - UNIT) - IB;
+			end = g->mem->storage + (needed - GRP_SIZE) - IB;
 			*end = 0;
 			set_size(p, end, n);
 #ifdef MORELLO

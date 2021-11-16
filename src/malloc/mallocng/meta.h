@@ -17,17 +17,19 @@ extern const uint16_t size_classes[];
 #define MMAP_THRESHOLD 131052
 
 #ifdef MORELLO
-#define UNIT 32
+#define GRP_SIZE 32
 #else
-#define UNIT 16
+#define GRP_SIZE 16
 #endif
+
+#define UNIT 16
 
 #define IB 4
 
 struct group {
 	struct meta *meta;
 	unsigned char active_idx:5;
-	char pad[UNIT - sizeof(struct meta *) - 1];
+	char pad[GRP_SIZE - sizeof(struct meta *) - 1];
 	unsigned char storage[];
 };
 
@@ -177,7 +179,7 @@ static inline struct meta *get_meta(const unsigned char *p)
 		offset = *(uint32_t *)(p - 8);
 		assert(offset > 0xffff);
 	}
-	const struct group *base = (const void *)(p - UNIT*offset - UNIT);
+	const struct group *base = (const void *)(p - UNIT*offset - GRP_SIZE);
 	const struct meta *meta = base->meta;
 	assert(meta->mem == base);
 	assert(index <= meta->last_idx);
@@ -216,7 +218,7 @@ static inline size_t get_nominal_size(const unsigned char *p, const unsigned cha
 static inline size_t get_stride(const struct meta *g)
 {
 	if (!g->last_idx && g->maplen) {
-		return g->maplen*4096UL - UNIT;
+		return g->maplen*4096UL - GRP_SIZE;
 	} else {
 		return UNIT*size_classes[g->sizeclass];
 	}
@@ -279,6 +281,7 @@ static inline void *enframe(struct meta *g, int idx, size_t n, int ctr, size_t a
 
 static inline int size_to_class(size_t n)
 {
+	// shift by 4 to divide by 16 (UNIT)
 	n = (n+IB-1)>>4;
 	if (n<10) return n;
 	n++;

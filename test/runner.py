@@ -1,6 +1,8 @@
 import os
 import json
 import subprocess
+
+import sys
 import time
 import re
 
@@ -54,7 +56,13 @@ passcase = Template('''<testcase classname="${suite}" name="${name}" time="${tim
 <system-err><![CDATA[${stderr}]]></system-err>
 </testcase>''')
 failcase = Template('''<testcase classname="${suite}" name="${name}" time="${time}" status="run">
-<failure message="${name} has failed with return code ${rc}" type="failure">${description}</failure>
+<failure message="${name} has failed with return code ${rc}" type="failure">
+<![CDATA[
+${description}
+stdout: ${stdout}
+stderr: ${stderr}
+]]>
+</failure>
 <system-out><![CDATA[${stdout}]]></system-out>
 <system-err><![CDATA[${stderr}]]></system-err>
 </testcase>''')
@@ -315,5 +323,7 @@ if __name__ == '__main__':
         print('Failed tests:')
         for tn in failed_tests:
             print('- failed: %s' % tn)
+        sys.exit(1)
     else:
         print('All %s tests passed (%s skipped%s)' % (ntests - skipped, skipped, skipped_info))
+        sys.exit(0)

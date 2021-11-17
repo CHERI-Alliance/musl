@@ -14,6 +14,7 @@ bindir = $(exec_prefix)/bin
 
 prefix = /usr/local/musl
 includedir = $(prefix)/include
+sharedir = $(prefix)/share
 libdir = $(prefix)/lib
 syslibdir = /lib
 
@@ -162,7 +163,7 @@ obj/%.lo: $(srcdir)/%.S
 obj/%.lo: $(srcdir)/%.c $(GENH) $(IMPH)
 	$(CC_CMD)
 
-ifeq ($(USE_LIBSHIM),1)
+ifeq ($(LIBSHIM),yes)
 
 override LIBSHIM_BUILD = lib/libshim/build
 override LIBSHIM = $(LIBSHIM_BUILD)/libshim.a
@@ -178,7 +179,7 @@ LIBARCHCAP_REF ?= null
 
 $(LIBSHIM): lib/libshim
 	$(MAKE) -C lib/libshim LIBC=musl ARCH=morello LIBC_PATH=$(LIBSHIM_LIBC_PATH) \
-	CC=$(CC) CXX=$(CC)++ CFLAGS="-DMORELLO $(LIBSHIM_FLAGS)" CXXFLAGS="-DMORELLO $(LIBSHIM_FLAGS)"
+	CC=$(CC) CXX=$(CC)++ AR=$(AR) RANLIB=$(RANLIB) CFLAGS="-DMORELLO $(LIBSHIM_FLAGS)" CXXFLAGS="-DMORELLO $(LIBSHIM_FLAGS)"
 
 lib/libshim: lib/libshim-libc lib/libarchcap
 	git clone --depth 1 $(LIBSHIM_GIT) $@
@@ -211,12 +212,20 @@ lib/libshim-libc/include/%: $(srcdir)/include/%
 # install libc headers for libshim build
 lib/libshim-libc: $(ALL_INCLUDES:include/%=lib/libshim-libc/include/%)
 
+lib/revisions.txt:
+	@echo "Libarchcap: `bash $(srcdir)/tools/revision.bash lib/libarchcap`" > $@
+	@echo "Libshim: `bash $(srcdir)/tools/revision.bash lib/libshim`" >> $@
+	@echo "Musl: `bash $(srcdir)/tools/revision.bash $(srcdir)`" >> $@
+
 else
 
 override LIBSHIM =
 override LIBSHIM_OBJECTS =
 
-endif # USE_LIBSHIM
+lib/revisions.txt:
+	echo "Musl: `bash $(srcdir)/tools/revision.bash $(srcdir)`" >> $@
+
+endif # LIBSHIM == yes
 
 lib/libc.so: $(LOBJS) $(LDSO_OBJS)
 	$(CC) $(CFLAGS_ALL) $(LDFLAGS_ALL) -nostdlib -shared \
@@ -269,6 +278,9 @@ $(DESTDIR)$(includedir)/bits/%: obj/include/bits/%
 $(DESTDIR)$(includedir)/%: $(srcdir)/include/%
 	$(INSTALL) -D -m 644 $< $@
 
+$(DESTDIR)$(sharedir)/%.txt: lib/%.txt
+	$(INSTALL) -D -m 644 $< $@
+
 $(DESTDIR)$(LDSO_PATHNAME): $(DESTDIR)$(libdir)/libc.so
 	$(INSTALL) -D -l $(libdir)/libc.so $@ || true
 
@@ -278,7 +290,9 @@ install-headers: $(ALL_INCLUDES:include/%=$(DESTDIR)$(includedir)/%)
 
 install-tools: $(ALL_TOOLS:obj/%=$(DESTDIR)$(bindir)/%)
 
-install: install-libs install-headers install-tools
+install-docs: $(DESTDIR)$(sharedir)/revisions.txt
+
+install: install-libs install-headers install-tools install-docs
 
 musl-git-%.tar.gz: .git
 	 git --git-dir=$(srcdir)/.git archive --format=tar.gz --prefix=$(patsubst %.tar.gz,%,$@)/ -o $@ $(patsubst musl-git-%.tar.gz,%,$@)

@@ -52,7 +52,11 @@ We use ``--disable-shared`` because dynamic linking and dynamic loading is curre
 supported. We use ``--enable-morello`` to build the Morello version of the library. When
 this is disabled, an AArch64 version of the library will be built. Finally, using
 ``--enable-libshim`` is required to produce build which uses the ``libshim`` library for
-system calls. This option only works when Morello is enabled.
+system calls. This option only works when Morello is enabled. To build this library
+targeting system with Morello kernel, use ``--disable-libshim`` in the command above.
+
+Currently, by default, Morello and use of libshim is enabled and building shared library
+is disabled.
 
 To build and install, just run
 
@@ -65,8 +69,8 @@ When ``--enable-libshim`` is used, source code for
 `libshim <https://git.morello-project.org/morello/android/platform/external/libshim>`_
 and
 `libarchcap <https://git.morello-project.org/morello/android/platform/external/libarchcap>`_
-is downloaded and built. The ``libshim`` objects are then added to ``libc.a`` which can then
-be used in a usual way.
+is downloaded (from ``mainline`` branch) and built. The ``libshim`` objects are then added
+to the ``libc.a`` archive which can then be used in a usual way.
 
 Building Musl libc without libshim
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -80,7 +84,7 @@ To produce build without libshim, use the following configure command:
        --disable-shared --enable-morello --disable-libshim --prefix=${MUSL_HOME}
 
 The rest of the build process is the same. Please note that this configuration is
-experimental.
+experimental and is not currently covered by tests described below.
 
 Building applications with this library
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -113,17 +117,30 @@ Link executable objects:
        -nostdlib -L${MUSL_HOME}/lib -lc -static
 
 The ``-nostdlib`` and ``-L${MUSL_HOME}/lib`` options are used to make sure the right
-libraries for ``-lc`` and ``-lm`` are used. The ``-static`` is necessary because only
+library for ``-lc`` is used. The ``-static`` is necessary because only
 static linking is currently supported. See `Morello LLVM toolchain`_ for more details
-about the ``crtbegin`` and ``crtend`` objects and about ``libclang_rt.builtins-morello.a``.
+about the ``crtbegin`` and ``crtend`` objects and about ``libclang_rt.builtins-morello.a``
+static library. Note that paths to these objects provided by the toolchain can be obtained
+dynamically with these command:
+
+.. code-block::
+
+   ${MORELLO_HOME}/bin/clang -print-file-name=<file-name>
+
+For example:
+
+.. code-block::
+
+   ${MORELLO_HOME}/bin/clang -print-file-name=libclang_rt.builtins-morello.a
+
 
 Cross-compiling
 ^^^^^^^^^^^^^^^
-Both the steps above can be cross-compiled from an x86 host to target Morello. To do
-so append ``--target=aarch64-linux-gnu`` to the ``configure`` script and clang invocations.
-Clang is a cross-compiler by default so it can output code for any architecture on demand.
-The configure script will also try to use LLVM's binutils instead of gcc's. They can be
-overridden in the same way as ``CC``.
+Both steps above can be cross-compiled from an x86 host to Morello target. To do so,
+append ``--target=aarch64-linux-gnu`` to the ``configure`` script command and clang
+invocations (for both compiling and linking). Clang is a cross-compiler by default so it
+can output code for any architecture on demand. The configure script will also try to use
+LLVM's binutils instead of gcc's. They can be overridden in the same way as ``CC``.
 
 Morello LLVM toolchain
 ----------------------
@@ -141,7 +158,7 @@ Setup:
 .. code-block::
 
    # where host LLVM is installed
-   export HOST_LLVM_BIN=/usr/local/llvm/bin
+   export HOST_LLVM_BIN=/path/to/host/llvm/bin
    # path to sources of the Morello toolchain
    export LLVM_PROJECT="$(pwd)/llvm-project"
    # target installation path for the Morello toolchain
@@ -157,7 +174,7 @@ Configure:
 
 .. code-block::
 
-   mkdir build && cd build
+   mkdir -p build && cd build
    cmake \
       -DCMAKE_C_COMPILER=${HOST_LLVM_BIN}/clang \
       -DCMAKE_C_COMPILER_WORKS=YES \
@@ -192,6 +209,10 @@ Configure:
       -DCMAKE_INSTALL_PREFIX=${MORELLO_HOME} \
       -DLLVM_ENABLE_EH=ON -DLLVM_ENABLE_RTTI=ON \
       -DLLVM_ENABLE_PROJECTS="clang;lld;lldb;libcxx;libcxxabi;compiler-rt;libunwind" \
+      -DCLANG_DEFAULT_RTLIB="compiler-rt" \
+      -DCLANG_DEFAULT_CXX_STDLIB="libc++" \
+      -DCLANG_DEFAULT_LINKER="lld" \
+      -DCLANG_DEFAULT_OBJCOPY="llvm-objcopy" \
       ${LLVM_PROJECT}/llvm
 
 Build:
@@ -211,55 +232,63 @@ This includes the ``crtbegin`` and ``crtend`` objects which are provided by the 
 
    ${MORELLO_HOME}/bin/clang -march=morello+c64 -mabi=purecap \
        -c ${LLVM_PROJECT}/compiler-rt/lib/crt/crtbegin.c \
-       -o ${MORELLO_HOME}/lib/clang/11.0.0/lib/linux/clang_rt.crtbegin-morello.o
+       -o $(${MORELLO_HOME}/bin/clang -print-resource-dir)/lib/linux/clang_rt.crtbegin-morello.o
 
    ${MORELLO_HOME}/bin/clang -march=morello+c64 -mabi=purecap \
        -c ${LLVM_PROJECT}/compiler-rt/lib/crt/crtend.c \
-       -o ${MORELLO_HOME}/lib/clang/11.0.0/lib/linux/clang_rt.crtend-morello.o
+       -o $(${MORELLO_HOME}/bin/clang -print-resource-dir)/lib/linux/clang_rt.crtend-morello.o
 
 Compiling libclang_rt.builtins-morello.a
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Create ``toolchain.cmake`` file with the following contents:
+Create ``toolchain.cmake`` file with the following contents (note the use of environment
+variable ``MORELLO_HOME``, it is supposed to point to the Morello toolchain installation
+directory):
 
 .. code-block::
 
    set(CMAKE_SYSTEM_NAME Linux)
    set(CMAKE_SYSTEM_PROCESSOR aarch64)
-   set(CMAKE_C_COMPILER_TARGET "aarch64-linux-gnueabi -march=morello+c64 -mabi=purecap")
+   set(CMAKE_C_COMPILER_TARGET "aarch64-linux-gnu -march=morello+c64 -mabi=purecap")
 
-This file is used in the following configure command for compiler-rt:
+   set(CMAKE_C_COMPILER_WORKS 1 CACHE INTERNAL "")
+   set(CMAKE_CXX_COMPILER_WORKS 1 CACHE INTERNAL "")
+
+   set(CMAKE_C_COMPILER "${MORELLO_HOME}/bin/clang" CACHE FILEPATH "" FORCE)
+   set(CMAKE_CXX_COMPILER "${MORELLO_HOME}/bin/clang++" CACHE FILEPATH "" FORCE)
+   set(CMAKE_AR "${MORELLO_HOME}/bin/llvm-ar" CACHE FILEPATH "" FORCE)
+   set(CMAKE_RANLIB "${MORELLO_HOME}/bin/llvm-ranlib" CACHE FILEPATH "" FORCE)
+   set(CMAKE_NM "${MORELLO_HOME}/bin/llvm-nm" CACHE FILEPATH "" FORCE)
+   set(CMAKE_LINKER "${MORELLO_HOME}/bin/ld.lld" CACHE FILEPATH "" FORCE)
+   set(CMAKE_OBJDUMP "${MORELLO_HOME}/bin/llvm-objdump" CACHE FILEPATH "" FORCE)
+   set(CMAKE_OBJCOPY "${MORELLO_HOME}/bin/llvm-objcopy" CACHE FILEPATH "" FORCE)
+
+   set(LLVM_CONFIG_PATH "${MORELLO_HOME}/bin/llvm-config" CACHE FILEPATH "" FORCE)
+   set(CMAKE_EXE_LINKER_FLAGS "-fuse-ld=lld" CACHE FILEPATH "" FORCE)
+   set(CMAKE_SHARED_LINKER_FLAGS "-fuse-ld=lld" CACHE FILEPATH "" FORCE)
+
+This file is used in the following configure command for compiler-rt (note that the
+``MORELLO_HOME`` environment variable must be exported):
 
 .. code-block::
 
-   mkdir build-rt && cd build-rt
+   mkdir p build-rt && cd build-rt
+   rm -rf *
+
+   perl -pe 's/\$\{([_A-Z]+)\}/$ENV{$1}/g' < /path/to/toolchain.cmake > toolchain.cmake
 
    cmake -Wno-dev \
-      -DCMAKE_TOOLCHAIN_FILE=/path/to/toolchain.cmake \
-      -DCOMPILER_RT_DEFAULT_TARGET_TRIPLE=aarch64-linux-gnueabi \
+      -DCMAKE_TOOLCHAIN_FILE=toolchain.cmake \
+      -DCOMPILER_RT_DEFAULT_TARGET_TRIPLE=aarch64-linux-gnu \
       -DCMAKE_C_FLAGS="-nostdinc -isystem ${MUSL_HOME}/include" \
-      -DLLVM_CONFIG_PATH=${MORELLO_HOME}/bin/llvm-config \
-      -DCMAKE_C_COMPILER=${MORELLO_HOME}/bin/clang \
-      -DCMAKE_C_COMPILER_WORKS=YES \
-      -DCMAKE_CXX_COMPILER=${MORELLO_HOME}/bin/clang++ \
-      -DCMAKE_CXX_COMPILER_WORKS=YES \
-      -DCMAKE_AR=${MORELLO_HOME}/bin/llvm-ar \
-      -DCMAKE_RANLIB=${MORELLO_HOME}/bin/llvm-ranlib \
-      -DCMAKE_NM=${MORELLO_HOME}/bin/llvm-nm \
-      -DCMAKE_LINKER=${MORELLO_HOME}/bin/ld.lld \
-      -DCMAKE_OBJDUMP=${MORELLO_HOME}/bin/llvm-objdump \
-      -DCMAKE_OBJCOPY=${MORELLO_HOME}/bin/llvm-objcopy \
-      -DCMAKE_EXE_LINKER_FLAGS="-fuse-ld=lld" \
-      -DCMAKE_SHARED_LINKER_FLAGS="-fuse-ld=lld" \
       -DLLVM_TARGETS_TO_BUILD="AArch64" \
       -DCMAKE_BUILD_TYPE=Release \
       -DCMAKE_EXPORT_COMPILE_COMMANDS=ON \
       -DBUILD_SHARED_LIBS=ON \
       -DCMAKE_SKIP_BUILD_RPATH=OFF \
-      -DCMAKE_INSTALL_RPATH=\$ORIGIN/../lib \
+      -DCMAKE_INSTALL_RPATH=$ORIGIN/../lib \
       -DCMAKE_BUILD_WITH_INSTALL_RPATH=ON \
       -DLLVM_ENABLE_ASSERTIONS=ON \
-      -DCMAKE_INSTALL_PREFIX=${MORELLO_HOME}-rt \
       -DCOMPILER_RT_BUILD_SANITIZERS=OFF \
       -DCOMPILER_RT_BUILD_XRAY=OFF \
       -DCMAKE_EXPORT_COMPILE_COMMANDS=ON \
@@ -267,7 +296,8 @@ This file is used in the following configure command for compiler-rt:
 
    make clang_rt.builtins-aarch64
 
-   mv lib/linux/libclang_rt.builtins-aarch64.a ${MORELLO_HOME}/lib/clang/11.0.0/lib/linux/libclang_rt.builtins-morello.a
+   mv lib/linux/libclang_rt.builtins-aarch64.a \
+       $(${MORELLO_HOME}/bin/clang -print-resource-dir)/lib/linux/libclang_rt.builtins-morello.a
 
 Contributing
 ------------

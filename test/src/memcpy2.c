@@ -11,14 +11,10 @@ int y = 9;
 int z = 0;
 
 /* We need this wrapper to force compiler use memcpy */
-static void *copy_bytes(void *dst, void *src, size_t n)
+__attribute__ ((naked,noinline))
+static void *copy_bytes(register void * c0, register void *c1, register size_t x2)
 {
-	__asm__ volatile ("mov c0, %0" : : "C"(dst));
-	__asm__ volatile ("mov c1, %0" : : "C"(src));
-	__asm__ volatile ("mov x2, %0" : : "r"(n));
-	void *res;
-	__asm__ volatile ("bl memcpy" : "=C"(res): : "cfp", "clr");
-	return res;
+	__asm__ volatile ("b memcpy\n");
 }
 
 #define CHECK(res, dst, src, num) ({                          \

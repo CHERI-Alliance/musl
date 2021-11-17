@@ -28,16 +28,14 @@ System types:
   --build=BUILD           build system type; used only to infer cross-compiling
 
 Optional features:
-  --enable-optimize=...              optimize listed components for speed over size [auto]
-  --enable-debug                     build with debugging information [disabled]
-  --disable-warnings                 build with recommended warnings flags [enabled]
-  --enable-wrapper=...               build given musl toolchain wrapper [auto]
-  --disable-shared                   inhibit building shared library [enabled]
-  --disable-static                   inhibit building static library [enabled]
-  --disable-morello                  inhibit using Morello features (only for AArch64 targets)
-  --morello-subobject-bounds=on/off  support restricting the capability bounds of subobjects
-                                     (only for AArch64 targets, off by default)
-  --enable-libshim                   build with syscall shim [disabled]
+  --enable-optimize=...   optimize listed components for speed over size [auto]
+  --enable-debug          build with debugging information [disabled]
+  --disable-warnings      build with recommended warnings flags [enabled]
+  --enable-wrapper=...    build given musl toolchain wrapper [auto]
+  --enable-shared         enable building shared library [disabled]
+  --disable-static        inhibit building static library [enabled]
+  --disable-morello       inhibit using Morello features (only for AArch64 targets) [enabled]
+  --disable-libshim       inhibit building with syscall libshim [auto]
 
 Optional packages:
   --with-malloc=...       choose malloc implementation [mallocng]
@@ -159,9 +157,9 @@ debug=no
 morello=yes
 morello_objects="\$(shell cat arch/morello/morello.objects | tr '\n' ' ')"
 morello_subobject_bounds=no
-libshim=no
+libshim=auto
 warnings=yes
-shared=auto
+shared=no
 static=yes
 wrapper=auto
 gcc_wrapper=no
@@ -191,8 +189,8 @@ case "$arg" in
 --disable-morello|--enable-morello=no) morello=no ; morello_objects="" ;;
 --morello-subobject-bounds=on) morello_subobject_bounds=yes ;;
 --morello-subobject-bounds=off) morello_subobject_bounds=no ;;
---enable-libshim|--enable-libshim=yes) libshim=yes ; use_libshim=1 ;;
---disable-libshim|--enable-libshim=no) libshim=no ; use_libshim=0 ;;
+--enable-libshim|--enable-libshim=yes) libshim=yes ;;
+--disable-libshim|--enable-libshim=no) libshim=no ;;
 --enable-warnings|--enable-warnings=yes) warnings=yes ;;
 --disable-warnings|--enable-warnings=no) warnings=no ;;
 --enable-wrapper|--enable-wrapper=yes) wrapper=detect ;;
@@ -321,8 +319,8 @@ tryldflag LDFLAGS_AUTO "-fuse-ld=lld"
 fi
 
 if test "$cc_family" = clang; then
-candidate_ar=llvm-ar
-candidate_ranlib=llvm-ranlib
+candidate_ar=$(dirname ${CC})/llvm-ar
+candidate_ranlib=$(dirname ${CC})/llvm-ranlib
 else
 candidate_ar=${CROSS_COMPILE}ar
 candidate_ranlib=${CROSS_COMPILE}ranlib
@@ -479,6 +477,10 @@ fi
 #
 if test "$morello_subobject_bounds" = yes ; then
     CFLAGS_MORELLO="$CFLAGS_MORELLO -DMORELLO_ENABLE_SUBOBJECT_BOUNDS"
+fi
+
+if test "$libshim" = auto && test "$morello" = yes ; then
+    libshim=yes
 fi
 
 if test "$libshim" = yes ; then
@@ -890,7 +892,7 @@ ADD_CFI = $ADD_CFI
 MALLOC_DIR = $malloc_dir
 CFLAGS_MORELLO = $CFLAGS_MORELLO
 MORELLO_OBJECTS = $morello_objects
-USE_LIBSHIM = $use_libshim
+LIBSHIM = $libshim
 LIBSHIM_FLAGS = $LIBSHIM_FLAGS
 EOF
 test "x$static" = xno && echo "STATIC_LIBS ="

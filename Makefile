@@ -165,10 +165,14 @@ obj/%.lo: $(srcdir)/%.c $(GENH) $(IMPH)
 
 ifeq ($(LIBSHIM),yes)
 
-override LIBSHIM_BUILD = lib/libshim/build
+override LIBSHIM_PATH = lib/libshim
+override LIBSHIM_BUILD = $(LIBSHIM_PATH)/build
 override LIBSHIM = $(LIBSHIM_BUILD)/libshim.a
 override LIBSHIM_LIBC_PATH = $(shell realpath $(srcdir))/lib/libshim-libc
 override LIBSHIM_OBJECTS := $$(find $(LIBSHIM_BUILD) -type f -name \*.o)
+
+LIBSHIM_JSON_PATH ?= $(LIBSHIM_PATH)/musl_$(ARCH).json
+override LIBSHIM_JSON_PATH :=  $(shell realpath $(srcdir))/$(LIBSHIM_JSON_PATH)
 
 LIBSHIM_URL ?= https://git.morello-project.org/morello/android/platform/external
 
@@ -179,7 +183,8 @@ LIBARCHCAP_REF ?= null
 
 $(LIBSHIM): lib/libshim
 	$(MAKE) -C lib/libshim LIBC=musl ARCH=morello LIBC_PATH=$(LIBSHIM_LIBC_PATH) \
-	CC=$(CC) CXX=$(CC)++ AR=$(AR) RANLIB=$(RANLIB) CFLAGS="-DMORELLO $(LIBSHIM_FLAGS)" CXXFLAGS="-DMORELLO $(LIBSHIM_FLAGS)"
+	CC=$(CC) CXX=$(CC)++ AR=$(AR) RANLIB=$(RANLIB) CFLAGS="-DMORELLO $(LIBSHIM_FLAGS)" CXXFLAGS="-DMORELLO $(LIBSHIM_FLAGS)" \
+	LIBSHIM_JSON_PATH=$(LIBSHIM_JSON_PATH)
 
 lib/libshim: lib/libshim-libc lib/libarchcap
 	git clone --depth 1 $(LIBSHIM_GIT) $@

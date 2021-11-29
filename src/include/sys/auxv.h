@@ -3,7 +3,7 @@
 
 #include "../../../include/sys/auxv.h"
 
-#if defined(__LP64__)
+#if (__SIZEOF_LONG__ == 8)
 typedef Elf64_auxv_t auxv_entry;
 #else
 typedef Elf32_auxv_t auxv_entry;

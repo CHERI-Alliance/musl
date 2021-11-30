@@ -7,18 +7,18 @@
 __setjmp:
 _setjmp:
 setjmp:
-	// IHI0055B_aapcs64.pdf 5.1.1, 5.1.2 callee saved registers
-	stp x19, x20, [x0,#0]
-	stp x21, x22, [x0,#16]
-	stp x23, x24, [x0,#32]
-	stp x25, x26, [x0,#48]
-	stp x27, x28, [x0,#64]
-	stp x29, x30, [x0,#80]
-	mov x2, sp
-	str x2, [x0,#104]
-	stp  d8,  d9, [x0,#112]
-	stp d10, d11, [x0,#128]
-	stp d12, d13, [x0,#144]
-	stp d14, d15, [x0,#160]
+	// 102205_aapcs-morello.pdf 6.1.1 callee saved registers
+	stp c19, c20, [c0,#0]
+	stp c21, c22, [c0,#32]
+	stp c23, c24, [c0,#64]
+	stp c25, c26, [c0,#96]
+	stp c27, c28, [c0,#128]
+	stp c29, c30, [c0,#160]
+	mov c2, csp
+	str c2, [c0,#208]
+	stp  d8,  d9, [c0,#224]
+	stp d10, d11, [c0,#240]
+	stp d12, d13, [c0,#256]
+	stp d14, d15, [c0,#272]
 	mov x0, #0
 	ret

@@ -6,16 +6,16 @@ sigsetjmp:
 __sigsetjmp:
 	cbz x1,setjmp
 
-	str x30,[x0,#176]
-	str x19,[x0,#176+8+8]
-	mov x19,x0
+	str c30,[c0,#288]
+	str c19,[c0,#288+16+16]
+	mov c19,c0
 
 	bl setjmp
 
 	mov w1,w0
-	mov x0,x19
-	ldr x30,[x0,#176]
-	ldr x19,[x0,#176+8+8]
+	mov c0,c19
+	ldr c30,[c0,#288]
+	ldr c19,[c0,#288+16+16]
 
 .hidden __sigsetjmp_tail
 	b __sigsetjmp_tail

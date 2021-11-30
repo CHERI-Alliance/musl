@@ -8,6 +8,7 @@ src/functional/fscanf-static.exe
 src/functional/fwscanf-static.exe
 src/functional/pthread_tsd-static.exe
 src/functional/random-static.exe
+src/functional/setjmp-static.exe
 src/functional/snprintf-static.exe
 src/functional/sscanf-static.exe
 src/functional/stat-static.exe

@@ -9,9 +9,11 @@ extern "C" {
 
 #include <bits/setjmp.h>
 
+#include <stdint.h>
+
 typedef struct __jmp_buf_tag {
 	__jmp_buf __jb;
-	unsigned long __fl;
+	uintptr_t __fl;
 	unsigned long __ss[128/sizeof(long)];
 } jmp_buf[1];
 

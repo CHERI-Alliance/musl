@@ -668,6 +668,8 @@ obj/src/sched/sched_yield.o
 obj/src/select/poll.o
 obj/src/select/pselect.o
 obj/src/select/select.o
+obj/src/setjmp/morello/longjmp.o
+obj/src/setjmp/morello/setjmp.o
 obj/src/signal/block.o
 obj/src/signal/getitimer.o
 obj/src/signal/kill.o

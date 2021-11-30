@@ -550,6 +550,34 @@
         "xrc": [0]
     },
     {
+        "app": "${build}/timer.exe",
+        "name": "timer_funcs",
+        "xrc": [0]
+    },
+    {
+        "app": "${build}/timegm.exe",
+        "name": "timegm",
+        "xrc": [0],
+        "stdout": ["0"]
+    },
+    {
+        "app": "${build}/clock_getcpuclockid.exe",
+        "name": "clock_getcpuclockid",
+        "xrc": [0]
+    },
+    {
+        "app": "${build}/nanosleep.exe",
+        "name": "nanosleep",
+        "args": ["0"],
+        "xrc": [0]
+    },
+    {
+        "app": "${build}/nanosleep.exe",
+        "name": "clock_nanosleep",
+        "args": ["1"],
+        "xrc": [0]
+    },
+    {
         "app":  "${build}/strxfrm.exe",
         "name": "strxfrm-get-length",
         "args": ["0"],

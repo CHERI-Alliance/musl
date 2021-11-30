@@ -233,6 +233,7 @@ obj/src/linux/setns.o
 obj/src/linux/settimeofday.o
 obj/src/linux/signalfd.o
 obj/src/linux/splice.o
+obj/src/linux/stime.o
 obj/src/linux/swap.o
 obj/src/linux/syncfs.o
 obj/src/linux/sync_file_range.o
@@ -1092,6 +1093,7 @@ obj/src/time/nanosleep.o
 obj/src/time/strftime.o
 obj/src/time/strptime.o
 obj/src/time/time.o
+obj/src/time/timegm.o
 obj/src/time/timer_create.o
 obj/src/time/timer_delete.o
 obj/src/time/timer_getoverrun.o

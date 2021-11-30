@@ -244,7 +244,7 @@ static struct meta *alloc_group(int sc, size_t req)
 			else if ((sc&3)==0 && size*cnt>8*pagesize) cnt = 3;
 			else if ((sc&3)==0 && size*cnt>2*pagesize) cnt = 5;
 		}
-		size_t needed = size*cnt + UNIT;
+		size_t needed = size*cnt + GRP_SIZE;
 		needed += -needed & (pagesize-1);
 
 		// produce an individually-mmapped allocation if usage is low,

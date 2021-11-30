@@ -8,8 +8,10 @@ void *realloc(void *p, size_t n)
 {
 	if (!p) return malloc(n);
 
-	// preserve original user pointer
+	// preserve original user pointer and requested size
 	void *userp = p;
+	size_t req_n = n;
+
 #ifdef MORELLO
 	rdlock();
 	p = expand_bounds(p);
@@ -28,15 +30,13 @@ void *realloc(void *p, size_t n)
 	void *new;
 
 #ifdef MORELLO
-	size_t morello_n = __builtin_cheri_round_representable_length(n);
-	size_t new_alignment = __builtin_cheri_representable_alignment_mask(morello_n);
+	n = __builtin_cheri_round_representable_length(n);
+	size_t new_alignment = __builtin_cheri_representable_alignment_mask(n);
 
 	if ((new_alignment & (ptraddr_t) userp) != (ptraddr_t) userp) {
 		// alignment has to change, just fall back to malloc and free
 		goto malloc_then_free;
 	}
-
-	n = morello_n;
 #endif
 
 	// only resize in-place if size class matches
@@ -83,9 +83,9 @@ void *realloc(void *p, size_t n)
 	}
 
 malloc_then_free:
-	new = malloc(n);
+	new = malloc(req_n);
 	if (!new) return 0;
-	memcpy(new, p, n < old_size ? n : old_size);
+	memcpy(new, p, req_n < old_size ? req_n : old_size);
 	free(userp);
 
 	return new;

@@ -24,7 +24,7 @@ int main(int argc, char **argv) {
   }
   clock_gettime(CLOCK_REALTIME, &ts_ret2);
   // Check duration exceeded sleep time
-  if ((ts_ret2.tv_nsec - ts_ret1.tv_nsec) < delay_ns) return 3;
+  if (((ts_ret2.tv_nsec - ts_ret1.tv_nsec) < delay_ns) && (ts_ret2.tv_sec <= ts_ret1.tv_sec)) return 3;
 
   return 0;
 }

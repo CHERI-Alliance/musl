@@ -287,8 +287,10 @@ fi
 tryflag   CFLAGS_TRY  -Werror=unknown-warning-option
 tryflag   CFLAGS_TRY  -Werror=unused-command-line-argument
 tryflag   CFLAGS_TRY  -Werror=ignored-optimization-argument
+if test "$shared" = yes ; then
 tryldflag LDFLAGS_TRY -Werror=unknown-warning-option
 tryldflag LDFLAGS_TRY -Werror=unused-command-line-argument
+fi
 
 #
 # Need to know if the compiler is gcc or clang to decide which toolchain
@@ -314,13 +316,15 @@ tryflag CFLAGS_TRY "--target=$target" || exit 1
 CFLAGS_AUTO="--target=${target} ${CFLAGS_AUTO}"
 # libshim is unaware of target, so inform it
 LIBSHIM_FLAGS="--target=${target}"
+if test "$shared" = yes ; then
 # best effort, overriding LD is currently not supported
 tryldflag LDFLAGS_AUTO "-fuse-ld=lld"
 fi
+fi
 
 if test "$cc_family" = clang; then
-candidate_ar=$(dirname ${CC})/llvm-ar
-candidate_ranlib=$(dirname ${CC})/llvm-ranlib
+candidate_ar=$(${CC} -print-prog-name=llvm-ar)
+candidate_ranlib=$(${CC} -print-prog-name=llvm-ranlib)
 else
 candidate_ar=${CROSS_COMPILE}ar
 candidate_ranlib=${CROSS_COMPILE}ranlib
@@ -649,6 +653,7 @@ else
 pic_default=no
 fi
 
+if test "$shared" = yes ; then
 # Reduce space lost to padding for alignment purposes by sorting data
 # objects according to their alignment requirements. This approximates
 # optimal packing.
@@ -688,6 +693,7 @@ test -z "$LIBCC" && try_libcc=`$CC -print-libgcc-file-name 2>/dev/null` \
 test -z "$LIBCC" && try_libcc=`$CC -print-file-name=libpcc.a 2>/dev/null` \
                  && tryldflag LIBCC "$try_libcc"
 printf "using compiler runtime libraries: %s\n" "$LIBCC"
+fi
 
 # Figure out arch variants for archs with variants
 SUBARCH=

@@ -8,9 +8,11 @@ override MUSL_LIB = $(prefix)/lib
 override MUSL_INC = $(prefix)/include
 override MUSL_BITS = crt1.o crti.o crtn.o libc.a rcrt1.o Scrt1.o
 
+CFLAGS += ${TEST_CFLAGS}
 CFLAGS += -nostdinc -isystem $(MUSL_INC) -march=morello+c64 -mabi=purecap -g -DMORELLO -fno-builtin-mempcpy
 CFLAGS += -Wall -Wpedantic -Werror
 CFLAGS += -Wno-gnu-empty-initializer -Wno-gnu-folding-constant -Wno-gnu-statement-expression
+LDFLAGS += ${TEST_LDFLAGS}
 LDFLAGS += -g -fuse-ld=lld -nostdlib -L$(MUSL_LIB) -march=morello+c64 -mabi=purecap -Wl,-disable-warn-morello-abi-mismatch
 LDLIBS += -lc
 

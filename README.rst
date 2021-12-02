@@ -72,6 +72,22 @@ and
 is downloaded (from ``mainline`` branch) and built. The ``libshim`` objects are then added
 to the ``libc.a`` archive which can then be used in a usual way.
 
+When libshim is compiled, it needs access to kernel headers that should correspond to the
+kernel on the target system. The makefile of libshim tries to locate these headers, but,
+if that is unsuccessful, the following message may appear: ``Cross compilation on <OS>
+is not supported``. Should this happen, you may install kernel header manually. To do this,
+download kernel sources of the required version and run the following command:
+
+.. code-block::
+
+   make headers_install ARCH=arm64 INSTALL_HDR_PATH=/path/to/kernel/headers
+
+To use those headers while building Musl, use:
+
+.. code-block::
+
+   KERNEL_HEADER_INCLUDES="-isystem /path/to/kernel/headers/include" make
+
 Building Musl libc without libshim
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
@@ -140,7 +156,8 @@ Both steps above can be cross-compiled from an x86 host to Morello target. To do
 append ``--target=aarch64-linux-gnu`` to the ``configure`` script command and clang
 invocations (for both compiling and linking). Clang is a cross-compiler by default so it
 can output code for any architecture on demand. The configure script will also try to use
-LLVM's binutils instead of gcc's. They can be overridden in the same way as ``CC``.
+LLVM's binutils instead of gcc's. They can be overridden in the same way as ``CC``. It
+might also be necessary to run ``configure`` with ``CFLAGS=--target=aarch64-linux-gnu``.
 
 Morello LLVM toolchain
 ----------------------
@@ -152,6 +169,8 @@ This describes how to build Morello LLVM toolchain natively from
 `source <https://git.morello-project.org/morello/llvm-project>`_. This relies on existing
 LLVM toolchain of version 9.0.x or newer (the "host LLVM") and can be used on an AArch64
 Linux system.
+
+The essential differences of cross-compiling the toolchain on x86 hosts are explained below.
 
 Setup:
 
@@ -228,6 +247,9 @@ Build:
    make -j16
    make install
 
+This step is the same for native and cross compilation except that you need to extend
+targets to build in ``LLVM_TARGETS_TO_BUILD`` with your host target.
+
 Compiling crtbegin and crtend objects
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
@@ -237,15 +259,55 @@ This includes the ``crtbegin`` and ``crtend`` objects which are provided by the 
 .. code-block::
 
    ${MORELLO_HOME}/bin/clang -march=morello+c64 -mabi=purecap \
+       -nostdinc -isystem ${MUSL_HOME}/include \
        -c ${LLVM_PROJECT}/compiler-rt/lib/crt/crtbegin.c \
        -o $(${MORELLO_HOME}/bin/clang -print-resource-dir)/lib/linux/clang_rt.crtbegin-morello.o
 
    ${MORELLO_HOME}/bin/clang -march=morello+c64 -mabi=purecap \
+       -nostdinc -isystem ${MUSL_HOME}/include \
        -c ${LLVM_PROJECT}/compiler-rt/lib/crt/crtend.c \
        -o $(${MORELLO_HOME}/bin/clang -print-resource-dir)/lib/linux/clang_rt.crtend-morello.o
 
+When cross-compiling, you will also need to build these objects for AArch64 (non-Morello)
+target:
+
+.. code-block::
+
+   ${MORELLO_HOME}/bin/clang --target=aarch64-linux-gnu \
+       -nostdinc -isystem ${MUSL_HOME}/include \
+       -c ${LLVM_PROJECT}/compiler-rt/lib/crt/crtbegin.c \
+       -o $(${MORELLO_HOME}/bin/clang -print-resource-dir)/lib/linux/clang_rt.crtbegin-aarch64.o
+
+   ${MORELLO_HOME}/bin/clang --target=aarch64-linux-gnu \
+       -nostdinc -isystem ${MUSL_HOME}/include \
+       -c ${LLVM_PROJECT}/compiler-rt/lib/crt/crtend.c \
+       -o $(${MORELLO_HOME}/bin/clang -print-resource-dir)/lib/linux/clang_rt.crtend-aarch64.o
+
 Compiling libclang_rt.builtins-morello.a
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+The ``libclang_rt.builtins-morello.a`` binary is required for building purecap applications.
+This step requires Musl library built and installed (``libclang_rt.builtins-morello.a``
+depends in C library headers).
+
+When cross-compiling, before proceeding to the step of building Morello version of the
+``libclang_rt.builtins-morello.a``, you will need to cross-compile AArch64 (non-Morello)
+version of this static library ``libclang_rt.builtins-aarch64.a``. This operation is
+identical to build Morello version with the following differences:
+
+* The ``CMAKE_C_COMPILER_TARGET`` value should be replaced with only ``aarch64-linux-gnu``
+  (Morello-specific flags should be removed).
+* The ``MUSL_HOME`` variable will refer to the installation path of the AArch64 (non-Morello)
+  version of Musl. It can bui built by using the procedure described above with running
+  the ``configure`` script with ``--disable-morello --disable-libshim`` options.
+* The destination file name of the ``mv`` command must be ``libclang_rt.builtins-aarch64.a``.
+
+When AArch64 versions of ``libclang_rt.builtins-aarch64.a``, ``clang_rt.crtbegin-aarch64.o``
+and ``clang_rt.crtend-aarch64.o`` are installed, you can successfully cross-compile Morello
+version of ``libclang_rt.builtins-morello.a`` by following steps described above.
+
+If you compile toolchain on AArch64-based device, you can proceed to the next step straight
+away.
 
 Create ``toolchain.cmake`` file with the following contents (note the use of environment
 variable ``MORELLO_HOME``, it is supposed to point to the Morello toolchain installation

@@ -11,5 +11,9 @@ else
 sed 's/$/-git/' < VERSION
 fi
 else
+if test -f VERSION ; then
 cat VERSION
+else
+echo "<unknown>"
+fi
 fi

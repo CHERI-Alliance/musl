@@ -36,6 +36,7 @@ Optional features:
   --disable-static        inhibit building static library [enabled]
   --disable-morello       inhibit using Morello features (only for AArch64 targets) [enabled]
   --disable-libshim       inhibit building with syscall libshim [auto]
+  --libshim-path=<path>   path to libshim, clone if empty [lib/libshim]
 
 Optional packages:
   --with-malloc=...       choose malloc implementation [mallocng]
@@ -158,6 +159,7 @@ morello=yes
 morello_objects="\$(shell cat arch/morello/morello.objects | tr '\n' ' ')"
 morello_subobject_bounds=no
 libshim=auto
+libshim_path=lib/libshim
 warnings=yes
 shared=no
 static=yes
@@ -191,6 +193,7 @@ case "$arg" in
 --morello-subobject-bounds=off) morello_subobject_bounds=no ;;
 --enable-libshim|--enable-libshim=yes) libshim=yes ;;
 --disable-libshim|--enable-libshim=no) libshim=no ;;
+--libshim-path=*) libshim_path=${arg#*=} ;;
 --enable-warnings|--enable-warnings=yes) warnings=yes ;;
 --disable-warnings|--enable-warnings=no) warnings=no ;;
 --enable-wrapper|--enable-wrapper=yes) wrapper=detect ;;
@@ -493,6 +496,8 @@ if test "$libshim" = yes ; then
     else
         fail "$0: Libshim is only applicable for Morello targets"
     fi
+
+    LIBSHIM_PATH="$libshim_path"
 fi
 
 #
@@ -900,6 +905,7 @@ CFLAGS_MORELLO = $CFLAGS_MORELLO
 MORELLO_OBJECTS = $morello_objects
 LIBSHIM = $libshim
 LIBSHIM_FLAGS = $LIBSHIM_FLAGS
+LIBSHIM_PATH = $LIBSHIM_PATH
 EOF
 test "x$static" = xno && echo "STATIC_LIBS ="
 test "x$shared" = xno && echo "SHARED_LIBS ="

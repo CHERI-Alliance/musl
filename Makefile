@@ -165,66 +165,64 @@ obj/%.lo: $(srcdir)/%.c $(GENH) $(IMPH)
 
 ifeq ($(LIBSHIM),yes)
 
-override LIBSHIM_PATH = lib/libshim
+# LIBSHIM_PATH is defined in config.mak
 override LIBSHIM_BUILD = $(LIBSHIM_PATH)/build
-override LIBSHIM = $(LIBSHIM_BUILD)/libshim.a
+override LIBSHIM_LIB = $(LIBSHIM_BUILD)/libshim.a
 override LIBSHIM_LIBC_PATH = $(shell realpath $(srcdir))/lib/libshim-libc
 override LIBSHIM_OBJECTS := $$(find $(LIBSHIM_BUILD) -type f -name \*.o)
 
 LIBSHIM_JSON_PATH ?= $(LIBSHIM_PATH)/musl_$(ARCH).json
-override LIBSHIM_JSON_PATH :=  $(shell realpath $(srcdir))/$(LIBSHIM_JSON_PATH)
-
 LIBSHIM_URL ?= https://git.morello-project.org/morello/android/platform/external
-
 LIBSHIM_GIT ?= $(LIBSHIM_URL)/libshim
 LIBSHIM_REF ?= null
 LIBARCHCAP_GIT ?= $(LIBSHIM_URL)/libarchcap
 LIBARCHCAP_REF ?= null
+LIBARCHCAP_PATH := $(LIBSHIM_PATH)/../libarchcap
 
-$(LIBSHIM): lib/libshim
-	$(MAKE) -C lib/libshim LIBC=musl ARCH=morello LIBC_PATH=$(LIBSHIM_LIBC_PATH) \
+$(LIBSHIM_LIB): $(LIBSHIM_LIBC_PATH) $(LIBSHIM_PATH) $(LIBARCHCAP_PATH)
+	$(MAKE) -C $(LIBSHIM_PATH) LIBC=musl ARCH=morello LIBC_PATH=$(LIBSHIM_LIBC_PATH) \
 	CC=$(CC) CXX=$(CC)++ AR=$(AR) RANLIB=$(RANLIB) CFLAGS="-DMORELLO $(LIBSHIM_FLAGS)" CXXFLAGS="-DMORELLO $(LIBSHIM_FLAGS)" \
-	LIBSHIM_JSON_PATH=$(LIBSHIM_JSON_PATH)
+	LIBSHIM_JSON_PATH=$(shell realpath $(LIBSHIM_JSON_PATH))
 
-lib/libshim: lib/libshim-libc lib/libarchcap
+$(LIBSHIM_PATH):
 	git clone --depth 1 $(LIBSHIM_GIT) $@
 ifneq ($(LIBSHIM_REF),null)
 	cd $@ && git pull --rebase $(LIBSHIM_GIT) $(LIBSHIM_REF)
 endif
 
-lib/libarchcap:
+$(LIBARCHCAP_PATH):
 	git clone --depth 1 $(LIBARCHCAP_GIT) $@
 ifneq ($(LIBARCHCAP_REF),null)
 	cd $@ && git pull --rebase $(LIBARCHCAP_GIT) $(LIBARCHCAP_REF)
 endif
 
 # install libc headers for libshim build
-lib/libshim-libc/include/bits/%: $(srcdir)/arch/$(ARCH)/bits/%
+$(LIBSHIM_LIBC_PATH)/include/bits/%: $(srcdir)/arch/$(ARCH)/bits/%
 	$(INSTALL) -D -m 644 $< $@
 
 # install libc headers for libshim build
-lib/libshim-libc/include/bits/%: $(srcdir)/arch/generic/bits/%
+$(LIBSHIM_LIBC_PATH)/include/bits/%: $(srcdir)/arch/generic/bits/%
 	$(INSTALL) -D -m 644 $< $@
 
 # install libc headers for libshim build
-lib/libshim-libc/include/bits/%: obj/include/bits/%
+$(LIBSHIM_LIBC_PATH)/include/bits/%: obj/include/bits/%
 	$(INSTALL) -D -m 644 $< $@
 
 # install libc headers for libshim build
-lib/libshim-libc/include/%: $(srcdir)/include/%
+$(LIBSHIM_LIBC_PATH)/include/%: $(srcdir)/include/%
 	$(INSTALL) -D -m 644 $< $@
 
 # install libc headers for libshim build
-lib/libshim-libc: $(ALL_INCLUDES:include/%=lib/libshim-libc/include/%)
+$(LIBSHIM_LIBC_PATH): $(ALL_INCLUDES:include/%=$(LIBSHIM_LIBC_PATH)/include/%)
 
 lib/revisions.txt:
-	@echo "Libarchcap: `bash $(srcdir)/tools/revision.bash lib/libarchcap`" > $@
-	@echo "Libshim: `bash $(srcdir)/tools/revision.bash lib/libshim`" >> $@
+	@echo "Libarchcap: `bash $(srcdir)/tools/revision.bash $(LIBARCHCAP_PATH)`" > $@
+	@echo "Libshim: `bash $(srcdir)/tools/revision.bash $(LIBSHIM_PATH)`" >> $@
 	@echo "Musl: `bash $(srcdir)/tools/revision.bash $(srcdir)`" >> $@
 
 else
 
-override LIBSHIM =
+override LIBSHIM_LIB =
 override LIBSHIM_OBJECTS =
 
 lib/revisions.txt:
@@ -236,7 +234,7 @@ lib/libc.so: $(LOBJS) $(LDSO_OBJS)
 	$(CC) $(CFLAGS_ALL) $(LDFLAGS_ALL) -nostdlib -shared \
 	-Wl,-e,_dlstart -o $@ $(LOBJS) $(LDSO_OBJS) $(LIBCC)
 
-lib/libc.a: $(AOBJS) $(LIBSHIM)
+lib/libc.a: $(AOBJS) $(LIBSHIM_LIB)
 	rm -f $@
 	$(AR) rc $@ $(AOBJS) $(LIBSHIM_OBJECTS)
 	$(RANLIB) $@
@@ -307,9 +305,17 @@ musl-%.tar.gz: .git
 
 endif
 
+ifeq ($(LIBSHIM),yes)
+shimclean:
+	@if [ -d $(LIBSHIM_BUILD) ]; then $(MAKE) -C $(LIBSHIM_PATH) ARCH=$(ARCH) clean; fi
+clean: shimclean
+else
 clean:
+endif
 	rm -rf obj lib
 
+# Note that build on custom libshim path will not be cleaned
+# if config.mak configured like that is not present.
 distclean: clean
 	rm -f config.mak
 

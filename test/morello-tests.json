@@ -525,6 +525,11 @@
         "xrc": [0]
     },
     {
+        "app": "${build}/strtok.exe",
+        "name": "strtok",
+        "xrc": [0]
+    },
+    {
         "app": "${build}/strtok_r.exe",
         "name": "strtok_r",
         "xrc": [0]

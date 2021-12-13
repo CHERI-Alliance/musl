@@ -21,7 +21,7 @@ size_t fread(void *restrict destv, size_t size, size_t nmemb, FILE *restrict f)
 		dest += k;
 		l -= k;
 	}
-	
+
 	/* Read the remainder directly */
 	for (; l; l-=k, dest+=k) {
 		k = __toread(f) ? 0 : f->read(f, dest, l);

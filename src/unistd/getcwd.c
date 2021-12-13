@@ -6,10 +6,10 @@
 
 char *getcwd(char *buf, size_t size)
 {
-	char tmp[buf ? 1 : PATH_MAX];
+	char tmp[buf ? 1 : (size == 0 ? PATH_MAX : size)];
 	if (!buf) {
 		buf = tmp;
-		size = sizeof tmp;
+		size = sizeof(tmp);
 	} else if (!size) {
 		errno = EINVAL;
 		return 0;

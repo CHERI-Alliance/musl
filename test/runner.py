@@ -222,9 +222,22 @@ if __name__ == '__main__':
             # to allow running specific test
             return None
 
+        if 'file' in tc:
+            # create file before running the test
+            test_file = tc.get('file')
+            with open(test_file.get('path'), 'wt') as tf:
+                tf.write(test_file.get('contents', ''))
+
         st = time.time()
         rc, out, err = run_process(cmd, tc.get('stdin', None), int(tc.get('timeout', 5 * 60)), env)
         delta = (time.time() - st)
+
+        if 'file' in tc and not tc.get('file').get('keep', False):
+            # remove file after running the test
+            test_file = tc.get('file')
+            tfp = test_file.get('path')
+            if os.path.exists(tfp):
+                os.remove(tfp)
 
         res, msg = check_results(rc, out.split('\n'), err.split('\n'), xrc, xout, xerr)
         time_str = '%.3f' % delta
@@ -241,7 +254,7 @@ if __name__ == '__main__':
         else:
             skip = tc.get('skip', 'never')
             if skip != 'never':
-                if (skip == 'jenkins' and 'JOB_URL' in os.environ) or skip == 'always':
+                if skip in {'always', 'flaky'} or (skip == 'jenkins' and 'JOB_URL' in os.environ):
                     tskipped = 1
                     print('SKIPPED (%s: %s): %s (%s sec)' % (tname, skip, msg, time_str))
                     tres = skipcase.substitute(

@@ -179,10 +179,12 @@ obj/src/ipc/shmat.o
 obj/src/ipc/shmctl.o
 obj/src/ipc/shmdt.o
 obj/src/ipc/shmget.o
+obj/src/legacy/cuserid.o
 obj/src/legacy/daemon.o
 obj/src/legacy/futimes.o
 obj/src/legacy/getdtablesize.o
 obj/src/legacy/getpagesize.o
+obj/src/legacy/getusershell.o
 obj/src/legacy/isastream.o
 obj/src/legacy/ulimit.o
 obj/src/legacy/valloc.o
@@ -247,6 +249,7 @@ obj/src/linux/vmsplice.o
 obj/src/linux/wait3.o
 obj/src/linux/wait4.o
 obj/src/linux/xattr.o
+obj/src/locale/bind_textdomain_codeset.o
 obj/src/locale/c_locale.o
 obj/src/locale/dcngettext.o
 obj/src/locale/duplocale.o
@@ -261,6 +264,7 @@ obj/src/locale/setlocale.o
 obj/src/locale/strcoll.o
 obj/src/locale/strfmon.o
 obj/src/locale/strxfrm.o
+obj/src/locale/textdomain.o
 obj/src/locale/uselocale.o
 obj/src/locale/wcscoll.o
 obj/src/locale/wcsxfrm.o
@@ -513,6 +517,9 @@ obj/src/math/__sinl.o
 obj/src/math/__tan.o
 obj/src/math/__tandf.o
 obj/src/math/__tanl.o
+obj/src/misc/a64l.o
+obj/src/misc/basename.o
+obj/src/misc/dirname.o
 obj/src/misc/ffs.o
 obj/src/misc/ffsll.o
 obj/src/misc/getauxptr.o
@@ -525,6 +532,7 @@ obj/src/misc/getresuid.o
 obj/src/misc/getrlimit.o
 obj/src/misc/getrusage.o
 obj/src/misc/getsubopt.o
+obj/src/misc/get_current_dir_name.o
 obj/src/misc/ioctl.o
 obj/src/misc/issetugid.o
 obj/src/misc/lockf.o
@@ -604,7 +612,13 @@ obj/src/network/setsockopt.o
 obj/src/network/shutdown.o
 obj/src/network/socket.o
 obj/src/network/socketpair.o
+obj/src/passwd/fgetpwent.o
+obj/src/passwd/getgrouplist.o
+obj/src/passwd/getpwent_a.o
+obj/src/passwd/getpw_a.o
+obj/src/passwd/getpw_r.o
 obj/src/passwd/lckpwdf.o
+obj/src/passwd/nscd_query.o
 obj/src/prng/drand48.o
 obj/src/prng/lcong48.o
 obj/src/prng/lrand48.o
@@ -1084,7 +1098,10 @@ obj/src/time/clock_getres.o
 obj/src/time/clock_gettime.o
 obj/src/time/clock_nanosleep.o
 obj/src/time/clock_settime.o
+obj/src/time/ctime.o
+obj/src/time/ctime_r.o
 obj/src/time/difftime.o
+obj/src/time/getdate.o
 obj/src/time/gettimeofday.o
 obj/src/time/gmtime.o
 obj/src/time/gmtime_r.o
@@ -1131,6 +1148,8 @@ obj/src/unistd/getegid.o
 obj/src/unistd/geteuid.o
 obj/src/unistd/getgid.o
 obj/src/unistd/getgroups.o
+obj/src/unistd/getlogin.o
+obj/src/unistd/getlogin_r.o
 obj/src/unistd/getpgid.o
 obj/src/unistd/getpgrp.o
 obj/src/unistd/getpid.o
@@ -1176,6 +1195,7 @@ obj/src/unistd/sync.o
 obj/src/unistd/tcgetpgrp.o
 obj/src/unistd/tcsetpgrp.o
 obj/src/unistd/truncate.o
+obj/src/unistd/ttyname.o
 obj/src/unistd/ttyname_r.o
 obj/src/unistd/unlink.o
 obj/src/unistd/unlinkat.o

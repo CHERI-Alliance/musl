@@ -9,6 +9,6 @@ char *dirname(char *s)
 	for (; s[i]=='/'; i--) if (!i) return "/";
 	for (; s[i]!='/'; i--) if (!i) return ".";
 	for (; s[i]=='/'; i--) if (!i) return "/";
-	s[i+1] = 0;
+	s[i+1] = 0; // todo: modifying input should be avoided
 	return s;
 }

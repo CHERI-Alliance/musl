@@ -1488,5 +1488,124 @@
         "app": "${build}/checksealed.exe",
         "name": "check-sealed-funcs",
         "xrc": [0]
+    },
+    {
+        "app": "${build}/legacy.exe",
+        "args": ["0"],
+        "name": "test_cuserid",
+        "xrc": [0],
+        "skip": "flaky"
+    },
+    {
+        "app": "${build}/legacy.exe",
+        "args": ["1"],
+        "name": "test_getusershell",
+        "xrc": [0]
+    },
+    {
+        "app": "${build}/locale.exe",
+        "args": ["0"],
+        "name": "test_bind_textdomain_codeset",
+        "xrc": [0]
+    },
+    {
+        "app": "${build}/locale.exe",
+        "args": ["1"],
+        "name": "test_textdomain",
+        "xrc": [0]
+    },
+    {
+        "app": "${build}/misc.exe",
+        "args": ["0"],
+        "name": "test_a64l",
+        "xrc": [0]
+    },
+    {
+        "app": "${build}/misc.exe",
+        "args": ["1"],
+        "name": "test_basename",
+        "xrc": [0]
+    },
+    {
+        "app": "${build}/misc.exe",
+        "args": ["2"],
+        "name": "test_dirname",
+        "xrc": [0]
+    },
+    {
+        "app": "${build}/misc.exe",
+        "args": ["3"],
+        "name": "test_getcwd",
+        "xrc": [0]
+    },
+    {
+        "app": "${build}/misc.exe",
+        "args": ["5"],
+        "name": "test_get_current_dir_name",
+        "xrc": [0]
+    },
+    {
+        "app": "${build}/passwd.exe",
+        "args": ["0"],
+        "name": "test_fgetpwent",
+        "xrc": [0]
+    },
+    {
+        "app": "${build}/passwd.exe",
+        "args": ["1"],
+        "name": "test_getgrouplist",
+        "xrc": [0],
+        "skip": "flaky",
+        "comment": "this test may fail due to system restrictions"
+    },
+    {
+        "app": "${build}/time.exe",
+        "args": ["0"],
+        "name": "test_ctime",
+        "xrc": [0]
+    },
+    {
+        "app": "${build}/time.exe",
+        "args": ["1"],
+        "name": "test_ctime_r",
+        "xrc": [0]
+    },
+    {
+        "app": "${build}/time.exe",
+        "args": ["2"],
+        "name": "test_getdate_error",
+        "xrc": [1]
+    },
+    {
+        "app": "${build}/time.exe",
+        "args": ["2"],
+        "name": "test_getdate_valid",
+        "xrc": [0],
+        "file": {
+            "path": "/tmp/musl-test-getdate-valid",
+            "contents": "%Y-%m-%d\n"
+        },
+        "env": {
+            "DATEMSK": "/tmp/musl-test-getdate-valid"
+        }
+    },
+    {
+        "app": "${build}/unistd.exe",
+        "args": ["0"],
+        "name": "test_getlogin",
+        "xrc": [0]
+    },
+    {
+        "app": "${build}/unistd.exe",
+        "args": ["1"],
+        "name": "test_getlogin_r",
+        "xrc": [0]
+    },
+    {
+        "app": "${build}/unistd.exe",
+        "args": ["2"],
+        "name": "test_ttyname",
+        "xrc": [0],
+        "skip": "flaky"
     }
 ]

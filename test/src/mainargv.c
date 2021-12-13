@@ -1,8 +1,17 @@
 #include <stddef.h>
 #include <stdio.h>
+#include <string.h>
 
 int main (int argc, char *argv[])
 {
+	if (!__builtin_cheri_tag_get(argv)) {
+		printf("argv tag is not set: %#p\n", (void *)argv);
+		return 5;
+	}
+	if (__builtin_cheri_length_get(argv) != (sizeof(char *) * (argc + 1))) {
+		printf("argv length is not set correctly: %zu\n", __builtin_cheri_length_get(argv));
+		return 6;
+	}
 	void *cap = NULL;
 	size_t tag = 0;
 	size_t sz = 0;
@@ -12,8 +21,10 @@ int main (int argc, char *argv[])
 			printf("argv[%d] has tag %zu\n", k, tag);
 			return 1;
 		}
-		if ((sz = __builtin_cheri_length_get(cap)) == 0ul) {
-			printf("argv[%d] has length %zu\n", k, sz);
+		size_t xsz = (strlen(cap) + 1);
+		sz = __builtin_cheri_length_get(cap);
+		printf("argv[%d]=`%s` has length %zu (%zu)\n", k, argv[k], sz, xsz);
+		if (sz != xsz) {
 			return 2;
 		}
 	}

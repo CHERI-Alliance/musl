@@ -171,7 +171,8 @@ override LIBSHIM_LIB = $(LIBSHIM_BUILD)/libshim.a
 override LIBSHIM_LIBC_PATH = $(shell realpath $(srcdir))/lib/libshim-libc
 override LIBSHIM_OBJECTS := $$(find $(LIBSHIM_BUILD) -type f -name \*.o)
 
-LIBSHIM_JSON_PATH ?= $(LIBSHIM_PATH)/musl_$(ARCH).json
+# subst: libshim's generator expects 'aarch64' to be named 'arm64'.
+LIBSHIM_JSON_PATH ?= $(LIBSHIM_PATH)/musl_$(subst aarch64,arm64,$(ARCH)).json
 LIBSHIM_URL ?= https://git.morello-project.org/morello/android/platform/external
 LIBSHIM_GIT ?= $(LIBSHIM_URL)/libshim
 LIBSHIM_REF ?= null

@@ -1,14 +1,22 @@
 #include <string.h>
 #include <libgen.h>
+#include <limits.h>
+#include "morello_helpers.h"
 
 char *basename(char *s)
 {
-	size_t i;
+	size_t i, sz;
+	static char d[PATH_MAX];
+
 	if (!s || !*s) return ".";
 	i = strlen(s)-1;
-	for (; i&&s[i]=='/'; i--) s[i] = 0; // todo: modifying input should be avoided
-	for (; i&&s[i-1]!='/'; i--);
-	return s+i;
+	for (; i&&s[i]=='/'; i--);
+	for (sz=i+1; i&&s[i-1]!='/'; i--);
+
+	sz -= i;
+	strncpy(d, s+i, sz);
+	d[sz] = 0;
+	return RESTRICT_BNDS_IF_MORELLO(d, sz+1);
 }
 
 weak_alias(basename, __xpg_basename);

@@ -1615,5 +1615,49 @@
         "name": "test_ttyname",
         "xrc": [0],
         "skip": "flaky"
+    },
+    {
+        "app": "${build}/getw.exe",
+        "name": "getw_eof",
+        "args": ["0"],
+        "xrc": [0]
+    },
+    {
+        "app": "${build}/getw.exe",
+        "name": "getw_not_eof",
+        "args": ["1"],
+        "xrc": [0]
+    },
+    {
+        "app": "${build}/putw.exe",
+        "name": "putw_read_only",
+        "args": ["0"],
+        "xrc": [0]
+    },
+    {
+        "app": "${build}/putw.exe",
+        "name": "putw_write_only",
+        "args": ["1"],
+        "xrc": [0]
+    },
+    {
+        "app": "${build}/fgetln.exe",
+        "name": "fgetln_with_newline",
+        "args": ["0"],
+        "xrc": [0],
+        "stdin": "test\n"
+    },
+    {
+        "app": "${build}/fgetln.exe",
+        "name": "fgetln_with_eof",
+        "args": ["1"],
+        "xrc": [0],
+        "stdin": "test"
+    },
+    {
+        "app": "${build}/fgetln.exe",
+        "name": "fgetln_at_eof",
+        "args": ["2"],
+        "xrc": [0]
     }
 ]

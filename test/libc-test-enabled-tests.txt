@@ -7,6 +7,11 @@ src/functional/fcntl-static.exe
 src/functional/fdopen-static.exe
 src/functional/fscanf-static.exe
 src/functional/fwscanf-static.exe
+src/functional/iconv_open-static.exe
+src/functional/inet_pton-static.exe
+src/functional/ipc_msg-static.exe
+src/functional/ipc_sem-static.exe
+src/functional/ipc_shm-static.exe
 src/functional/memstream-static.exe
 src/functional/pthread_tsd-static.exe
 src/functional/random-static.exe
@@ -205,6 +210,8 @@ src/regression/dn_expand-ptr-0-static.exe
 src/regression/fflush-exit-static.exe
 src/regression/fpclassify-invalid-ld80-static.exe
 src/regression/ftello-unflushed-append-static.exe
+src/regression/iconv-roundtrips-static.exe
+src/regression/inet_ntop-v4mapped-static.exe
 src/regression/inet_pton-empty-last-field-static.exe
 src/regression/iswspace-null-static.exe
 src/regression/lrand48-signextend-static.exe
@@ -217,6 +224,7 @@ src/regression/mkstemp-failure-static.exe
 src/regression/printf-1e9-oob-static.exe
 src/regression/printf-fmt-g-round-static.exe
 src/regression/printf-fmt-g-zeros-static.exe
+src/regression/printf-fmt-n-static.exe
 src/regression/putenv-doublefree.exe
 src/regression/rewind-clear-error-static.exe
 src/regression/scanf-bytes-consumed-static.exe

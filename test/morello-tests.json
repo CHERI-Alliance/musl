@@ -632,6 +632,19 @@
     {
         "app":  "${build}/mbrtowc.exe",
         "name": "mbrtowc",
+        "args": ["0"],
+        "xrc": [0]
+    },
+    {
+        "app":  "${build}/mbrtowc.exe",
+        "name": "c16towc",
+        "args": ["1"],
+        "xrc": [0]
+    },
+    {
+        "app":  "${build}/mbrtowc.exe",
+        "name": "mbsnrtowcs",
+        "args": ["2"],
         "xrc": [0]
     },
     {
@@ -973,13 +986,25 @@
     },
     {
         "app": "${build}/sprintf.exe",
+        "args": ["0"],
         "name": "sprintf",
         "xrc": [0]
     },
     {
-        "app": "${build}/vsprintf.exe",
-        "args": ["morello"],
+        "app": "${build}/sprintf.exe",
+        "args": ["1"],
         "name": "vsprintf",
+        "xrc": [0]
+    },
+    {
+        "app": "${build}/sprintf.exe",
+        "args": ["2"],
+        "name": "asprintf",
+        "xrc": [0]
+    },
+    {
+        "app": "${build}/dprintf.exe",
+        "name": "dprintf",
         "xrc": [0]
     },
     {

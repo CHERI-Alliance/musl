@@ -74,6 +74,7 @@ obj/src/complex/ctanhl.o
 obj/src/complex/ctanl.o
 obj/src/complex/__cexp.o
 obj/src/complex/__cexpf.o
+obj/src/conf/confstr.o
 obj/src/conf/fpathconf.o
 obj/src/conf/legacy.o
 obj/src/conf/pathconf.o
@@ -172,6 +173,7 @@ obj/src/internal/procfdname.o
 obj/src/internal/shgetc.o
 obj/src/internal/syscall_ret.o
 obj/src/internal/version.o
+obj/src/ipc/ftok.o
 obj/src/ipc/msgctl.o
 obj/src/ipc/msgget.o
 obj/src/ipc/msgrcv.o
@@ -190,9 +192,11 @@ obj/src/legacy/err.o
 obj/src/legacy/euidaccess.o
 obj/src/legacy/futimes.o
 obj/src/legacy/getdtablesize.o
+obj/src/legacy/getloadavg.o
 obj/src/legacy/getpagesize.o
 obj/src/legacy/getusershell.o
 obj/src/legacy/isastream.o
+obj/src/legacy/lutimes.o
 obj/src/legacy/ulimit.o
 obj/src/legacy/utmpx.o
 obj/src/legacy/valloc.o
@@ -266,6 +270,7 @@ obj/src/locale/dcngettext.o
 obj/src/locale/duplocale.o
 obj/src/locale/freelocale.o
 obj/src/locale/iconv.o
+obj/src/locale/iconv_close.o
 obj/src/locale/langinfo.o
 obj/src/locale/localeconv.o
 obj/src/locale/locale_map.o
@@ -532,6 +537,7 @@ obj/src/misc/a64l.o
 obj/src/misc/basename.o
 obj/src/misc/dirname.o
 obj/src/misc/ffs.o
+obj/src/misc/ffsl.o
 obj/src/misc/ffsll.o
 obj/src/misc/getauxptr.o
 obj/src/misc/getauxval.o
@@ -579,16 +585,21 @@ obj/src/mq/mq_timedreceive.o
 obj/src/mq/mq_timedsend.o
 obj/src/mq/mq_unlink.o
 obj/src/multibyte/btowc.o
+obj/src/multibyte/c16rtomb.o
 obj/src/multibyte/c32rtomb.o
 obj/src/multibyte/internal.o
 obj/src/multibyte/mblen.o
 obj/src/multibyte/mbrlen.o
+obj/src/multibyte/mbrtoc16.o
+obj/src/multibyte/mbrtoc32.o
 obj/src/multibyte/mbrtowc.o
 obj/src/multibyte/mbsinit.o
+obj/src/multibyte/mbsnrtowcs.o
 obj/src/multibyte/mbsrtowcs.o
 obj/src/multibyte/mbstowcs.o
 obj/src/multibyte/mbtowc.o
 obj/src/multibyte/wcrtomb.o
+obj/src/multibyte/wcsnrtombs.o
 obj/src/multibyte/wcsrtombs.o
 obj/src/multibyte/wcstombs.o
 obj/src/multibyte/wctob.o
@@ -598,6 +609,7 @@ obj/src/network/accept4.o
 obj/src/network/bind.o
 obj/src/network/connect.o
 obj/src/network/ent.o
+obj/src/network/ether.o
 obj/src/network/gai_strerror.o
 obj/src/network/getifaddrs.o
 obj/src/network/getnameinfo.o
@@ -613,6 +625,12 @@ obj/src/network/if_indextoname.o
 obj/src/network/if_nametoindex.o
 obj/src/network/in6addr_any.o
 obj/src/network/in6addr_loopback.o
+obj/src/network/inet_addr.o
+obj/src/network/inet_aton.o
+obj/src/network/inet_legacy.o
+obj/src/network/inet_ntoa.o
+obj/src/network/inet_ntop.o
+obj/src/network/inet_pton.o
 obj/src/network/listen.o
 obj/src/network/lookup_name.o
 obj/src/network/lookup_serv.o
@@ -620,6 +638,7 @@ obj/src/network/netlink.o
 obj/src/network/netname.o
 obj/src/network/ntohl.o
 obj/src/network/ntohs.o
+obj/src/network/proto.o
 obj/src/network/recv.o
 obj/src/network/recvfrom.o
 obj/src/network/recvmmsg.o
@@ -699,6 +718,7 @@ obj/src/regex/regerror.o
 obj/src/regex/regexec.o
 obj/src/regex/tre-mem.o
 obj/src/sched/affinity.o
+obj/src/sched/sched_cpucount.o
 obj/src/sched/sched_getcpu.o
 obj/src/sched/sched_getparam.o
 obj/src/sched/sched_getscheduler.o
@@ -889,6 +909,8 @@ obj/src/stdio/__uflow.o
 obj/src/stdlib/abs.o
 obj/src/stdlib/atof.o
 obj/src/stdlib/atoi.o
+obj/src/stdlib/atol.o
+obj/src/stdlib/atoll.o
 obj/src/stdlib/bsearch.o
 obj/src/stdlib/div.o
 obj/src/stdlib/ecvt.o
@@ -908,6 +930,7 @@ obj/src/stdlib/wcstol.o
 obj/src/string/bcmp.o
 obj/src/string/bcopy.o
 obj/src/string/bzero.o
+obj/src/string/explicit_bzero.o
 obj/src/string/index.o
 obj/src/string/memccpy.o
 obj/src/string/memchr.o
@@ -985,11 +1008,17 @@ obj/src/temp/mkstemp.o
 obj/src/temp/mkstemps.o
 obj/src/temp/mktemp.o
 obj/src/temp/__randname.o
+obj/src/termios/cfgetospeed.o
+obj/src/termios/cfmakeraw.o
+obj/src/termios/cfsetospeed.o
 obj/src/termios/tcdrain.o
 obj/src/termios/tcflow.o
+obj/src/termios/tcflush.o
+obj/src/termios/tcgetattr.o
 obj/src/termios/tcgetsid.o
 obj/src/termios/tcgetwinsize.o
 obj/src/termios/tcsendbreak.o
+obj/src/termios/tcsetattr.o
 obj/src/termios/tcsetwinsize.o
 obj/src/thread/call_once.o
 obj/src/thread/cnd_broadcast.o
@@ -1181,6 +1210,7 @@ obj/src/unistd/getegid.o
 obj/src/unistd/geteuid.o
 obj/src/unistd/getgid.o
 obj/src/unistd/getgroups.o
+obj/src/unistd/gethostname.o
 obj/src/unistd/getlogin.o
 obj/src/unistd/getlogin_r.o
 obj/src/unistd/getpgid.o

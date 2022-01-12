@@ -76,7 +76,9 @@ WRAPCC_CLANG = clang
 
 LDSO_PATHNAME = $(syslibdir)/ld-musl-$(ARCH)$(SUBARCH).so.1
 
--include config.mak
+export CONFIG = $(CURDIR)/config.mak
+
+-include $(CONFIG)
 -include $(srcdir)/arch/$(ARCH)/arch.mak
 
 ifeq ($(ARCH),morello)
@@ -324,7 +326,13 @@ endif
 distclean: clean
 	rm -f config.mak
 
+
+ifeq ($(ARCH),morello)
+test:
+	$(MAKE) -C $(testdir) test
+endif
+
 # Turn off implicit rules
 .SUFFIXES:
 
-.PHONY: all clean install install-libs install-headers install-tools
+.PHONY: all clean install install-libs install-headers install-tools test

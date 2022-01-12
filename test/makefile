@@ -2,7 +2,9 @@ override SHELL = /bin/bash
 
 MORELLO_TESTS_PROCS = 8
 
-include $(CURDIR)/../config.mak
+CONFIG ?= $(CURDIR)/../config.mak
+
+include $(CONFIG)
 
 override MUSL_LIB = $(prefix)/lib
 override MUSL_INC = $(prefix)/include

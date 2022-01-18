@@ -34,7 +34,7 @@ LDSO_OBJS = $(filter obj/ldso/%,$(ALL_OBJS:%.o=%.lo))
 CRT_OBJS = $(filter obj/crt/%,$(ALL_OBJS))
 
 AOBJS = $(filter-out obj/src/ldso/%,$(LIBC_OBJS))
-LOBJS = $(LIBC_OBJS:.o=.lo)
+LOBJS = $(AOBJS:.o=.lo)
 GENH = obj/include/bits/alltypes.h obj/include/bits/syscall.h
 GENH_INT = obj/src/internal/version.h
 IMPH = $(addprefix $(srcdir)/, src/internal/stdio_impl.h src/internal/pthread_impl.h src/internal/locale_impl.h src/internal/libc.h)
@@ -81,6 +81,7 @@ LDSO_PATHNAME = $(syslibdir)/ld-musl-$(ARCH)$(SUBARCH).so.1
 
 ifeq ($(ARCH),morello)
 AOBJS := $(filter-out %/lite_malloc.o,$(AOBJS))
+LOBJS := $(filter-out %/lite_malloc.o,$(LOBJS))
 endif
 
 ifeq ($(ARCH),)
@@ -134,7 +135,7 @@ $(NOSSP_OBJS) $(NOSSP_OBJS:%.o=%.lo): CFLAGS_ALL += $(CFLAGS_NOSSP)
 
 $(CRT_OBJS): CFLAGS_ALL += -DCRT
 
-$(LOBJS) $(LDSO_OBJS): CFLAGS_ALL += -fPIC
+$(LOBJS): CFLAGS_ALL += -fPIC
 
 CC_CMD = $(CC) $(CFLAGS_ALL) -c -o $@ $<
 
@@ -231,9 +232,10 @@ lib/revisions.txt:
 
 endif # LIBSHIM == yes
 
-lib/libc.so: $(LOBJS) $(LDSO_OBJS)
-	$(CC) $(CFLAGS_ALL) $(LDFLAGS_ALL) -nostdlib -shared \
-	-Wl,-e,_dlstart -o $@ $(LOBJS) $(LDSO_OBJS) $(LIBCC)
+lib/libc.so: $(LOBJS) $(LIBSHIM_LIB)
+	$(CC) $(CFLAGS_ALL) $(LDFLAGS_ALL) \
+	-Wl,--whole-archive $(LIBSHIM_LIB) -Wl,--no-whole-archive \
+	-nostdlib -shared -Wl,-e,_dlstart -o $@ $(LOBJS) $(LIBCC)
 
 lib/libc.a: $(AOBJS) $(LIBSHIM_LIB)
 	rm -f $@

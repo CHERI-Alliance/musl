@@ -139,6 +139,7 @@ CFLAGS_MEMOPS=
 CFLAGS_NOSSP=
 CFLAGS_TRY=
 CFLAGS_MORELLO=
+LDFLAGS_MORELLO=
 LDFLAGS_AUTO=
 LDFLAGS_TRY=
 OPTIMIZE_GLOBS=
@@ -187,7 +188,7 @@ case "$arg" in
 --disable-optimize) optimize=no ;;
 --enable-debug|--enable-debug=yes) debug=yes ;;
 --disable-debug|--enable-debug=no) debug=no ;;
---enable-morello|--enable-morello=yes) morello=yes ; morello_objects="\$(shell cat arch/morello/morello.objects | tr '\n' ' ')" ;;
+--enable-morello|--enable-morello=yes) morello=yes ; morello_objects="\$(shell cat \${srcdir}/arch/morello/morello.objects | tr '\n' ' ')" ;;
 --disable-morello|--enable-morello=no) morello=no ; morello_objects="" ;;
 --morello-subobject-bounds=on) morello_subobject_bounds=yes ;;
 --morello-subobject-bounds=off) morello_subobject_bounds=no ;;
@@ -312,13 +313,15 @@ echo "$cc_family"
 #
 # Unlike gcc, clang is always a cross compiler. Handle the specifics
 #
-if test "$cc_family" = clang && test $target; then
+if test "$cc_family" = clang ; then
+if test $target; then
 # testing for flags should be in the target environment
 tryflag CFLAGS_TRY "--target=$target" || exit 1
 # also required for the build
 CFLAGS_AUTO="--target=${target} ${CFLAGS_AUTO}"
 # libshim is unaware of target, so inform it
 LIBSHIM_FLAGS="--target=${target}"
+fi
 if test "$shared" = yes ; then
 # best effort, overriding LD is currently not supported
 tryldflag LDFLAGS_AUTO "-fuse-ld=lld"
@@ -469,6 +472,7 @@ test "$morello" = yes
 if test "$morello" = yes ; then
     if test "$ARCH" = "aarch64" ; then
         tryflag CFLAGS_MORELLO "-march=morello+c64 -mabi=purecap"
+        tryflag LDFLAGS_MORELLO "-march=morello+c64 -mabi=purecap"
         ARCH=morello
     else
         fail "$0: Morello can only be enabled for AArch64 target"
@@ -678,11 +682,6 @@ tryldflag LDFLAGS_AUTO -Wl,--hash-style=both
 # runtime library; implementation error is also a possibility.
 tryldflag LDFLAGS_AUTO -Wl,--no-undefined
 
-# Avoid exporting symbols from compiler runtime libraries. They
-# should be hidden anyway, but some toolchains including old gcc
-# versions built without shared library support and pcc are broken.
-tryldflag LDFLAGS_AUTO -Wl,--exclude-libs=ALL
-
 # Public data symbols must be interposable to allow for copy
 # relocations, but otherwise we want to bind symbols at libc link
 # time to eliminate startup relocations and PLT overhead. Use
@@ -691,6 +690,14 @@ tryldflag LDFLAGS_AUTO -Wl,--exclude-libs=ALL
 tryldflag LDFLAGS_AUTO -Wl,--dynamic-list="$srcdir/dynamic.list"
 
 # Find compiler runtime library
+if test "$cc_family" = clang ; then
+if test "$morello" = yes ; then
+test -z "$LIBCC" && try_libcc=`$CC -print-file-name=libclang_rt.builtins-morello.a 2>/dev/null` \
+                 && tryldflag LIBCC "$try_libcc"
+fi
+test -z "$LIBCC" && try_libcc=`$CC -print-file-name=libclang_rt.builtins-aarch64.a 2>/dev/null` \
+                 && tryldflag LIBCC "$try_libcc"
+fi
 test -z "$LIBCC" && tryldflag LIBCC -lgcc && tryldflag LIBCC -lgcc_eh
 test -z "$LIBCC" && tryldflag LIBCC -lcompiler_rt
 test -z "$LIBCC" && try_libcc=`$CC -print-libgcc-file-name 2>/dev/null` \
@@ -902,6 +909,7 @@ TOOL_LIBS = $tool_libs
 ADD_CFI = $ADD_CFI
 MALLOC_DIR = $malloc_dir
 CFLAGS_MORELLO = $CFLAGS_MORELLO
+LDFLAGS_MORELLO = $LDFLAGS_MORELLO
 MORELLO_OBJECTS = $morello_objects
 LIBSHIM = $libshim
 LIBSHIM_FLAGS = $LIBSHIM_FLAGS

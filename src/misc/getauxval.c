@@ -4,7 +4,7 @@
 
 unsigned long __getauxval(unsigned long item)
 {
-#ifdef MORELLO
+#ifdef __CHERI__
 	// error if asking for a pointer from getauxval()
 	switch (item) {
 		case AT_ENTRY:

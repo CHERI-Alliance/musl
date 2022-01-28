@@ -418,7 +418,7 @@ static int fmt_fp(FILE *f, long double y, int w, int p, int fl, int t)
 	return MAX(w, pl+l);
 }
 
-#ifdef MORELLO
+#ifdef __CHERI__
 #define CAP_BUFFER_SIZE 90
 
 // todo: this won't be necessary after this has been fixed
@@ -494,7 +494,10 @@ static int fmt_cap(FILE *f, const void *cap) {
 	*--z = 'x';
 	*--z = '0';
 	/* Permissions */
-	unsigned perms_macros[] =  {__ARM_CAP_PERMISSION_EXECUTIVE__,
+	unsigned perms_macros[] =  {
+#ifdef __ARM_CAP_PERMISSION_EXECUTIVE__
+								__ARM_CAP_PERMISSION_EXECUTIVE__,
+#endif
 								__CHERI_CAP_PERMISSION_PERMIT_STORE_CAPABILITY__,
 								__CHERI_CAP_PERMISSION_PERMIT_LOAD_CAPABILITY__,
 								__CHERI_CAP_PERMISSION_PERMIT_EXECUTE__,
@@ -659,7 +662,7 @@ static int printf_core(FILE *f, const char *fmt, va_list *ap, union arg *nl_arg,
 			}
 			continue;
 		case 'p':
-#ifdef MORELLO
+#ifdef __CHERI__
 			if (fl & ALT_FORM) {
 				l = fmt_cap(f, arg.p);
 				continue;

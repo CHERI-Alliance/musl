@@ -1,4 +1,4 @@
-#ifdef MORELLO
+#ifdef __CHERI_PURE_CAPABILITY__
 
 #define _GNU_SOURCE
 #include <stdlib.h>

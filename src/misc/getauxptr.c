@@ -1,4 +1,4 @@
-#ifdef MORELLO
+#ifdef __CHERI__
 
 #include <sys/auxv.h>
 #include <errno.h>

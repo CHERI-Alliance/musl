@@ -102,7 +102,7 @@ void free(void *p)
 {
 	if (!p) return;
 
-#ifdef MORELLO
+#ifdef __CHERI_PURE_CAPABILITY__
 	wrlock();
 	p = expand_bounds(p);
 	mallocmap_delete(p, &(ctx.capmap));

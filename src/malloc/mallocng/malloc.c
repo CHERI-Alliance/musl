@@ -51,7 +51,7 @@ struct meta *alloc_meta(void)
 		ctx.pagesize = get_page_size();
 #endif
 
-#ifdef MORELLO
+#ifdef __CHERI_PURE_CAPABILITY__
 		mallocmap_create(1024, &(ctx.capmap));
 #endif
 
@@ -63,7 +63,7 @@ struct meta *alloc_meta(void)
 	if ((m = dequeue_head(&ctx.free_meta_head))) return m;
 	if (!ctx.avail_meta_count) {
 		int need_unprotect = 1;
-#ifndef MORELLO
+#ifndef __CHERI_PURE_CAPABILITY__
 		if (!ctx.avail_meta_area_count && ctx.brk!=-1) {
 			uintptr_t new = ctx.brk + pagesize;
 			int need_guard = 0;
@@ -92,7 +92,7 @@ struct meta *alloc_meta(void)
 			p = mmap(0, n*pagesize, PROT_NONE,
 				MAP_PRIVATE|MAP_ANON, -1, 0);
 			if (p==MAP_FAILED) return 0;
-#ifdef MORELLO
+#ifdef __CHERI_PURE_CAPABILITY__
 			p = restrict_perms(p);
 #endif
 			ctx.avail_meta_areas = p + pagesize;
@@ -264,7 +264,7 @@ static struct meta *alloc_group(int sc, size_t req)
 			free_meta(m);
 			return 0;
 		}
-#ifdef MORELLO
+#ifdef __CHERI_PURE_CAPABILITY__
 			p = restrict_perms(p);
 #endif
 		m->maplen = needed>>12;
@@ -331,7 +331,7 @@ void *malloc_aligned(size_t n, size_t align)
 		void *p = mmap(0, needed, PROT_READ|PROT_WRITE,
 			MAP_PRIVATE|MAP_ANON, -1, 0);
 		if (p==MAP_FAILED) return 0;
-#ifdef MORELLO
+#ifdef __CHERI_PURE_CAPABILITY__
 		p = restrict_perms(p);
 #endif
 		wrlock();
@@ -400,7 +400,7 @@ void *malloc_aligned(size_t n, size_t align)
 success:
 	ctr = ctx.mmap_counter;
 
-#ifdef MORELLO
+#ifdef __CHERI_PURE_CAPABILITY__
 	void *p = enframe(g, idx, n, ctr, align);
 	p = restrict_user_ptr(p, n);
 
@@ -412,7 +412,7 @@ success:
 
 	unlock();
 
-#ifdef MORELLO
+#ifdef __CHERI_PURE_CAPABILITY__
 	return p;
 #else
 	return enframe(g, idx, n, ctr, align);
@@ -420,7 +420,7 @@ success:
 }
 
 void *malloc(size_t n) {
-#ifdef MORELLO
+#ifdef __CHERI_PURE_CAPABILITY__
 	n = __builtin_cheri_round_representable_length(n);
 	size_t align = ~__builtin_cheri_representable_alignment_mask(n) + 1;
 	if (align < UNIT) align = UNIT;
@@ -433,7 +433,7 @@ void *malloc(size_t n) {
 
 int is_allzero(void *p)
 {
-#ifdef MORELLO
+#ifdef __CHERI_PURE_CAPABILITY__
 	rdlock();
 	p = expand_bounds(p);
 	unlock();
@@ -444,7 +444,7 @@ int is_allzero(void *p)
 		get_stride(g) < UNIT*size_classes[g->sizeclass];
 }
 
-#ifdef MORELLO
+#ifdef __CHERI_PURE_CAPABILITY__
 // we are not including lite_malloc object anymore
 void *__libc_malloc(size_t n)
 {

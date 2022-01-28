@@ -12,7 +12,7 @@ void *realloc(void *p, size_t n)
 	void *userp = p;
 	size_t req_n = n;
 
-#ifdef MORELLO
+#ifdef __CHERI_PURE_CAPABILITY__
 	rdlock();
 	p = expand_bounds(p);
 	unlock();
@@ -29,7 +29,7 @@ void *realloc(void *p, size_t n)
 	size_t avail_size = end-(unsigned char *)p;
 	void *new;
 
-#ifdef MORELLO
+#ifdef __CHERI_PURE_CAPABILITY__
 	n = __builtin_cheri_round_representable_length(n);
 	size_t new_alignment = __builtin_cheri_representable_alignment_mask(n);
 
@@ -44,7 +44,7 @@ void *realloc(void *p, size_t n)
 	    && size_to_class(n)+1 >= g->sizeclass) {
 		set_size(p, end, n);
 
-#ifdef MORELLO
+#ifdef __CHERI_PURE_CAPABILITY__
 		wrlock();
 		mallocmap_delete(userp, &(ctx.capmap));
 		p = restrict_user_ptr(p, n);
@@ -62,7 +62,7 @@ void *realloc(void *p, size_t n)
 		new = g->maplen*4096UL == needed ? g->mem :
 			mremap(g->mem, g->maplen*4096UL, needed, MREMAP_MAYMOVE);
 		if (new!=MAP_FAILED) {
-#ifdef MORELLO
+#ifdef __CHERI_PURE_CAPABILITY__
 			new = restrict_perms(new);
 #endif
 			g->mem = new;
@@ -71,7 +71,7 @@ void *realloc(void *p, size_t n)
 			end = g->mem->storage + (needed - GRP_SIZE) - IB;
 			*end = 0;
 			set_size(p, end, n);
-#ifdef MORELLO
+#ifdef __CHERI_PURE_CAPABILITY__
 			wrlock();
 			mallocmap_delete(userp, &(ctx.capmap));
 			p = restrict_user_ptr(p, n);

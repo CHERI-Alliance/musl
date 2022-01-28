@@ -16,7 +16,7 @@ extern const uint16_t size_classes[];
 
 #define MMAP_THRESHOLD 131052
 
-#ifdef MORELLO
+#ifdef __CHERI_PURE_CAPABILITY__
 #define GRP_SIZE 32
 #else
 #define GRP_SIZE 16
@@ -66,7 +66,7 @@ struct malloc_context {
 	size_t usage_by_class[48];
 	uint8_t unmap_seq[32], bounces[32];
 	uint8_t seq;
-#ifdef MORELLO
+#ifdef __CHERI_PURE_CAPABILITY__
 	uintptr_t __padding;
 	struct __mallocmap_tab capmap;
 #else
@@ -89,15 +89,21 @@ struct meta *alloc_meta(void);
 __attribute__((__visibility__("hidden")))
 int is_allzero(void *);
 
-#ifdef MORELLO
-#define USER_PTR_PERMS_REMOVED ((unsigned long) \
-	__ARM_CAP_PERMISSION_EXECUTIVE__ | \
-	__CHERI_CAP_PERMISSION_ACCESS_SYSTEM_REGISTERS__ | \
-	__ARM_CAP_PERMISSION_COMPARTMENT_ID__ | \
-	__ARM_CAP_PERMISSION_BRANCH_SEALED_PAIR__ | \
-	__CHERI_CAP_PERMISSION_PERMIT_UNSEAL__ | \
-	__CHERI_CAP_PERMISSION_PERMIT_SEAL__ | \
-	__CHERI_CAP_PERMISSION_PERMIT_EXECUTE__)
+#ifdef __CHERI_PURE_CAPABILITY__
+static const unsigned long USER_PTR_PERMS_REMOVED =
+#ifdef __ARM_CAP_PERMISSION_EXECUTIVE__
+	__ARM_CAP_PERMISSION_EXECUTIVE__ |
+#endif
+#ifdef __ARM_CAP_PERMISSION_COMPARTMENT_ID__
+	__ARM_CAP_PERMISSION_COMPARTMENT_ID__ |
+#endif
+#ifdef __ARM_CAP_PERMISSION_BRANCH_SEALED_PAIR__
+	__ARM_CAP_PERMISSION_BRANCH_SEALED_PAIR__ |
+#endif
+	__CHERI_CAP_PERMISSION_ACCESS_SYSTEM_REGISTERS__ |
+	__CHERI_CAP_PERMISSION_PERMIT_UNSEAL__ |
+	__CHERI_CAP_PERMISSION_PERMIT_SEAL__ |
+	__CHERI_CAP_PERMISSION_PERMIT_EXECUTE__;
 
 static inline void *expand_bounds(void *p) {
 	struct group *g = (struct group *) mallocmap_find(p, &(ctx.capmap));
@@ -247,7 +253,7 @@ static inline void *enframe(struct meta *g, int idx, size_t n, int ctr, size_t a
 	int off = (p[-3] ? *(uint16_t *)(p-2) + 1 : ctr) & 255;
 
 	if (align > UNIT) {
-#ifdef MORELLO
+#ifdef __CHERI_PURE_CAPABILITY__
 		unsigned char *aligned_p = __builtin_align_up(p, align);
 #else
 		unsigned char *aligned_p = -(uintptr_t)p + (-(uintptr_t)p & (align - 1));

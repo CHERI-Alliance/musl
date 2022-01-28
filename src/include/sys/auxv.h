@@ -12,7 +12,7 @@ typedef Elf32_auxv_t auxv_entry;
 #include <features.h>
 
 hidden unsigned long __getauxval(unsigned long);
-#ifdef MORELLO
+#ifdef __CHERI__
 hidden void *__getauxptr(unsigned long);
 #endif
 

@@ -21,7 +21,7 @@ void *aligned_alloc(size_t align, size_t len)
 
 	if (align <= UNIT) align = UNIT;
 
-#ifdef MORELLO
+#ifdef __CHERI_PURE_CAPABILITY__
 	size_t morello_len = __builtin_cheri_round_representable_length(len);
 	size_t morello_alignment = ~__builtin_cheri_representable_alignment_mask(morello_len) + 1;
 

@@ -2,7 +2,7 @@
 #include <unistd.h>
 #include <stdint.h>
 #include <errno.h>
-#ifdef MORELLO
+#ifdef __CHERI_PURE_CAPABILITY__
 #include "syscall.h"
 
 void *sbrk(intptr_t inc)

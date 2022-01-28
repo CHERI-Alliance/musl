@@ -32,7 +32,7 @@
 #define assert(x) do { if (!(x)) a_crash(); } while(0)
 #endif
 
-#ifndef MORELLO
+#ifndef __CHERI_PURE_CAPABILITY__
 #define brk(p) ((uintptr_t)__syscall(SYS_brk, p))
 #endif
 
@@ -45,7 +45,7 @@
 static inline uint64_t get_random_secret()
 {
 	uint64_t secret = (size_t)&secret * 1103515245;
-#ifdef MORELLO
+#ifdef __CHERI__
 	void * random = getauxptr(AT_RANDOM);
 #else
 	uintptr_t random = getauxval(AT_RANDOM);

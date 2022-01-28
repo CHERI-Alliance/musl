@@ -9,7 +9,7 @@ extern "C" {
 #include <bits/hwcap.h>
 
 unsigned long getauxval(unsigned long);
-#ifdef MORELLO
+#ifdef __CHERI__
 void *getauxptr(unsigned long);
 #endif
 

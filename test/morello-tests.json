@@ -1578,9 +1578,27 @@
         "xrc": [0]
     },
     {
+        "app": "${build}/group.exe",
+        "args": ["0"],
+        "name": "test_groupentry",
+        "xrc": [0]
+    },
+    {
         "app": "${build}/passwd.exe",
         "args": ["0"],
         "name": "test_fgetpwent",
+        "xrc": [0]
+    },
+    {
+        "app": "${build}/ns_funcs.exe",
+        "args": ["0"],
+        "name": "ns_putget",
+        "xrc": [0]
+    },
+    {
+        "app": "${build}/ns_funcs.exe",
+        "args": ["1"],
+        "name": "ns_parse",
         "xrc": [0]
     },
     {
@@ -1590,6 +1608,18 @@
         "xrc": [0],
         "skip": "flaky",
         "comment": "this test may fail due to system restrictions"
+    },
+    {
+        "app": "${build}/search.exe",
+        "args": ["0"],
+        "name": "lsearch",
+        "xrc": [0]
+    },
+    {
+        "app": "${build}/search.exe",
+        "args": ["1"],
+        "name": "tsearch",
+        "xrc": [0]
     },
     {
         "app": "${build}/time.exe",

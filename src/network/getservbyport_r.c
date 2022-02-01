@@ -51,7 +51,6 @@ int getservbyport_r(int port, const char *prots,
 	case 0:
 		break;
 	}
-
 	/* A numeric port string is not a service record. */
 	if (strtol(buf, 0, 10)==ntohs(port)) return ENOENT;
 

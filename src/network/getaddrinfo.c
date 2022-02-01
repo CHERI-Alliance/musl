@@ -8,6 +8,7 @@
 #include <endian.h>
 #include <errno.h>
 #include "lookup.h"
+#include "morello_helpers.h"
 
 int getaddrinfo(const char *restrict host, const char *restrict serv, const struct addrinfo *restrict hint, struct addrinfo **restrict res)
 {
@@ -126,7 +127,7 @@ int getaddrinfo(const char *restrict host, const char *restrict serv, const stru
 			out[k].sa.sin6.sin6_port = htons(ports[j].port);
 			out[k].sa.sin6.sin6_scope_id = addrs[i].scopeid;
 			memcpy(&out[k].sa.sin6.sin6_addr, &addrs[i].addr, 16);
-			break;			
+			break;
 		}
 	}
 	out[0].ref = nais;

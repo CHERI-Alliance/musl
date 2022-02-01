@@ -15,6 +15,10 @@ src/functional/ipc_shm-static.exe
 src/functional/memstream-static.exe
 src/functional/pthread_tsd-static.exe
 src/functional/random-static.exe
+src/functional/search_hsearch-static.exe
+src/functional/search_insque-static.exe
+src/functional/search_lsearch-static.exe
+src/functional/search_tsearch-static.exe
 src/functional/setjmp-static.exe
 src/functional/snprintf-static.exe
 src/functional/sscanf-static.exe

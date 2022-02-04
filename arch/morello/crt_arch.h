@@ -10,6 +10,8 @@ START ":\n"
 "	cvtd c0, x0\n"
 "	bl do_raw_args_marshalling\n"
 "	mov csp, c0\n"
+#else
+"	mov c0, csp\n"
 #endif
 "	bl __morello_init_static\n"
 "	mov c0, csp\n"

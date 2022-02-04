@@ -463,7 +463,7 @@ tryflag CFLAGS_MEMOPS -fno-tree-loop-distribute-patterns
 #
 # Enable debugging if requested.
 #
-test "$debug" = yes && CFLAGS_AUTO=-g
+test "$debug" = yes && CFLAGS_AUTO="-g ${CFLAGS_AUTO}"
 
 #
 # Enable Morello if requested.

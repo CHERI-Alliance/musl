@@ -1,4 +1,3 @@
-#ifdef MORELLO
 #include <elf.h>
 #include <link.h>
 #include <limits.h>
@@ -44,10 +43,10 @@ static int checkver(Verdef *def, int vsym, const char *vername, char *strings)
 void *__vdsosym(const char *vername, const char *name)
 {
 	size_t i;
-	for (i=0; libc.auxv[i] != AT_SYSINFO_EHDR; i+=2)
-		if (!libc.auxv[i]) return 0;
-	if (!libc.auxv[i+1]) return 0;
-	Ehdr *eh = (void *)libc.auxv[i+1];
+	for (i=0; libc.auxv[i].a_type != AT_SYSINFO_EHDR; i++)
+		if (!libc.auxv[i].a_type) return 0;
+	if (!libc.auxv[i].a_un.a_val) return 0;
+	Ehdr *eh = (void *)libc.auxv[i].a_un.a_val;
 	Phdr *ph = (void *)((char *)eh + eh->e_phoff);
 	size_t *dynv=0, base=-1;
 	for (i=0; i<eh->e_phnum; i++, ph=(void *)((char *)ph+eh->e_phentsize)) {
@@ -92,4 +91,3 @@ void *__vdsosym(const char *vername, const char *name)
 }
 
 #endif // VDSO_USEFUL
-#endif // MORELLO

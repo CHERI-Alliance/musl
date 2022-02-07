@@ -15,8 +15,9 @@ static int static_dl_iterate_phdr(int(*callback)(struct dl_phdr_info *info, size
 	struct dl_phdr_info info;
 	size_t i, aux[AUX_CNT] = {0};
 
-	for (i=0; libc.auxv[i]; i+=2)
-		if (libc.auxv[i]<AUX_CNT) aux[libc.auxv[i]] = libc.auxv[i+1];
+	for (i=0; libc.auxv[i].a_type; i++)
+		if (libc.auxv[i].a_type<AUX_CNT)
+			aux[libc.auxv[i].a_type] = libc.auxv[i].a_un.a_val;
 
 	for (p=(void *)aux[AT_PHDR],n=aux[AT_PHNUM]; n; n--,p+=aux[AT_PHENT]) {
 		phdr = (void *)p;

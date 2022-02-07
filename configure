@@ -157,7 +157,6 @@ target=
 optimize=auto
 debug=no
 morello=yes
-morello_objects="\$(shell cat arch/morello/morello.objects | tr '\n' ' ')"
 morello_subobject_bounds=no
 libshim=auto
 libshim_path=lib/libshim
@@ -188,8 +187,8 @@ case "$arg" in
 --disable-optimize) optimize=no ;;
 --enable-debug|--enable-debug=yes) debug=yes ;;
 --disable-debug|--enable-debug=no) debug=no ;;
---enable-morello|--enable-morello=yes) morello=yes ; morello_objects="\$(shell cat \${srcdir}/arch/morello/morello.objects | tr '\n' ' ')" ;;
---disable-morello|--enable-morello=no) morello=no ; morello_objects="" ;;
+--enable-morello|--enable-morello=yes) morello=yes ;;
+--disable-morello|--enable-morello=no) morello=no ;;
 --morello-subobject-bounds=on) morello_subobject_bounds=yes ;;
 --morello-subobject-bounds=off) morello_subobject_bounds=no ;;
 --enable-libshim|--enable-libshim=yes) libshim=yes ;;
@@ -910,7 +909,6 @@ ADD_CFI = $ADD_CFI
 MALLOC_DIR = $malloc_dir
 CFLAGS_MORELLO = $CFLAGS_MORELLO
 LDFLAGS_MORELLO = $LDFLAGS_MORELLO
-MORELLO_OBJECTS = $morello_objects
 LIBSHIM = $libshim
 LIBSHIM_FLAGS = $LIBSHIM_FLAGS
 LIBSHIM_PATH = $LIBSHIM_PATH

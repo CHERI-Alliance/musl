@@ -15,7 +15,6 @@ libc functionality. Current limitations include:
 * No support for dynamic linking and dynamic loading (only static linking to ``libc.a``
   is supported).
 * No support for networking.
-* Only objects listed in ``arch/morello/morello.objects`` are ported to Morello.
 
 Kernel ABI
 ^^^^^^^^^^
@@ -381,18 +380,6 @@ Prerequisites: Python 3.6+, `Morello IE <https://developer.arm.com/architectures
 
    export MORELLOIE=/path/to/morelloie/bin/morelloie
    make -C test test
-
-Sorting ``morello.objects``
-^^^^^^^^^^^^^^^^^^^^^^^^^^^
-
-To sort the ``morello.objects`` file please use the command line ``sort``
-utility. This can also be used to remove duplicate entries.
-
-E.g. from musl root directory:
-
-.. code-block::
-
-   LC_COLLATE=C sort -uf arch/morello/morello.objects -o arch/morello/morello.objects
 
 Original README
 ---------------

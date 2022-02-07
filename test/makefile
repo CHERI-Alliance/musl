@@ -13,7 +13,7 @@ CFLAGS += -nostdinc -isystem $(MUSL_INC) -march=morello+c64 -mabi=purecap -g -DM
 CFLAGS += -Wall -Wpedantic -Werror
 CFLAGS += -Wno-gnu-empty-initializer -Wno-gnu-folding-constant -Wno-gnu-statement-expression
 LDFLAGS += ${TEST_LDFLAGS}
-LDFLAGS += -g -fuse-ld=lld -nostdlib -L$(MUSL_LIB) -march=morello+c64 -mabi=purecap -Wl,-disable-warn-morello-abi-mismatch
+LDFLAGS += -g -fuse-ld=lld -nostdlib -L$(MUSL_LIB) -march=morello+c64 -mabi=purecap
 LDLIBS += -lc
 
 CRT_BEGIN = $(shell $(CC) -print-file-name=clang_rt.crtbegin-morello.o)

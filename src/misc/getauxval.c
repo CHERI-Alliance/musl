@@ -8,7 +8,6 @@ unsigned long __getauxval(unsigned long item)
 	// error if asking for a pointer from getauxval()
 	switch (item) {
 		case AT_ENTRY:
-		case AT_SYSINFO_EHDR:
 		case AT_EXECFN:
 		case AT_RANDOM:
 		case AT_PLATFORM:

@@ -7,8 +7,13 @@
 void *__getauxptr(unsigned long item)
 {
 	// error if asking for a non-pointer from getauxptr()
+	//  this list is not a perfect enforcement as it currently supports
+	//  both transitional and draft ABIs, which have different capability
+	//  entries.
 	switch (item) {
 		case AT_ENTRY:
+		case AT_PHDR:
+		case AT_BASE:
 		case AT_SYSINFO_EHDR:
 		case AT_EXECFN:
 		case AT_RANDOM:

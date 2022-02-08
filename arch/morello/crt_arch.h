@@ -36,11 +36,16 @@ __asm__ (".text \n"
 ".Lloop_auxv:\n"
 "	ldp     x9, xzr, [c0], #16\n"
 "	cmp     x9, xzr\n"
-"	b.eq    .Lreloc_start\n"
+"	b.eq    .Lfallback_ddc\n"
 "	cmp     x9, #60\n" //AT_CHERI_EXEC_RW_CAP
 "	b.eq    .Lload_cap_rw\n"
 "	add     c0, c0, #16\n"
 "	b       .Lloop_auxv\n"
+// if we didn't find AT_CHERI_EXEC_RW_CAP (e.g. on transitional ABI),
+//  try using DDC instead
+".Lfallback_ddc:\n"
+"	mrs     c11, ddc\n"
+"	b       .Lreloc_start\n"
 ".Lload_cap_rw:\n"
 "	ldr     c11, [c0], #16\n"
 ".Lreloc_start:\n"

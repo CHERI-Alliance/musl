@@ -13,7 +13,7 @@ void *lsearch(const void *key, void *base, size_t *nelp, size_t width,
 		if (compar(key, p[i]) == 0)
 			return p[i];
 	*nelp = n+1;
-#ifdef MORELLO
+#ifdef __CHERI_PURE_CAPABILITY__
 	width = MIN(width, __builtin_cheri_length_get(key) - __builtin_cheri_offset_get(key));
 #endif
 	return memcpy(p[n], key, width);

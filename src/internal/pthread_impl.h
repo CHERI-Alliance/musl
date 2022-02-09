@@ -84,7 +84,7 @@ enum {
 #define _a_policy __u.__i[3*__SU+2]
 #define _a_prio __u.__i[3*__SU+3]
 
-#ifdef MORELLO
+#ifdef __CHERI_PURE_CAPABILITY__
 #define _m_prev __u.__p[0]
 #define _m_next __u.__p[1]
 #define _m_lock __u.__vi[8]
@@ -100,7 +100,7 @@ enum {
 #define _m_count __u.__i[5]
 #endif
 
-#ifdef MORELLO
+#ifdef __CHERI_PURE_CAPABILITY__
 #define _c_shared __u.__p[0]
 #define _c_head __u.__p[1]
 #define _c_tail __u.__p[2]
@@ -122,7 +122,7 @@ enum {
 #define _rw_waiters __u.__vi[1]
 #define _rw_shared __u.__i[2]
 
-#ifdef MORELLO
+#ifdef __CHERI_PURE_CAPABILITY__
 #define _b_inst __u.__p[0]
 #define _b_lock __u.__vi[4]
 #define _b_waiters __u.__vi[5]

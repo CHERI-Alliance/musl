@@ -77,8 +77,8 @@ typedef wctype_t tre_ctype_t;
 /* Returns number of bytes to add to (char *)ptr to make it
    properly aligned for the type. */
 #define ALIGN(ptr, type) \
-  ((((long)ptr) % sizeof(type)) \
-   ? (sizeof(type) - (((long)ptr) % sizeof(type))) \
+  ((((ptraddr_t)ptr) % sizeof(type)) \
+   ? (sizeof(type) - (((ptraddr_t)ptr) % sizeof(type))) \
    : 0)
 
 #undef MAX

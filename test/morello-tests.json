@@ -1091,6 +1091,15 @@
         "xrc": [0]
     },
     {
+        "app": "${build}/shm_open.exe",
+        "name": "shm_open_unlink",
+        "args": ["this should be uppercase"],
+        "stdout": [
+            "THIS SHOULD BE UPPERCASE"
+        ],
+        "xrc": [0]
+    },
+    {
         "app": "${build}/printcap.exe",
         "name": "printcap-null",
         "args": ["0"],
@@ -1523,6 +1532,12 @@
         "xrc": [0]
     },
     {
+        "app": "${build}/ftw.exe",
+        "args": ["0"],
+        "name": "test_ftw",
+        "xrc": [0]
+    },
+    {
         "app": "${build}/legacy.exe",
         "args": ["0"],
         "name": "test_cuserid",
@@ -1590,6 +1605,23 @@
         "xrc": [0]
     },
     {
+        "app": "${build}/getserv.exe",
+        "args": ["0"],
+        "name": "test_getservbyname",
+        "xrc": [0]
+    },
+    {
+        "app": "${build}/getserv.exe",
+        "args": ["1"],
+        "name": "test_getservbyport",
+        "xrc": [0]
+    },
+    {
+        "app": "${build}/if_nameindex.exe",
+        "name": "if_nameindex",
+        "xrc": [0]
+    },
+    {
         "app": "${build}/ns_funcs.exe",
         "args": ["0"],
         "name": "ns_putget",
@@ -1599,6 +1631,11 @@
         "app": "${build}/ns_funcs.exe",
         "args": ["1"],
         "name": "ns_parse",
+        "xrc": [0]
+    },
+    {
+        "app": "${build}/sockatmark.exe",
+        "name": "sockatmark",
         "xrc": [0]
     },
     {

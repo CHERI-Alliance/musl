@@ -1634,6 +1634,18 @@
         "xrc": [0]
     },
     {
+        "app": "${build}/openpty.exe",
+        "args": ["0"],
+        "name": "openpty",
+        "xrc": [0]
+    },
+    {
+        "app": "${build}/openpty.exe",
+        "args": ["1"],
+        "name": "forkpty",
+        "xrc": [0]
+    },
+    {
         "app": "${build}/sockatmark.exe",
         "name": "sockatmark",
         "xrc": [0]

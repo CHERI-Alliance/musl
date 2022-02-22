@@ -13,6 +13,10 @@ src/functional/ipc_msg-static.exe
 src/functional/ipc_sem-static.exe
 src/functional/ipc_shm-static.exe
 src/functional/memstream-static.exe
+src/functional/pthread_cancel-points-static.exe
+src/functional/pthread_cond-static.exe
+src/functional/pthread_mutex-static.exe
+src/functional/pthread_mutex_pi-static.exe
 src/functional/pthread_tsd-static.exe
 src/functional/random-static.exe
 src/functional/search_hsearch-static.exe
@@ -233,7 +237,6 @@ src/regression/putenv-doublefree.exe
 src/regression/rewind-clear-error-static.exe
 src/regression/scanf-bytes-consumed-static.exe
 src/regression/scanf-match-literal-eof-static.exe
-src/regression/setenv-oom.c
 src/regression/sscanf-eof-static.exe
 src/regression/statvfs-static.exe
 src/regression/strverscmp-static.exe

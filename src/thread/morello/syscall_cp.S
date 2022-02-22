@@ -4,6 +4,8 @@
 // syscall(nr, u, v, w, x, y, z)
 //         x8  x0 x1 x2 x3 x4 x5
 
+#ifndef LIBSHIM
+
 .global __cp_begin
 .hidden __cp_begin
 .global __cp_end
@@ -33,3 +35,5 @@ __cp_cancel:
 .L__cp_cancel_end:
 	.size __cp_cancel, .L__cp_cancel_end-__cp_cancel
 	.size __cp_begin, __cp_end-__cp_begin
+
+#endif

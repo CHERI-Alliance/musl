@@ -29,6 +29,8 @@ typedef struct sigcontext {
 #define ESR_MAGIC 0x45535201
 #define EXTRA_MAGIC 0x45585401
 #define SVE_MAGIC 0x53564501
+#define MORELLO_MAGIC 0x4d524c01
+
 struct _aarch64_ctx {
 	unsigned int magic;
 	unsigned int size;
@@ -53,6 +55,14 @@ struct sve_context {
 	struct _aarch64_ctx head;
 	unsigned short vl;
 	unsigned short __reserved[3];
+};
+struct morello_context {
+	struct _aarch64_ctx head;
+	unsigned long __pad;
+	uintcap_t cregs[31];
+	uintcap_t csp;
+	uintcap_t rcsp;
+	uintcap_t pcc;
 };
 #define SVE_VQ_BYTES		16
 #define SVE_VQ_MIN		1

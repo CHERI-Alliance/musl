@@ -1046,8 +1046,18 @@
     {
         "app": "${build}/pthread.exe",
         "name": "pthread-basic",
+        "xrc": [0]
+    },
+    {
+        "app": "${build}/pthread_cancel.exe",
+        "name": "pthread-cancel",
         "xrc": [0],
-        "timeout": 600
+        "skip": "flaky"
+    },
+    {
+        "app": "${build}/pthread_cleanup.exe",
+        "name": "pthread-cleanup",
+        "xrc": [0]
     },
     {
         "app": "${build}/printf_plain_text.exe",
@@ -1763,5 +1773,11 @@
         "name": "fgetln_at_eof",
         "args": ["2"],
         "xrc": [0]
+    },
+    {
+        "app": "${build}/signal.exe",
+        "name": "signal",
+        "xrc": [0],
+        "skip": "flaky"
     }
 ]

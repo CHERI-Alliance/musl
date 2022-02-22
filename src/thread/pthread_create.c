@@ -230,6 +230,12 @@ static void init_file_lock(FILE *f)
 	if (f && f->lock<0) f->lock = 0;
 }
 
+static void _sigaddset(sigset_t *set, int sig)
+{
+	unsigned s = sig-1;
+	set->__bits[s/8/sizeof *set->__bits] |= 1UL<<(s&8*sizeof *set->__bits-1);
+}
+
 int __pthread_create(pthread_t *restrict res, const pthread_attr_t *restrict attrp, void *(*entry)(void *), void *restrict arg)
 {
 	int ret, c11 = (attrp == __ATTRP_C11_THREAD);
@@ -323,6 +329,9 @@ int __pthread_create(pthread_t *restrict res, const pthread_attr_t *restrict att
 	new->robust_list.head = &new->robust_list.head;
 	new->canary = self->canary;
 	new->sysinfo = self->sysinfo;
+#ifdef LIBSHIM
+	new->in_syscall_cp = 0;
+#endif
 
 	/* Setup argument structure for the new thread on its stack.
 	 * It's safe to access from the caller only until the thread
@@ -348,7 +357,28 @@ int __pthread_create(pthread_t *restrict res, const pthread_attr_t *restrict att
 
 	__tl_lock();
 	if (!libc.threads_minus_1++) libc.need_locks = 1;
+
+#ifdef LIBSHIM
+	// It is necessary to block SIGCANCEL when using libshim.
+	// This means that when we call clone(), the new thread will also
+	//  initially have SIGCANCEL blocked. This is necessary because
+	//  when using libshim, CTPIDR_EL0 has an incorrect capability
+	//  immediately after the clone svc returns. We need to make sure
+	//  we run the fix for this before allowing the thread to take
+	//  any incoming SIGCANCELs, otherwise the signal handler will fault
+	//  on the CTPIDR_EL0 capability.
+
+	sigset_t block_cancel, before_block_cancel;
+	sigemptyset(&block_cancel);
+	_sigaddset(&block_cancel, SIGCANCEL);
+	sigprocmask(SIG_BLOCK, &block_cancel, &before_block_cancel);
+#endif
+
 	ret = __clone((c11 ? start_c11 : start), stack, flags, args, &new->tid, TP_ADJ(new), &__thread_list_lock);
+
+#ifdef LIBSHIM
+	sigprocmask(SIG_SETMASK, &before_block_cancel, NULL);
+#endif
 
 	/* All clone failures translate to EAGAIN. If explicit scheduling
 	 * was requested, attempt it before unlocking the thread list so

@@ -14,7 +14,6 @@ libc functionality. Current limitations include:
 
 * No support for dynamic linking and dynamic loading (only static linking to ``libc.a``
   is supported).
-* No support for networking.
 
 Kernel ABI
 ^^^^^^^^^^
@@ -24,6 +23,15 @@ Current version relies on the
 library for implementing system calls to non-Morello kernel. This allows using purecap
 Morello applications on systems with non-Morello kernel subject to common libshim
 limitations.
+
+You need to clone the libshim and libarchcap sources separately and place them next to the
+Musl's root folder:
+
+.. code-block::
+
+   git clone https://git.morello-project.org/morello/android/platform/external/libshim.git
+   git clone https://git.morello-project.org/morello/android/platform/external/libarchcap.git
+   git clone https://git.morello-project.org/morello/musl-libc.git musl
 
 Using this library
 ------------------
@@ -48,11 +56,16 @@ To configure the build, run
        --disable-shared --enable-morello --enable-libshim --prefix=${MUSL_HOME}
 
 We use ``--disable-shared`` because dynamic linking and dynamic loading is currently not
-supported. We use ``--enable-morello`` to build the Morello version of the library. When
-this is disabled, an AArch64 version of the library will be built. Finally, using
-``--enable-libshim`` is required to produce build which uses the ``libshim`` library for
-system calls. This option only works when Morello is enabled. To build this library
-targeting system with Morello kernel, use ``--disable-libshim`` in the command above.
+supported. We use ``--enable-morello`` to build the Morello version of the library. This
+option also impllies ``--target=aarch64-linux-musl_purecap``. When this is disabled,
+an AArch64 version of the library will be built. Finally, using ``--enable-libshim`` is
+required to produce build which uses the ``libshim`` library for system calls. This option
+only works when Morello is enabled. To build this library targeting system with Morello
+kernel, use ``--disable-libshim`` in the command above.
+
+Make sure that ``libshim`` and ``libarchcap`` folders contain sources and are located
+next to the source root of Musl. Alternatively, use ``--libshim-path=<path>`` configure
+option.
 
 Currently, by default, Morello and use of libshim is enabled and building shared library
 is disabled.
@@ -107,56 +120,26 @@ Building applications with this library
 The following example demonstrates how to build a purecap Morello application and link
 it to this C library. We presume the code of the application is in the ``hello.c`` file.
 
-Compile objects:
+Compile and link application:
 
 .. code-block::
 
-   ${MORELLO_HOME}/bin/clang -c -g -nostdinc -isystem ${MUSL_HOME}/include \
-       -march=morello+c64 -mabi=purecap hello.c -o hello.c.o
+   ${MORELLO_HOME}/bin/clang -march=morello+c64 --target=aarch64-linux-musl_purecap \
+       --sysroot ${MUSL_HOME} hello.c -o hello
 
-The ``-nostdinc`` and ``-isystem ${MUSL_HOME}/include`` options are used to make sure we
-are using the correct headers from Musl.
-
-Link executable objects:
-
-.. code-block::
-
-   ${MORELLO_HOME}/bin/clang -fuse-ld=lld -march=morello+c64 -mabi=purecap -o foo \
-       ${MUSL_HOME}/lib/crt1.o \
-       ${MUSL_HOME}/lib/crti.o \
-       ${MORELLO_HOME}/lib/clang/11.0.0/lib/linux/clang_rt.crtbegin-morello.o \
-       hello.c.o \
-       ${MORELLO_HOME}/lib/clang/11.0.0/lib/linux/libclang_rt.builtins-morello.a \
-       ${MORELLO_HOME}/lib/clang/11.0.0/lib/linux/clang_rt.crtend-morello.o \
-       ${MUSL_HOME}/lib/crtn.o \
-       -nostdlib -L${MUSL_HOME}/lib -lc -static
-
-The ``-nostdlib`` and ``-L${MUSL_HOME}/lib`` options are used to make sure the right
-library for ``-lc`` is used. The ``-static`` is necessary because only
-static linking is currently supported. See `Morello LLVM toolchain`_ for more details
-about the ``crtbegin`` and ``crtend`` objects and about ``libclang_rt.builtins-morello.a``
-static library. Note that paths to these objects provided by the toolchain can be obtained
-dynamically with these command:
-
-.. code-block::
-
-   ${MORELLO_HOME}/bin/clang -print-file-name=<file-name>
-
-For example:
-
-.. code-block::
-
-   ${MORELLO_HOME}/bin/clang -print-file-name=libclang_rt.builtins-morello.a
-
+Note that you need to use version of the toolchain that supports target triple
+``aarch64-linux-musl_purecap`` and has correctly built CRT objects and compiler-rt
+for this target.
 
 Cross-compiling
 ^^^^^^^^^^^^^^^
 Both steps above can be cross-compiled from an x86 host to Morello target. To do so,
-append ``--target=aarch64-linux-gnu`` to the ``configure`` script command and clang
-invocations (for both compiling and linking). Clang is a cross-compiler by default so it
-can output code for any architecture on demand. The configure script will also try to use
-LLVM's binutils instead of gcc's. They can be overridden in the same way as ``CC``. It
-might also be necessary to run ``configure`` with ``CFLAGS=--target=aarch64-linux-gnu``.
+append ``--target=aarch64-linux-musl_purecap`` to the ``configure`` script command and
+clang invocations (for both compiling and linking). Clang is a cross-compiler by default
+so it can output code for any architecture on demand. The configure script will also try
+to use LLVM's binutils instead of gcc's. They can be overridden in the same way as ``CC``.
+It might also be necessary to run ``configure`` with
+``CFLAGS=--target=aarch64-linux-musl_purecap``.
 
 Morello LLVM toolchain
 ----------------------
@@ -260,27 +243,12 @@ This includes the ``crtbegin`` and ``crtend`` objects which are provided by the 
    ${MORELLO_HOME}/bin/clang -march=morello+c64 -mabi=purecap \
        -nostdinc -isystem ${MUSL_HOME}/include \
        -c ${LLVM_PROJECT}/compiler-rt/lib/crt/crtbegin.c \
-       -o $(${MORELLO_HOME}/bin/clang -print-resource-dir)/lib/linux/clang_rt.crtbegin-morello.o
+       -o $(${MORELLO_HOME}/bin/clang -print-resource-dir)/lib/aarch64-linux-musl_purecap/clang_rt.crtbegin.o
 
    ${MORELLO_HOME}/bin/clang -march=morello+c64 -mabi=purecap \
        -nostdinc -isystem ${MUSL_HOME}/include \
        -c ${LLVM_PROJECT}/compiler-rt/lib/crt/crtend.c \
-       -o $(${MORELLO_HOME}/bin/clang -print-resource-dir)/lib/linux/clang_rt.crtend-morello.o
-
-When cross-compiling, you will also need to build these objects for AArch64 (non-Morello)
-target:
-
-.. code-block::
-
-   ${MORELLO_HOME}/bin/clang --target=aarch64-linux-gnu \
-       -nostdinc -isystem ${MUSL_HOME}/include \
-       -c ${LLVM_PROJECT}/compiler-rt/lib/crt/crtbegin.c \
-       -o $(${MORELLO_HOME}/bin/clang -print-resource-dir)/lib/linux/clang_rt.crtbegin-aarch64.o
-
-   ${MORELLO_HOME}/bin/clang --target=aarch64-linux-gnu \
-       -nostdinc -isystem ${MUSL_HOME}/include \
-       -c ${LLVM_PROJECT}/compiler-rt/lib/crt/crtend.c \
-       -o $(${MORELLO_HOME}/bin/clang -print-resource-dir)/lib/linux/clang_rt.crtend-aarch64.o
+       -o $(${MORELLO_HOME}/bin/clang -print-resource-dir)/lib/aarch64-linux-musl_purecap/clang_rt.crtend.o
 
 Compiling libclang_rt.builtins-morello.a
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -366,7 +334,7 @@ This file is used in the following configure command for compiler-rt (note that 
    make clang_rt.builtins-aarch64
 
    mv lib/linux/libclang_rt.builtins-aarch64.a \
-       $(${MORELLO_HOME}/bin/clang -print-resource-dir)/lib/linux/libclang_rt.builtins-morello.a
+       $(${MORELLO_HOME}/bin/clang -print-resource-dir)/lib/aarch64-linux-musl_purecap/libclang_rt.builtins.a
 
 Contributing
 ------------

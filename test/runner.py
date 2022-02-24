@@ -96,8 +96,8 @@ def run_process(command: list, stdin: str, timeout: int, _env: dict):
 
     return code, stdout, stderr
 
-def build_test(_tc: dict, cwd: str, _runner: str, _mie_extra_params: str) -> tuple:
-    app: str = _tc.get('app').replace('${build}', cwd)
+def build_test(_tc: dict, cwd: str, _runner: str, _mie_extra_params: str, _kind: str) -> tuple:
+    app: str = _tc.get('app').replace('${build}', cwd).replace('.exe', '-%s.exe' % _kind)
     params: list = _tc.get('params', [])
     args: list = _tc.get('args', [])
     _tname = _tc.get('name', '%s%s' % (basename(app).replace('.', '-'),
@@ -198,6 +198,7 @@ if __name__ == '__main__':
         .add('--only-test', help='name of the test to run', dest='thetest', default=None) \
         .add('--nproc', help='number of processes to run in parallel', dest='nproc', default='8') \
         .add('--mie-args', help='params for emulator', dest='params', default='') \
+        .add('--kind', help='kind of build: dynamic or static', dest='kind', default='static') \
         .parse()
 
     # folder -- current working directory
@@ -210,13 +211,14 @@ if __name__ == '__main__':
     thetest = options.get('thetest')
     nproc: int = options.get('nproc', fmt=lambda t: int(t))
     mie_extra_params = options.get('params')
+    kind = options.get('kind')
 
     with open(script, 'rt') as f:
         suite: list = json.load(f)
 
     def process(tc):
 
-        tname, cmd, xrc, xout, xerr, env = build_test(tc, folder, runner, mie_extra_params)
+        tname, cmd, xrc, xout, xerr, env = build_test(tc, folder, runner, mie_extra_params, kind)
 
         if thetest and tname != thetest:
             # to allow running specific test

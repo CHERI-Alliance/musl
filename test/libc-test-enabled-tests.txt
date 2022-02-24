@@ -233,7 +233,7 @@ src/regression/printf-1e9-oob-static.exe
 src/regression/printf-fmt-g-round-static.exe
 src/regression/printf-fmt-g-zeros-static.exe
 src/regression/printf-fmt-n-static.exe
-src/regression/putenv-doublefree.exe
+src/regression/putenv-doublefree-static.exe
 src/regression/rewind-clear-error-static.exe
 src/regression/scanf-bytes-consumed-static.exe
 src/regression/scanf-match-literal-eof-static.exe

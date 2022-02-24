@@ -171,6 +171,7 @@ obj/%.lo: $(srcdir)/%.c $(GENH) $(IMPH)
 ifeq ($(LIBSHIM),yes)
 
 # LIBSHIM_PATH is defined in config.mak
+# LIBARCHCAP_PATH is defined in config.mak
 override LIBSHIM_BUILD = $(LIBSHIM_PATH)/build
 override LIBSHIM_LIB = $(LIBSHIM_BUILD)/libshim.a
 override LIBSHIM_LIBC_PATH = $(shell realpath $(srcdir))/lib/libshim-libc
@@ -178,29 +179,11 @@ override LIBSHIM_OBJECTS := $$(find $(LIBSHIM_BUILD) -type f -name \*.o)
 
 # subst: libshim's generator expects 'aarch64' to be named 'arm64'.
 LIBSHIM_JSON_PATH ?= $(LIBSHIM_PATH)/musl_$(subst aarch64,arm64,$(ARCH)).json
-LIBSHIM_URL ?= https://git.morello-project.org/morello/android/platform/external
-LIBSHIM_GIT ?= $(LIBSHIM_URL)/libshim
-LIBSHIM_REF ?= null
-LIBARCHCAP_GIT ?= $(LIBSHIM_URL)/libarchcap
-LIBARCHCAP_REF ?= null
-LIBARCHCAP_PATH := $(LIBSHIM_PATH)/../libarchcap
 
 $(LIBSHIM_LIB): $(LIBSHIM_LIBC_PATH) $(LIBSHIM_PATH) $(LIBARCHCAP_PATH)
 	$(MAKE) -C $(LIBSHIM_PATH) LIBC=musl ARCH=morello LIBC_PATH=$(LIBSHIM_LIBC_PATH) \
 	CC=$(CC) CXX=$(CC)++ AR=$(AR) RANLIB=$(RANLIB) CFLAGS="-DMORELLO $(LIBSHIM_FLAGS)" CXXFLAGS="-DMORELLO $(LIBSHIM_FLAGS)" \
 	LIBSHIM_JSON_PATH=$(shell realpath $(LIBSHIM_JSON_PATH))
-
-$(LIBSHIM_PATH):
-	git clone --depth 1 $(LIBSHIM_GIT) $@
-ifneq ($(LIBSHIM_REF),null)
-	cd $@ && git pull --rebase $(LIBSHIM_GIT) $(LIBSHIM_REF)
-endif
-
-$(LIBARCHCAP_PATH):
-	git clone --depth 1 $(LIBARCHCAP_GIT) $@
-ifneq ($(LIBARCHCAP_REF),null)
-	cd $@ && git pull --rebase $(LIBARCHCAP_GIT) $(LIBARCHCAP_REF)
-endif
 
 # install libc headers for libshim build
 $(LIBSHIM_LIBC_PATH)/include/bits/%: $(srcdir)/arch/$(ARCH)/bits/%
@@ -226,7 +209,7 @@ lib/revisions.txt:
 	@echo "Libshim: `bash $(srcdir)/tools/revision.bash $(LIBSHIM_PATH)`" >> $@
 	@echo "Musl: `bash $(srcdir)/tools/revision.bash $(srcdir)`" >> $@
 
-else
+else # LIBSHIM
 
 override LIBSHIM_LIB =
 override LIBSHIM_OBJECTS =
@@ -234,7 +217,7 @@ override LIBSHIM_OBJECTS =
 lib/revisions.txt:
 	echo "Musl: `bash $(srcdir)/tools/revision.bash $(srcdir)`" >> $@
 
-endif # LIBSHIM == yes
+endif # LIBSHIM
 
 lib/libc.so: $(LOBJS) $(LDSO_OBJS) $(LIBSHIM_LIB)
 	$(CC) $(CFLAGS_ALL) $(LDFLAGS_ALL) \

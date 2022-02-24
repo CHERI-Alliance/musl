@@ -37,7 +37,7 @@ Optional features:
   --disable-static        inhibit building static library [enabled]
   --disable-morello       inhibit using Morello features (only for AArch64 targets) [enabled]
   --disable-libshim       inhibit building with syscall libshim [auto]
-  --libshim-path=<path>   path to libshim, clone if empty [lib/libshim]
+  --libshim-path=<path>   path to libshim [libshim]
 
 Optional packages:
   --with-malloc=...       choose malloc implementation [mallocng]
@@ -161,7 +161,7 @@ debug=no
 morello=yes
 morello_subobject_bounds=no
 libshim=auto
-libshim_path=lib/libshim
+libshim_path=auto
 warnings=yes
 shared=no
 static=yes
@@ -269,6 +269,10 @@ trap 'rm "$tmpc"' EXIT INT QUIT TERM HUP
 test -d "$srcdir/src/malloc/$malloc_dir" \
 || fail "$0: error: chosen malloc implementation '$malloc_dir' does not exist"
 
+if test "$morello" = yes ; then
+target=aarch64-linux-musl_purecap
+fi
+
 #
 # Check whether we are cross-compiling, and set a default
 # CROSS_COMPILE prefix if none was provided.
@@ -328,7 +332,11 @@ echo "$cc_family"
 if test "$cc_family" = clang ; then
 if test $target; then
 # testing for flags should be in the target environment
+if test "$target" = aarch64-linux-musl_purecap ; then
+tryflag CFLAGS_TRY "--target=$target -march=morello+c64" || exit 1
+else
 tryflag CFLAGS_TRY "--target=$target" || exit 1
+fi
 # also required for the build
 CFLAGS_AUTO="--target=${target} ${CFLAGS_AUTO}"
 # libshim is unaware of target, so inform it
@@ -512,8 +520,22 @@ if test "$libshim" = yes ; then
     else
         fail "$0: Libshim is only applicable for Morello targets"
     fi
-
+    if test "$libshim_path" = auto ; then
+        libshim_path=$(realpath -m $(pwd)/../libshim)
+    fi
     LIBSHIM_PATH="$libshim_path"
+    LIBARCHCAP_PATH="$(realpath -m $libshim_path/../libarchcap)"
+    printf "checking for libshim sources... "
+    if test -d $LIBSHIM_PATH ; then
+        printf "%s (exists) " $LIBSHIM_PATH
+    else
+        printf "%s (does not exist)\n" $LIBSHIM_PATH
+    fi
+    if test -d $LIBARCHCAP_PATH ; then
+        printf "%s (exists)\n" $LIBARCHCAP_PATH
+    else
+        printf "%s (does not exist)\n" $LIBARCHCAP_PATH
+    fi
 fi
 
 #
@@ -926,6 +948,7 @@ LDFLAGS_MORELLO = $LDFLAGS_MORELLO
 LIBSHIM = $libshim
 LIBSHIM_FLAGS = $LIBSHIM_FLAGS
 LIBSHIM_PATH = $LIBSHIM_PATH
+LIBARCHCAP_PATH = $LIBARCHCAP_PATH
 EOF
 test "x$static" = xno && echo "STATIC_LIBS ="
 test "x$shared" = xno && echo "SHARED_LIBS ="

@@ -1653,7 +1653,8 @@
         "app": "${build}/openpty.exe",
         "args": ["1"],
         "name": "forkpty",
-        "xrc": [0]
+        "xrc": [0],
+        "skip": "flaky"
     },
     {
         "app": "${build}/sockatmark.exe",

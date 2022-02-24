@@ -6,29 +6,28 @@ CONFIG ?= $(CURDIR)/../config.mak
 
 include $(CONFIG)
 
-override MUSL_LIB = $(prefix)/lib
-override MUSL_INC = $(prefix)/include
-override MUSL_BITS = crt1.o crti.o crtn.o libc.a rcrt1.o Scrt1.o
+override SYSROOT = $(prefix)
+override MUSLLIB = $(SYSROOT)/lib
+override TRIPLE = aarch64-linux-musl_purecap
 
+override MUSL_BITS_STATIC = crt1.o crti.o crtn.o libc.a rcrt1.o Scrt1.o
+override MUSL_BITS_DYNAMIC = crt1.o crti.o crtn.o libc.so rcrt1.o Scrt1.o
+
+CFLAGS += --target=$(TRIPLE) --sysroot=$(SYSROOT) -march=morello+c64 -DMORELLO
 CFLAGS += ${TEST_CFLAGS}
-CFLAGS += -nostdinc -isystem $(MUSL_INC) -march=morello+c64 -mabi=purecap -g -DMORELLO -fno-builtin-mempcpy
+CFLAGS += -g -fno-builtin-mempcpy
 CFLAGS += -Wall -Wpedantic -Werror
 CFLAGS += -Wno-gnu-empty-initializer -Wno-gnu-folding-constant -Wno-gnu-statement-expression
+
+LDFLAGS += --target=$(TRIPLE) --sysroot=$(SYSROOT) -march=morello+c64
 LDFLAGS += ${TEST_LDFLAGS}
-LDFLAGS += -g -fuse-ld=lld -nostdlib -L$(MUSL_LIB) -march=morello+c64 -mabi=purecap
+LDFLAGS += -g -fuse-ld=lld
 LDLIBS += -lc
-
-CRT_BEGIN = $(shell $(CC) -print-file-name=clang_rt.crtbegin-morello.o)
-CRT_END = $(shell $(CC) -print-file-name=clang_rt.crtend-morello.o)
-CRT_PRE = $(MUSL_LIB)/crt1.o $(MUSL_LIB)/crti.o $(CRT_BEGIN)
-CRT_POST = $(CRT_END) $(MUSL_LIB)/crtn.o
-
-RT_BUILTINS = $(shell $(CC) -print-file-name=libclang_rt.builtins-morello.a)
 
 SOURCES := $(wildcard src/*.c)
 OBJS := $(patsubst %.c, %.o, $(SOURCES))
 MKFS := $(patsubst %.c, %.mk, $(SOURCES))
-EXE := $(patsubst %.c, %.exe, $(SOURCES))
+EXE_STATIC := $(patsubst %.c, %-static.exe, $(SOURCES))
 
 MIE_ARGS ?= -fail-early c64-a64
 
@@ -36,10 +35,15 @@ all: test
 
 -include $(MKFS)
 
-test: $(EXE) check_morelloie $(CURDIR)/runner.py
-	python3 runner.py --nproc $(MORELLO_TESTS_PROCS) --mie-args "$(MIE_ARGS)" src morello-tests.json $(MORELLOIE) musl.custom.morello
+test: test-static
 
-build: $(EXE)
+test-static: $(EXE_STATIC) check_morelloie $(CURDIR)/runner.py
+	python3 runner.py --kind static --nproc $(MORELLO_TESTS_PROCS) --mie-args "$(MIE_ARGS)" src morello-tests.json $(MORELLOIE) musl.custom.morello.static
+
+test-dynamic: $(EXE_STATIC) check_morelloie $(CURDIR)/runner.py
+	python3 runner.py --kind dynamic --nproc $(MORELLO_TESTS_PROCS) --mie-args "$(MIE_ARGS)" src morello-tests.json $(MORELLOIE) musl.custom.morello.dynamic
+
+build: $(EXE_STATIC)
 
 check_morelloie:
 ifndef MORELLOIE
@@ -49,14 +53,17 @@ endif
 %.o: %.c
 	$(CC) $(CFLAGS) -c $< -o $@
 
-%.exe: %.o $(addprefix $(MUSL_LIB)/,$(MUSL_BITS))
-	$(CC) $(LDFLAGS) $(CRT_PRE) $< $(RT_BUILTINS) $(CRT_POST) -o $@ $(LDLIBS) -static
+%-static.exe: %.o $(addprefix $(MUSLLIB)/,$(MUSL_BITS_STATIC))
+	$(CC) $(LDFLAGS) $< -o $@ $(LDLIBS) -static
+
+%-dynamic.exe: %.o $(addprefix $(MUSLLIB)/,$(MUSL_BITS_STATIC))
+	$(CC) $(LDFLAGS) $< -o $@ $(LDLIBS)
 
 run-%: src/%.exe
 	$(MORELLOIE) $(MIE_ARGS) -- $< $(TEST_ARGS)
 
 clean:
-	@rm -vf suite-morello-results.xml $(EXE) $(OBJS)
+	@rm -vf suite-morello-results.xml $(EXE_STATIC) $(OBJS)
 	@rm -vrf /tmp/morello-musl-tests-*
 
 .PHONY: clean check_morelloie test build

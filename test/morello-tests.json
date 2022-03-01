@@ -1354,6 +1354,18 @@
         "xrc": [0]
     },
     {
+        "app": "${build}/stdio_misc.exe",
+        "name": "setvbuf",
+        "args": ["3"],
+        "xrc": [0]
+    },
+    {
+        "app": "${build}/stdio_misc.exe",
+        "name": "getdelim",
+        "args": ["4"],
+        "xrc": [0]
+    },
+    {
         "app": "${build}/stdlib_misc.exe",
         "name": "setkey_encrypt",
         "args": ["0"],
@@ -1780,5 +1792,28 @@
         "name": "signal",
         "xrc": [0],
         "skip": "flaky"
+    },
+    {
+        "app": "${build}/exit.exe",
+        "name": "exit",
+        "args": ["0"],
+        "xrc": [1]
+    },
+    {
+        "app": "${build}/exit.exe",
+        "name": "quick_exit",
+        "args": ["1"],
+        "xrc": [1]
+    },
+    {
+        "app": "${build}/exit.exe",
+        "name": "abort",
+        "args": ["2"],
+        "xrc": [-6]
+    },
+    {
+        "app": "${build}/popen.exe",
+        "name": "popen",
+        "xrc": [0]
     }
 ]

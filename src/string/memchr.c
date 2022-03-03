@@ -35,5 +35,5 @@ void *memchr(const void *src, int c, size_t n)
 	}
 #endif
 	for (; n && *s != c; s++, n--);
-	return n ? RESTRICT_BOUNDS_TO_TAIL_IF_MORELLO_SUBOBJ((void *)s) : 0;
+	return n ? ((void *)s) : 0;
 }

@@ -1,8 +1,6 @@
 #include <string.h>
 #include <stdint.h>
 
-#include "morello_helpers.h"
-
 static char *twobyte_strstr(const unsigned char *h, const unsigned char *n)
 {
 	uint16_t nw = n[0]<<8 | n[1], hw = h[0]<<8 | h[1];
@@ -154,5 +152,5 @@ char *strstr(const char *h, const char *n)
 	else if (!n[4]) p = fourbyte_strstr((void *)h, (void *)n);
 	else p = twoway_strstr((void *)h, (void *)n);
 
-	return RESTRICT_BOUNDS_TO_TAIL_IF_MORELLO_SUBOBJ(p);
+	return (p);
 }

@@ -159,7 +159,6 @@ target=
 optimize=auto
 debug=no
 morello=yes
-morello_subobject_bounds=no
 libshim=auto
 libshim_path=auto
 warnings=yes
@@ -192,8 +191,6 @@ case "$arg" in
 --disable-debug|--enable-debug=no) debug=no ;;
 --enable-morello|--enable-morello=yes) morello=yes ;;
 --disable-morello|--enable-morello=no) morello=no ;;
---morello-subobject-bounds=on) morello_subobject_bounds=yes ;;
---morello-subobject-bounds=off) morello_subobject_bounds=no ;;
 --enable-libshim|--enable-libshim=yes) libshim=yes ;;
 --disable-libshim|--enable-libshim=no) libshim=no ;;
 --libshim-path=*) libshim_path=${arg#*=} ;;
@@ -501,13 +498,6 @@ if test "$morello" = yes ; then
     else
         fail "$0: Morello is not supported by $CC"
     fi
-fi
-
-#
-# Enable Morello subobject bounds if requested
-#
-if test "$morello_subobject_bounds" = yes ; then
-    CFLAGS_MORELLO="$CFLAGS_MORELLO -DMORELLO_ENABLE_SUBOBJECT_BOUNDS"
 fi
 
 if test "$libshim" = auto && test "$morello" = yes ; then

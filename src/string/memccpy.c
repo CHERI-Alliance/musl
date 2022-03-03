@@ -44,6 +44,6 @@ void *memccpy(void *restrict dest, const void *restrict src, int c, size_t n)
 	for (; n && (*d=*s)!=c; n--, s++, d++);
 tail:
 	if (n)
-	  return RESTRICT_BOUNDS_TO_TAIL_IF_MORELLO_SUBOBJ(d+1);
+	  return d+1;
 	return 0;
 }

@@ -24,7 +24,7 @@
 
 #ifndef __scc
 
-#ifdef MORELLO
+#ifdef __CHERI_PURE_CAPABILITY__
 #define __scc(X) ((intptr_t) (X))
 typedef intptr_t syscall_arg_t;
 hidden intptr_t __syscall_ret(uintptr_t);
@@ -32,7 +32,7 @@ hidden intptr_t __syscall_ret(uintptr_t);
 #define __scc(X) ((long) (X))
 typedef long syscall_arg_t;
 hidden long __syscall_ret(unsigned long);
-#endif // #if MORELLO
+#endif // __CHERI_PURE_CAPABILITY__
 hidden syscall_arg_t __syscall_cp(syscall_arg_t, syscall_arg_t, syscall_arg_t, syscall_arg_t,
 	syscall_arg_t, syscall_arg_t, syscall_arg_t);
 #endif // #ifndef __scc

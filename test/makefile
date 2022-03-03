@@ -13,7 +13,7 @@ override TRIPLE = aarch64-linux-musl_purecap
 override MUSL_BITS_STATIC = crt1.o crti.o crtn.o libc.a rcrt1.o Scrt1.o
 override MUSL_BITS_DYNAMIC = crt1.o crti.o crtn.o libc.so rcrt1.o Scrt1.o
 
-CFLAGS += --target=$(TRIPLE) --sysroot=$(SYSROOT) -march=morello+c64 -DMORELLO
+CFLAGS += --target=$(TRIPLE) --sysroot=$(SYSROOT) -march=morello+c64
 CFLAGS += ${TEST_CFLAGS}
 CFLAGS += -g -fno-builtin-mempcpy
 CFLAGS += -Wall -Wpedantic -Werror

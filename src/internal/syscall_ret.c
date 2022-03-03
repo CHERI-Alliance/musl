@@ -1,7 +1,7 @@
 #include <errno.h>
 #include "syscall.h"
 
-#ifdef MORELLO
+#ifdef __CHERI_PURE_CAPABILITY__
 intptr_t __syscall_ret(uintptr_t r)
 #else
 long __syscall_ret(unsigned long r)

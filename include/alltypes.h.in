@@ -86,7 +86,7 @@ TYPEDEF unsigned short sa_family_t;
 // TODO: Once all objects are built with MORELLO defined, the lines which set different sizes when Morello is not enabled can be uncommented
 // TODO: Once the above is complete, work out minimum required lengths of arrays for morello within the union
 
-// #ifdef MORELLO
+// #ifdef __CHERI_PURE_CAPABILITY__
 #define MUTEX_LEN 16
 #define COND_LEN 16
 #define RWLOCK_LEN 16

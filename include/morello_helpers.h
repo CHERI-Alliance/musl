@@ -3,21 +3,10 @@
 
 #include <stdint.h>
 
-#define RESTRICT_BNDS_IF_MORELLO(c, w) c
-#define RESTRICT_BNDS_IF_MORELLO_SUBOBJ(c, w) c
-#define RESTRICT_BOUNDS_TO_TAIL_IF_MORELLO_SUBOBJ(c) c
-#define CAP_TAIL_LENGTH(cap) SIZE_MAX
-#define LT_IF_MORELLO_ELSE(a, b, e) e
+#ifdef __CHERI_PURE_CAPABILITY__
 
-#ifdef MORELLO
-
-#undef RESTRICT_BNDS_IF_MORELLO
 #define RESTRICT_BNDS_IF_MORELLO(c, w) __builtin_cheri_bounds_set(c, w)
-
-#undef CAP_TAIL_LENGTH
 #define CAP_TAIL_LENGTH(cap) __builtin_cheri_length_get(cap) - __builtin_cheri_offset_get(cap)
-
-#undef LT_IF_MORELLO
 #define LT_IF_MORELLO_ELSE(a, b, e) (a < b)
 
 /**
@@ -35,16 +24,12 @@ inline void *restrict_bounds_to_tail(void *cap) {
   return new;
 }
 
-#ifdef MORELLO_ENABLE_SUBOBJECT_BOUNDS
+#else
 
-#undef RESTRICT_BOUNDS_TO_TAIL_IF_MORELLO_SUBOBJ
-#define RESTRICT_BOUNDS_TO_TAIL_IF_MORELLO_SUBOBJ(c) restrict_bounds_to_tail(c)
+#define RESTRICT_BNDS_IF_MORELLO(c, w) c
+#define CAP_TAIL_LENGTH(cap) SIZE_MAX
+#define LT_IF_MORELLO_ELSE(a, b, e) e
 
-#undef RESTRICT_BNDS_IF_MORELLO_SUBOBJ
-#define RESTRICT_BNDS_IF_MORELLO_SUBOBJ(c, w) RESTRICT_BNDS_IF_MORELLO(c, w)
-
-#endif // MORELLO_ENABLE_SUBOBJECT_BOUNDS
-
-#endif // MORELLO
+#endif // __CHERI_PURE_CAPABILITY__
 
 #endif // MUSL_MORELLO_HELPERS_H

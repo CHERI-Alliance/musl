@@ -23,7 +23,7 @@ char *__strchrnul(const char *s, int c)
 	const word *w;
 	for (; (uintptr_t)s % ALIGN; s++, i++)
 	  if (!*s || *(unsigned char *)s == c)
-	    return RESTRICT_BOUNDS_TO_TAIL_IF_MORELLO_SUBOBJ((char *)s);
+	    return ((char *)s);
 	size_t k = ONES * c;
 	if (LT_IF_MORELLO_ELSE(i + sizeof(word) - 1, max_i, true)) {
 		for (w = (void *)s;
@@ -35,7 +35,7 @@ char *__strchrnul(const char *s, int c)
 	}
 #endif
 	for (; *s && *(unsigned char *)s != c; s++);
-	return RESTRICT_BOUNDS_TO_TAIL_IF_MORELLO_SUBOBJ((char *)s);
+	return ((char *)s);
 }
 
 weak_alias(__strchrnul, strchrnul);

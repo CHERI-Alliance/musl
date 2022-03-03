@@ -5,8 +5,6 @@
 #include <limits.h>
 #include <ctype.h>
 
-#include "morello_helpers.h"
-
 static unsigned long long strtox(const char *s, char **p, int base, unsigned long long lim)
 {
 	FILE f;
@@ -15,7 +13,7 @@ static unsigned long long strtox(const char *s, char **p, int base, unsigned lon
 	unsigned long long y = __intscan(&f, base, 1, lim);
 	if (p) {
 		size_t cnt = shcnt(&f);
-		*p = RESTRICT_BOUNDS_TO_TAIL_IF_MORELLO_SUBOBJ((char *)s + cnt);
+		*p = (char *)s + cnt;
 	}
 	return y;
 }

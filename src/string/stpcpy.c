@@ -17,7 +17,7 @@ char *__stpcpy(char *restrict d, const char *restrict s)
 	const word *ws;
 	if ((uintptr_t)s % ALIGN == (uintptr_t)d % ALIGN) {
 		for (; (uintptr_t)s % ALIGN; s++, d++)
-			if (!(*d=*s)) return RESTRICT_BOUNDS_TO_TAIL_IF_MORELLO_SUBOBJ(d);
+			if (!(*d=*s)) return (d);
 		wd=(void *)d; ws=(const void *)s;
 		for (; CAP_TAIL_LENGTH(ws) >= sizeof(word) && !HASZERO(*ws); *wd++ = *ws++);
 		d=(void *)wd; s=(const void *)ws;
@@ -25,7 +25,7 @@ char *__stpcpy(char *restrict d, const char *restrict s)
 #endif
 	for (; (*d=*s); s++, d++);
 
-	return RESTRICT_BOUNDS_TO_TAIL_IF_MORELLO_SUBOBJ(d);
+	return (d);
 }
 
 weak_alias(__stpcpy, stpcpy);

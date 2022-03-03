@@ -62,13 +62,8 @@ static void libc_start_init(void)
 {
 	_init();
 	uintptr_t a = (uintptr_t)&__init_array_start;
-
-#ifdef MORELLO
-	morello_init_array(a, &__init_array_end);
-#else
 	for (; a<(uintptr_t)&__init_array_end; a+=sizeof(void(*)()))
 		(*(void (**)(void))a)();
-#endif
 }
 
 weak_alias(libc_start_init, __libc_start_init);
@@ -97,7 +92,7 @@ static int libc_start_main_stage2(int (*main)(int,char **,char **), int argc, ch
 	char **envp = argv+argc+1;
 	__libc_start_init();
 
-#ifdef MORELLO
+#ifdef __CHERI_PURE_CAPABILITY__
 	morello_set_bounds_on_cap_array(&argv);
 	morello_set_bounds_on_cap_array(&envp);
 #endif

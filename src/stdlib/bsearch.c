@@ -14,7 +14,7 @@ void *bsearch(const void *key, const void *base, size_t nel, size_t width, int (
 			base = (char *)try + width;
 			nel -= nel/2+1;
 		} else {
-		  return RESTRICT_BNDS_IF_MORELLO_SUBOBJ(try, width);
+		  return try;
 		}
 	}
 	return NULL;

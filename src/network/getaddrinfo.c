@@ -5,10 +5,8 @@
 #include <string.h>
 #include <pthread.h>
 #include <unistd.h>
-#include <endian.h>
 #include <errno.h>
 #include "lookup.h"
-#include "morello_helpers.h"
 
 int getaddrinfo(const char *restrict host, const char *restrict serv, const struct addrinfo *restrict hint, struct addrinfo **restrict res)
 {

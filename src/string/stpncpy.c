@@ -35,7 +35,7 @@ char *__stpncpy(char *restrict d, const char *restrict s, size_t n)
 	for (; n && (*d=*s); n--, s++, d++);
 tail:
 	memset(d, 0, n);
-	return RESTRICT_BOUNDS_TO_TAIL_IF_MORELLO_SUBOBJ(d);
+	return (d);
 }
 
 weak_alias(__stpncpy, stpncpy);

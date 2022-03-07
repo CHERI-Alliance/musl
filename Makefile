@@ -84,8 +84,6 @@ export CONFIG = $(CURDIR)/config.mak
 ifeq ($(ARCH),morello)
 AOBJS := $(filter-out %/lite_malloc.o,$(AOBJS))
 LOBJS := $(filter-out %/lite_malloc.lo,$(LOBJS))
-LOBJS := $(filter-out obj/src/ldso/%,$(LOBJS))
-override LDSO_OBJS =
 endif
 
 ifeq ($(ARCH),)

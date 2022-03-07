@@ -10,6 +10,7 @@
 #include <sys/mman.h>
 #include <limits.h>
 #include <fcntl.h>
+#include <sys/dynv.h>
 #include <sys/stat.h>
 #include <errno.h>
 #include <link.h>
@@ -36,6 +37,17 @@ static void error(const char *, ...);
 
 #define container_of(p,t,m) ((t*)((char *)(p)-offsetof(t,m)))
 #define countof(a) ((sizeof (a))/(sizeof (a)[0]))
+
+#define AUX_TYPE(p) ((p)->a_type)
+#define AUX_VAL(p) ((p)->a_un.a_val)
+#ifdef MORELLO
+#define AUX_PTR(p) ((p)->a_un.a_ptr)
+#else
+#define AUX_PTR(p) ((p)->a_un.a_val)
+#endif
+#define DYN_TAG(p) ((p)->d_tag)
+#define DYN_VAL(p) ((p)->d_un.d_val)
+#define DYN_PTR(p) ((p)->d_un.d_ptr)
 
 struct debug {
 	int ver;
@@ -88,7 +100,7 @@ struct dso {
 	struct tls_module tls;
 	size_t tls_id;
 	size_t relro_start, relro_end;
-	uintptr_t *new_dtv;
+	uintptr_t * new_dtv;
 	unsigned char *new_tls;
 	struct td_index *td_index;
 	struct dso *fini_next;
@@ -203,21 +215,37 @@ static void (*fdbarrier(void *p))()
 #define fpaddr(p, v) ((void (*)())laddr(p, v))
 #endif
 
-static void decode_vec(size_t *v, size_t *a, size_t cnt)
+static void decode_aux_vec(auxv_entry *v, auxv_entry **a, size_t cnt, auxv_entry *def)
 {
 	size_t i;
-	for (i=0; i<cnt; i++) a[i] = 0;
-	for (; v[0]; v+=2) if (v[0]-1<cnt-1) {
-		a[0] |= 1UL<<v[0];
-		a[v[0]] = v[1];
+	for (i=0; i<cnt; i++) a[i] = def;
+	for (; v->a_type; v++) if (v->a_type<cnt) {
+		a[v->a_type] = v;
 	}
 }
 
-static int search_vec(size_t *v, size_t *r, size_t key)
+static void decode_dyn_vec(dynv_entry *v, dynv_entry **a, size_t cnt, dynv_entry *def)
 {
-	for (; v[0]!=key; v+=2)
-		if (!v[0]) return 0;
-	*r = v[1];
+	size_t i;
+	for (i=0; i<cnt; i++) a[i] = def;
+	for (; v->d_tag; v++) if (v->d_tag<cnt) {
+		a[v->d_tag] = v;
+	}
+}
+
+static int search_aux_vec(auxv_entry *v, auxv_entry **r, size_t key)
+{
+	for (; AUX_TYPE(v)!=key; v++)
+		if (!AUX_TYPE(v)) return 0;
+	*r = v;
+	return 1;
+}
+
+static int search_dyn_vec(dynv_entry *v, dynv_entry **r, size_t key)
+{
+	for (; DYN_TAG(v)!=key; v++)
+		if (!DYN_TAG(v)) return 0;
+	*r = v;
 	return 1;
 }
 
@@ -345,9 +373,9 @@ static void do_relocs(struct dso *dso, size_t *rel, size_t rel_size, size_t stri
 	int type;
 	int sym_index;
 	struct symdef def;
-	size_t *reloc_addr;
-	size_t sym_val;
-	size_t tls_val;
+	size_t **reloc_addr;
+	size_t *sym_val;
+	size_t *tls_val;
 	size_t addend;
 	int skip_relative = 0, reuse_addends = 0, save_slot = 0;
 
@@ -376,7 +404,7 @@ static void do_relocs(struct dso *dso, size_t *rel, size_t rel_size, size_t stri
 				saved_addends[save_slot] = *reloc_addr;
 			addend = saved_addends[save_slot++];
 		} else {
-			addend = *reloc_addr;
+			addend = (size_t)*reloc_addr;
 		}
 
 		sym_index = R_SYM(rel[1]);
@@ -407,8 +435,8 @@ static void do_relocs(struct dso *dso, size_t *rel, size_t rel_size, size_t stri
 			def.dso = dso;
 		}
 
-		sym_val = def.sym ? (size_t)laddr(def.dso, def.sym->st_value) : 0;
-		tls_val = def.sym ? def.sym->st_value : 0;
+		sym_val = def.sym ? laddr(def.dso, def.sym->st_value) : NULL;
+		tls_val = def.sym ? def.sym->st_value : NULL;
 
 		if ((type == REL_TPOFF || type == REL_TPOFF_NEG)
 		    && def.dso->tls_id > static_tls_cnt) {
@@ -426,21 +454,23 @@ static void do_relocs(struct dso *dso, size_t *rel, size_t rel_size, size_t stri
 		case REL_PLT:
 			*reloc_addr = sym_val + addend;
 			break;
-		case REL_USYMBOLIC:
-			memcpy(reloc_addr, &(size_t){sym_val + addend}, sizeof(size_t));
+		case REL_USYMBOLIC: {
+			size_t *temp = sym_val + addend;
+			memcpy(reloc_addr, &temp, sizeof(size_t *));
 			break;
+		}
 		case REL_RELATIVE:
-			*reloc_addr = (size_t)base + addend;
+			*reloc_addr = base + addend;
 			break;
 		case REL_SYM_OR_REL:
 			if (sym) *reloc_addr = sym_val + addend;
-			else *reloc_addr = (size_t)base + addend;
+			else *reloc_addr = base + addend;
 			break;
 		case REL_COPY:
-			memcpy(reloc_addr, (void *)sym_val, sym->st_size);
+			memcpy(reloc_addr, sym_val, sym->st_size);
 			break;
 		case REL_OFFSET32:
-			*(uint32_t *)reloc_addr = sym_val + addend
+			*(uint32_t **)reloc_addr = sym_val + addend
 				- (size_t)reloc_addr;
 			break;
 		case REL_FUNCDESC:
@@ -448,7 +478,7 @@ static void do_relocs(struct dso *dso, size_t *rel, size_t rel_size, size_t stri
 				+ (def.sym - def.dso->syms)) : 0;
 			break;
 		case REL_FUNCDESC_VAL:
-			if ((sym->st_info&0xf) == STT_SECTION) *reloc_addr += sym_val;
+			if ((sym->st_info&0xf) == STT_SECTION) *reloc_addr += (size_t)sym_val;
 			else *reloc_addr = sym_val;
 			reloc_addr[1] = def.sym ? (size_t)def.dso->got : 0;
 			break;
@@ -467,7 +497,7 @@ static void do_relocs(struct dso *dso, size_t *rel, size_t rel_size, size_t stri
 			*reloc_addr = tls_val - def.dso->tls.offset + addend;
 			break;
 		case REL_TPOFF_NEG:
-			*reloc_addr = def.dso->tls.offset - tls_val + addend;
+			*reloc_addr = (tls_val - 2 * (size_t)tls_val) + def.dso->tls.offset + addend;
 			break;
 #endif
 		case REL_TLSDESC:
@@ -484,10 +514,10 @@ static void do_relocs(struct dso *dso, size_t *rel, size_t rel_size, size_t stri
 				dso->td_index = new;
 				new->args[0] = def.dso->tls_id;
 				new->args[1] = tls_val + addend - DTP_OFFSET;
-				reloc_addr[0] = (size_t)__tlsdesc_dynamic;
-				reloc_addr[1] = (size_t)new;
+				reloc_addr[0] = (size_t *)__tlsdesc_dynamic;
+				reloc_addr[1] = (size_t *)new;
 			} else {
-				reloc_addr[0] = (size_t)__tlsdesc_static;
+				reloc_addr[0] = (size_t *)__tlsdesc_static;
 #ifdef TLS_ABOVE_TP
 				reloc_addr[1] = tls_val + def.dso->tls.offset
 					+ TPOFF_K + addend;
@@ -748,7 +778,7 @@ static void *map_library(int fd, struct dso *dso)
 	dso->map_len = map_len;
 	/* If the loaded file is not relocatable and the requested address is
 	 * not available, then the load operation must fail. */
-	if (eh->e_type != ET_DYN && addr_min && map!=(void *)addr_min) {
+	if (eh->e_type != ET_DYN && addr_min && (size_t)map!=addr_min) {
 		errno = EBUSY;
 		goto error;
 	}
@@ -777,15 +807,15 @@ static void *map_library(int fd, struct dso *dso)
 			if (mmap_fixed(base+this_min, this_max-this_min, prot, MAP_PRIVATE|MAP_FIXED, fd, off_start) == MAP_FAILED)
 				goto error;
 		if (ph->p_memsz > ph->p_filesz && (ph->p_flags&PF_W)) {
-			size_t brk = (size_t)base+ph->p_vaddr+ph->p_filesz;
-			size_t pgbrk = brk+PAGE_SIZE-1 & -PAGE_SIZE;
-			memset((void *)brk, 0, pgbrk-brk & PAGE_SIZE-1);
+			size_t *brk = base+ph->p_vaddr+ph->p_filesz;
+			size_t pgbrk = (size_t)brk+PAGE_SIZE-1 & -PAGE_SIZE;
+			memset(brk, 0, pgbrk-(size_t)brk & PAGE_SIZE-1);
 			if (pgbrk-(size_t)base < this_max && mmap_fixed((void *)pgbrk, (size_t)base+this_max-pgbrk, prot, MAP_PRIVATE|MAP_FIXED|MAP_ANONYMOUS, -1, 0) == MAP_FAILED)
 				goto error;
 		}
 	}
-	for (i=0; ((size_t *)(base+dyn))[i]; i+=2)
-		if (((size_t *)(base+dyn))[i]==DT_TEXTREL) {
+	for (i=0; DYN_TAG((dynv_entry *)(base+dyn) + i); i++)
+		if (DYN_TAG((dynv_entry *)(base+dyn) + i)==DT_TEXTREL) {
 			if (mprotect(map, map_len, PROT_READ|PROT_WRITE|PROT_EXEC)
 			    && errno != ENOSYS)
 				goto error;
@@ -910,22 +940,22 @@ static int fixup_rpath(struct dso *p, char *buf, size_t buf_size)
 
 static void decode_dyn(struct dso *p)
 {
-	size_t dyn[DYN_CNT];
-	decode_vec(p->dynv, dyn, DYN_CNT);
-	p->syms = laddr(p, dyn[DT_SYMTAB]);
-	p->strings = laddr(p, dyn[DT_STRTAB]);
-	if (dyn[0]&(1<<DT_HASH))
-		p->hashtab = laddr(p, dyn[DT_HASH]);
-	if (dyn[0]&(1<<DT_RPATH))
-		p->rpath_orig = p->strings + dyn[DT_RPATH];
-	if (dyn[0]&(1<<DT_RUNPATH))
-		p->rpath_orig = p->strings + dyn[DT_RUNPATH];
-	if (dyn[0]&(1<<DT_PLTGOT))
-		p->got = laddr(p, dyn[DT_PLTGOT]);
-	if (search_vec(p->dynv, dyn, DT_GNU_HASH))
-		p->ghashtab = laddr(p, *dyn);
-	if (search_vec(p->dynv, dyn, DT_VERSYM))
-		p->versym = laddr(p, *dyn);
+	dynv_entry dyn_null = {0}, *dyn[DYN_CNT];
+	decode_dyn_vec(p->dynv, dyn, DYN_CNT, &dyn_null);
+	p->syms = laddr(p, DYN_VAL(dyn[DT_SYMTAB]));
+	p->strings = laddr(p, DYN_VAL(dyn[DT_STRTAB]));
+	if (dyn[DT_HASH] != &dyn_null)
+		p->hashtab = laddr(p, DYN_VAL(dyn[DT_HASH]));
+	if (dyn[DT_RPATH] != &dyn_null)
+		p->rpath_orig = p->strings + DYN_VAL(dyn[DT_RPATH]);
+	if (dyn[DT_RUNPATH] != &dyn_null)
+		p->rpath_orig = p->strings + DYN_VAL(dyn[DT_RUNPATH]);
+	if (dyn[DT_PLTGOT] != &dyn_null)
+		p->got = laddr(p, DYN_VAL(dyn[DT_PLTGOT]));
+	if (search_dyn_vec(p->dynv, dyn, DT_GNU_HASH))
+		p->ghashtab = laddr(p, DYN_VAL(dyn[0]));
+	if (search_dyn_vec(p->dynv, dyn, DT_VERSYM))
+		p->versym = laddr(p, DYN_VAL(dyn[0]));
 }
 
 static size_t count_syms(struct dso *p)
@@ -1174,8 +1204,8 @@ static struct dso *load_library(const char *name, struct dso *needed_by)
 			& (p->tls.align-1);
 		p->tls.offset = tls_offset;
 #endif
-		p->new_dtv = (void *)(-sizeof(size_t) &
-			(uintptr_t)(p->name+strlen(p->name)+sizeof(size_t)));
+		p->new_dtv = p->name + strlen(p->name) + sizeof(size_t);
+		p->new_dtv = (uintptr_t *) (p->new_dtv - ((uintptr_t)(p->new_dtv) & (sizeof(size_t)-1)));
 		p->new_tls = (void *)(p->new_dtv + n_th*(tls_cnt+1));
 		if (tls_tail) tls_tail->next = &p->tls;
 		else libc.tls_head = &p->tls;
@@ -1326,14 +1356,18 @@ static void do_mips_relocs(struct dso *p, size_t *got)
 {
 	size_t i, j, rel[2];
 	unsigned char *base = p->base;
-	i=0; search_vec(p->dynv, &i, DT_MIPS_LOCAL_GOTNO);
-	if (p==&ldso) {
-		got += i;
-	} else {
-		while (i--) *got++ += (size_t)base;
+	dynv_entry *d = NULL;
+	if (search_dyn_vec(p->dynv, &d, DT_MIPS_LOCAL_GOTNO)) {
+		i=DYN_VAL(d);
+		if (p==&ldso) {
+			got += i;
+		} else {
+			while (i--) *got++ += (size_t)base;
+		}
 	}
-	j=0; search_vec(p->dynv, &j, DT_MIPS_GOTSYM);
-	i=0; search_vec(p->dynv, &i, DT_MIPS_SYMTABNO);
+	i=0; j=0;
+	if (search_dyn_vec(p->dynv, &d, DT_MIPS_GOTSYM)) j=DYN_VAL(d);
+	if (search_dyn_vec(p->dynv, &d, DT_MIPS_SYMTABNO)) i=DYN_VAL(d);
 	Sym *sym = p->syms + j;
 	rel[0] = (unsigned char *)got - base;
 	for (i-=j; i; i--, sym++, rel[0]+=sizeof(size_t)) {
@@ -1344,16 +1378,16 @@ static void do_mips_relocs(struct dso *p, size_t *got)
 
 static void reloc_all(struct dso *p)
 {
-	size_t dyn[DYN_CNT];
+	dynv_entry dyn_null = {0}, *dyn[DYN_CNT];
 	for (; p; p=p->next) {
 		if (p->relocated) continue;
-		decode_vec(p->dynv, dyn, DYN_CNT);
+		decode_dyn_vec(p->dynv, dyn, DYN_CNT, &dyn_null);
 		if (NEED_MIPS_GOT_RELOCS)
-			do_mips_relocs(p, laddr(p, dyn[DT_PLTGOT]));
-		do_relocs(p, laddr(p, dyn[DT_JMPREL]), dyn[DT_PLTRELSZ],
-			2+(dyn[DT_PLTREL]==DT_RELA));
-		do_relocs(p, laddr(p, dyn[DT_REL]), dyn[DT_RELSZ], 2);
-		do_relocs(p, laddr(p, dyn[DT_RELA]), dyn[DT_RELASZ], 3);
+			do_mips_relocs(p, laddr(p, DYN_VAL(dyn[DT_PLTGOT])));
+		do_relocs(p, laddr(p, DYN_VAL(dyn[DT_JMPREL])), DYN_PTR(dyn[DT_PLTRELSZ]),
+			2+(DYN_VAL(dyn[DT_PLTREL])==DT_RELA));
+		do_relocs(p, laddr(p, DYN_VAL(dyn[DT_REL])), DYN_VAL(dyn[DT_RELSZ]), 2);
+		do_relocs(p, laddr(p, DYN_VAL(dyn[DT_RELA])), DYN_VAL(dyn[DT_RELASZ]), 3);
 
 		if (head != &ldso && p->relro_start != p->relro_end &&
 		    mprotect(laddr(p, p->relro_start), p->relro_end-p->relro_start, PROT_READ)
@@ -1400,7 +1434,7 @@ static void kernel_mapped_dso(struct dso *p)
 void __libc_exit_fini()
 {
 	struct dso *p;
-	size_t dyn[DYN_CNT];
+	dynv_entry dyn_null = {0}, *dyn[DYN_CNT];
 	pthread_t self = __pthread_self();
 
 	/* Take both locks before setting shutting_down, so that
@@ -1414,15 +1448,15 @@ void __libc_exit_fini()
 		while (p->ctor_visitor && p->ctor_visitor!=self)
 			pthread_cond_wait(&ctor_cond, &init_fini_lock);
 		if (!p->constructed) continue;
-		decode_vec(p->dynv, dyn, DYN_CNT);
-		if (dyn[0] & (1<<DT_FINI_ARRAY)) {
-			size_t n = dyn[DT_FINI_ARRAYSZ]/sizeof(size_t);
-			size_t *fn = (size_t *)laddr(p, dyn[DT_FINI_ARRAY])+n;
+		decode_dyn_vec(p->dynv, dyn, DYN_CNT, &dyn_null);
+		if (dyn[DT_FINI_ARRAY] != &dyn_null) {
+			size_t n = DYN_VAL(dyn[DT_FINI_ARRAYSZ])/sizeof(size_t);
+			size_t *fn = (size_t *)laddr(p, DYN_VAL(dyn[DT_FINI_ARRAY]))+n;
 			while (n--) ((void (*)(void))*--fn)();
 		}
 #ifndef NO_LEGACY_INITFINI
-		if ((dyn[0] & (1<<DT_FINI)) && dyn[DT_FINI])
-			fpaddr(p, dyn[DT_FINI])();
+		if ((dyn[DT_FINI] != &dyn_null && DYN_VAL(dyn[DT_FINI]))
+			fpaddr(p, DYN_VAL(dyn[DT_FINI]))();
 #endif
 	}
 }
@@ -1510,7 +1544,8 @@ static struct dso **queue_ctors(struct dso *dso)
 static void do_init_fini(struct dso **queue)
 {
 	struct dso *p;
-	size_t dyn[DYN_CNT], i;
+	dynv_entry dyn_null = {0}, *dyn[DYN_CNT];
+	size_t i;
 	pthread_t self = __pthread_self();
 
 	pthread_mutex_lock(&init_fini_lock);
@@ -1520,9 +1555,9 @@ static void do_init_fini(struct dso **queue)
 		if (p->ctor_visitor || p->constructed)
 			continue;
 		p->ctor_visitor = self;
-		
-		decode_vec(p->dynv, dyn, DYN_CNT);
-		if (dyn[0] & ((1<<DT_FINI) | (1<<DT_FINI_ARRAY))) {
+
+		decode_dyn_vec(p->dynv, dyn, DYN_CNT, &dyn_null);
+		if (dyn[DT_FINI] != &dyn_null || dyn[DT_FINI_ARRAY] != &dyn_null) {
 			p->fini_next = fini_head;
 			fini_head = p;
 		}
@@ -1530,12 +1565,12 @@ static void do_init_fini(struct dso **queue)
 		pthread_mutex_unlock(&init_fini_lock);
 
 #ifndef NO_LEGACY_INITFINI
-		if ((dyn[0] & (1<<DT_INIT)) && dyn[DT_INIT])
-			fpaddr(p, dyn[DT_INIT])();
+		if (dyn[DT_INIT] != &dyn_null && DYN_VAL(dyn[DT_INIT]))
+			fpaddr(p, DYN_VAL(dyn[DT_INIT]))();
 #endif
-		if (dyn[0] & (1<<DT_INIT_ARRAY)) {
-			size_t n = dyn[DT_INIT_ARRAYSZ]/sizeof(size_t);
-			size_t *fn = laddr(p, dyn[DT_INIT_ARRAY]);
+		if (dyn[DT_INIT_ARRAY] != &dyn_null) {
+			size_t n = DYN_VAL(dyn[DT_INIT_ARRAYSZ])/sizeof(size_t);
+			size_t *fn = laddr(p, DYN_VAL(dyn[DT_INIT_ARRAY]));
 			while (n--) ((void (*)(void))*fn++)();
 		}
 
@@ -1561,7 +1596,7 @@ static void dl_debug_state(void)
 
 weak_alias(dl_debug_state, _dl_debug_state);
 
-void __init_tls(size_t *auxv)
+void __init_tls(uintptr_t *)
 {
 }
 
@@ -1647,10 +1682,10 @@ hidden void __dls2(unsigned char *base, size_t *sp)
 		void *p1 = (void *)sp[-2];
 		void *p2 = (void *)sp[-1];
 		if (!p1) {
-			size_t aux[AUX_CNT];
-			decode_vec(auxv, aux, AUX_CNT);
-			if (aux[AT_BASE]) ldso.base = (void *)aux[AT_BASE];
-			else ldso.base = (void *)(aux[AT_PHDR] & -4096);
+			auxv_entry aux_null = {0}, *aux[AUX_CNT];
+			decode_aux_vec(auxv, aux, AUX_CNT, &aux_null);
+			if (aux[AT_BASE]) ldso.base = AUX_PTR(aux[AT_BASE]);
+			else ldso.base = __builtin_align_down(AUX_PTR(aux[AT_PHDR]), 4096);
 		}
 		app_loadmap = p2 ? p1 : 0;
 		ldso.loadmap = p2 ? p2 : p1;
@@ -1672,10 +1707,10 @@ hidden void __dls2(unsigned char *base, size_t *sp)
 	 * can be reused in stage 3. There should be very few. If
 	 * something goes wrong and there are a huge number, abort
 	 * instead of risking stack overflow. */
-	size_t dyn[DYN_CNT];
-	decode_vec(ldso.dynv, dyn, DYN_CNT);
-	size_t *rel = laddr(&ldso, dyn[DT_REL]);
-	size_t rel_size = dyn[DT_RELSZ];
+	dynv_entry dyn_null = {0}, *dyn[DYN_CNT];
+	decode_dyn_vec(ldso.dynv, dyn, DYN_CNT, &dyn_null);
+	size_t *rel = laddr(&ldso, DYN_VAL(dyn[DT_REL]));
+	size_t rel_size = DYN_VAL(dyn[DT_RELSZ]);
 	size_t symbolic_rel_cnt = 0;
 	apply_addends_to = rel;
 	for (; rel_size; rel+=2, rel_size-=2*sizeof(size_t))
@@ -1708,7 +1743,9 @@ void __dls2b(size_t *sp, size_t *auxv)
 	/* Setup early thread pointer in builtin_tls for ldso/libc itself to
 	 * use during dynamic linking. If possible it will also serve as the
 	 * thread pointer at runtime. */
-	search_vec(auxv, &__hwcap, AT_HWCAP);
+	auxv_entry *a;
+	search_aux_vec(auxv, &a, AT_HWCAP);
+	__hwcap = AUX_VAL(a);
 	libc.auxv = auxv;
 	libc.tls_size = sizeof builtin_tls;
 	libc.tls_align = tls_align;
@@ -1729,11 +1766,11 @@ void __dls2b(size_t *sp, size_t *auxv)
 void __dls3(size_t *sp, size_t *auxv)
 {
 	static struct dso app, vdso;
-	size_t aux[AUX_CNT];
+	auxv_entry aux_null = {0}, *a, *aux[AUX_CNT];
 	size_t i;
 	char *env_preload=0;
 	char *replace_argv0=0;
-	size_t vdso_base;
+	size_t *vdso_base;
 	int argc = *sp;
 	char **argv = (void *)(sp+1);
 	char **argv_orig = argv;
@@ -1742,12 +1779,13 @@ void __dls3(size_t *sp, size_t *auxv)
 	/* Find aux vector just past environ[] and use it to initialize
 	 * global data that may be needed before we can make syscalls. */
 	__environ = envp;
-	decode_vec(auxv, aux, AUX_CNT);
-	search_vec(auxv, &__sysinfo, AT_SYSINFO);
+	decode_aux_vec(auxv, aux, AUX_CNT, &aux_null);
+	if (search_aux_vec(auxv, &a, AT_SYSINFO)) __sysinfo = AUX_VAL(a);
 	__pthread_self()->sysinfo = __sysinfo;
-	libc.page_size = aux[AT_PAGESZ];
-	libc.secure = ((aux[0]&0x7800)!=0x7800 || aux[AT_UID]!=aux[AT_EUID]
-		|| aux[AT_GID]!=aux[AT_EGID] || aux[AT_SECURE]);
+	libc.page_size = AUX_VAL(aux[AT_PAGESZ]);
+	libc.secure = (!aux[3] || !aux[4] || !aux[5] || !aux[6] || !aux[9] || !aux[10]
+		|| !aux[11] || !aux[12] || AUX_VAL(aux[AT_UID])!=AUX_VAL(aux[AT_EUID])
+		|| AUX_VAL(aux[AT_GID])!=AUX_VAL(aux[AT_EGID]) || AUX_VAL(aux[AT_SECURE]));
 
 	/* Only trust user/env if kernel says we're not suid/sgid */
 	if (!libc.secure) {
@@ -1758,16 +1796,16 @@ void __dls3(size_t *sp, size_t *auxv)
 	/* If the main program was already loaded by the kernel,
 	 * AT_PHDR will point to some location other than the dynamic
 	 * linker's program headers. */
-	if (aux[AT_PHDR] != (size_t)ldso.phdr) {
+	if (AUX_VAL(aux[AT_PHDR]) != (size_t)ldso.phdr) {
 		size_t interp_off = 0;
 		size_t tls_image = 0;
 		/* Find load address of the main program, via AT_PHDR vs PT_PHDR. */
-		Phdr *phdr = app.phdr = (void *)aux[AT_PHDR];
-		app.phnum = aux[AT_PHNUM];
-		app.phentsize = aux[AT_PHENT];
-		for (i=aux[AT_PHNUM]; i; i--, phdr=(void *)((char *)phdr + aux[AT_PHENT])) {
+		Phdr *phdr = app.phdr = AUX_PTR(aux[AT_PHDR]);
+		app.phnum = AUX_VAL(aux[AT_PHNUM]);
+		app.phentsize = AUX_VAL(aux[AT_PHENT]);
+		for (i=AUX_VAL(aux[AT_PHNUM]); i; i--, phdr=(void *)((char *)phdr + AUX_VAL(aux[AT_PHENT]))) {
 			if (phdr->p_type == PT_PHDR)
-				app.base = (void *)(aux[AT_PHDR] - phdr->p_vaddr);
+				app.base = AUX_VAL(aux[AT_PHDR]) - phdr->p_vaddr;
 			else if (phdr->p_type == PT_INTERP)
 				interp_off = (size_t)phdr->p_vaddr;
 			else if (phdr->p_type == PT_TLS) {
@@ -1780,9 +1818,9 @@ void __dls3(size_t *sp, size_t *auxv)
 		if (DL_FDPIC) app.loadmap = app_loadmap;
 		if (app.tls.size) app.tls.image = laddr(&app, tls_image);
 		if (interp_off) ldso.name = laddr(&app, interp_off);
-		if ((aux[0] & (1UL<<AT_EXECFN))
-		    && strncmp((char *)aux[AT_EXECFN], "/proc/", 6))
-			app.name = (char *)aux[AT_EXECFN];
+		if (AUX_PTR(aux[AT_EXECFN])
+		    && strncmp((char *)AUX_PTR(aux[AT_EXECFN]), "/proc/", 6))
+			app.name = (char *)AUX_PTR(aux[AT_EXECFN]);
 		else
 			app.name = argv[0];
 		kernel_mapped_dso(&app);
@@ -1815,7 +1853,8 @@ void __dls3(size_t *sp, size_t *auxv)
 				argv[0] = 0;
 			}
 		}
-		argv[-1] = (void *)(argc - (argv-argv_orig));
+
+		argv[-1] = (size_t)(argc - (argv-argv_orig));
 		if (!argv[0]) {
 			dprintf(2, "musl libc (" LDSO_ARCH ")\n"
 				"Version %s\n"
@@ -1830,7 +1869,7 @@ void __dls3(size_t *sp, size_t *auxv)
 			dprintf(2, "%s: cannot load %s: %s\n", ldname, argv[0], strerror(errno));
 			_exit(1);
 		}
-		Ehdr *ehdr = (void *)map_library(fd, &app);
+		Ehdr *ehdr = map_library(fd, &app);
 		if (!ehdr) {
 			dprintf(2, "%s: %s: Not a valid dynamic program\n", ldname, argv[0]);
 			_exit(1);
@@ -1838,7 +1877,7 @@ void __dls3(size_t *sp, size_t *auxv)
 		close(fd);
 		ldso.name = ldname;
 		app.name = argv[0];
-		aux[AT_ENTRY] = (size_t)laddr(&app, ehdr->e_entry);
+		AUX_PTR(aux[AT_ENTRY]) = laddr(&app, ehdr->e_entry);
 		/* Find the name that would have been used for the dynamic
 		 * linker had ldd not taken its place. */
 		if (ldd_mode) {
@@ -1894,16 +1933,17 @@ void __dls3(size_t *sp, size_t *auxv)
 
 	/* Attach to vdso, if provided by the kernel, last so that it does
 	 * not become part of the global namespace.  */
-	if (search_vec(auxv, &vdso_base, AT_SYSINFO_EHDR) && vdso_base) {
+	if (search_aux_vec(auxv, &a, AT_SYSINFO_EHDR) && AUX_PTR(a)) {
+		vdso_base = AUX_PTR(a);
 		Ehdr *ehdr = (void *)vdso_base;
-		Phdr *phdr = vdso.phdr = (void *)(vdso_base + ehdr->e_phoff);
+		Phdr *phdr = vdso.phdr = (void *)((char *)vdso_base + ehdr->e_phoff);
 		vdso.phnum = ehdr->e_phnum;
 		vdso.phentsize = ehdr->e_phentsize;
 		for (i=ehdr->e_phnum; i; i--, phdr=(void *)((char *)phdr + ehdr->e_phentsize)) {
 			if (phdr->p_type == PT_DYNAMIC)
-				vdso.dynv = (void *)(vdso_base + phdr->p_offset);
+				vdso.dynv = (void *)((char *)vdso_base + phdr->p_offset);
 			if (phdr->p_type == PT_LOAD)
-				vdso.base = (void *)(vdso_base - phdr->p_vaddr + phdr->p_offset);
+				vdso.base = (void *)((char *)vdso_base - phdr->p_vaddr + phdr->p_offset);
 		}
 		vdso.name = "";
 		vdso.shortname = "linux-gate.so.1";
@@ -1995,21 +2035,22 @@ void __dls3(size_t *sp, size_t *auxv)
 
 	errno = 0;
 
-	CRTJMP((void *)aux[AT_ENTRY], argv-1);
+	CRTJMP(AUX_PTR(aux[AT_ENTRY]), argv-1);
 	for(;;);
 }
 
 static void prepare_lazy(struct dso *p)
 {
-	size_t dyn[DYN_CNT], n, flags1=0;
-	decode_vec(p->dynv, dyn, DYN_CNT);
-	search_vec(p->dynv, &flags1, DT_FLAGS_1);
-	if (dyn[DT_BIND_NOW] || (dyn[DT_FLAGS] & DF_BIND_NOW) || (flags1 & DF_1_NOW))
+	dynv_entry dyn_null = {0}, *d, *dyn[DYN_CNT];
+	size_t n, flags1=0;
+	decode_dyn_vec(p->dynv, dyn, DYN_CNT, &dyn_null);
+	if (search_dyn_vec(p->dynv, &d, DT_FLAGS_1)) flags1 = DYN_VAL(d);
+	if (dyn[DT_BIND_NOW] != &dyn_null || (DYN_VAL(dyn[DT_FLAGS]) & DF_BIND_NOW) || (flags1 & DF_1_NOW))
 		return;
-	n = dyn[DT_RELSZ]/2 + dyn[DT_RELASZ]/3 + dyn[DT_PLTRELSZ]/2 + 1;
+	n = DYN_VAL(dyn[DT_RELSZ])/2 + DYN_VAL(dyn[DT_RELASZ])/3 + DYN_VAL(dyn[DT_PLTRELSZ])/2 + 1;
 	if (NEED_MIPS_GOT_RELOCS) {
-		size_t j=0; search_vec(p->dynv, &j, DT_MIPS_GOTSYM);
-		size_t i=0; search_vec(p->dynv, &i, DT_MIPS_SYMTABNO);
+		size_t j=0; if (search_dyn_vec(p->dynv, &d, DT_MIPS_GOTSYM)) j = DYN_VAL(d);
+		size_t i=0; if (search_dyn_vec(p->dynv, &i, DT_MIPS_SYMTABNO)) i = DYN_VAL(d);
 		n += i-j;
 	}
 	p->lazy = calloc(n, 3*sizeof(size_t));
@@ -2221,7 +2262,7 @@ int dladdr(const void *addr_arg, Dl_info *info)
 	Sym *sym, *bestsym;
 	uint32_t nsym;
 	char *strings;
-	size_t best = 0;
+	size_t *best = 0;
 	size_t besterr = -1;
 
 	pthread_rwlock_rdlock(&lock);
@@ -2238,7 +2279,7 @@ int dladdr(const void *addr_arg, Dl_info *info)
 		size_t idx = (addr-(size_t)p->funcdescs)
 			/ sizeof(*p->funcdescs);
 		if (idx < nsym && (sym[idx].st_info&0xf) == STT_FUNC) {
-			best = (size_t)(p->funcdescs + idx);
+			best = p->funcdescs + idx;
 			bestsym = sym + idx;
 			besterr = 0;
 		}
@@ -2248,12 +2289,12 @@ int dladdr(const void *addr_arg, Dl_info *info)
 		if (sym->st_value
 		 && (1<<(sym->st_info&0xf) & OK_TYPES)
 		 && (1<<(sym->st_info>>4) & OK_BINDS)) {
-			size_t symaddr = (size_t)laddr(p, sym->st_value);
-			if (symaddr > addr || symaddr <= best)
+			size_t *symaddr = laddr(p, sym->st_value);
+			if (symaddr > addr || (size_t)symaddr <= (size_t)best)
 				continue;
 			best = symaddr;
 			bestsym = sym;
-			besterr = addr - symaddr;
+			besterr = addr - (size_t)symaddr;
 			if (addr == symaddr)
 				break;
 		}
@@ -2274,9 +2315,9 @@ int dladdr(const void *addr_arg, Dl_info *info)
 	}
 
 	if (DL_FDPIC && (bestsym->st_info&0xf) == STT_FUNC)
-		best = (size_t)(p->funcdescs + (bestsym - p->syms));
+		best = p->funcdescs + (bestsym - p->syms);
 	info->dli_sname = strings + bestsym->st_name;
-	info->dli_saddr = (void *)best;
+	info->dli_saddr = best;
 
 	return 1;
 }

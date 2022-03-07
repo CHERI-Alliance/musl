@@ -724,14 +724,8 @@ tryldflag LDFLAGS_AUTO -Wl,--no-undefined
 tryldflag LDFLAGS_AUTO -Wl,--dynamic-list="$srcdir/dynamic.list"
 
 # Find compiler runtime library
-if test "$cc_family" = clang ; then
-if test "$morello" = yes ; then
-test -z "$LIBCC" && try_libcc=`$CC -print-file-name=libclang_rt.builtins-morello.a 2>/dev/null` \
+test -z "$LIBCC" && try_libcc=`$CC --target="$target" -print-libgcc-file-name 2> /dev/null` \
                  && tryldflag LIBCC "$try_libcc"
-fi
-test -z "$LIBCC" && try_libcc=`$CC -print-file-name=libclang_rt.builtins-aarch64.a 2>/dev/null` \
-                 && tryldflag LIBCC "$try_libcc"
-fi
 test -z "$LIBCC" && tryldflag LIBCC -lgcc && tryldflag LIBCC -lgcc_eh
 test -z "$LIBCC" && tryldflag LIBCC -lcompiler_rt
 test -z "$LIBCC" && try_libcc=`$CC -print-libgcc-file-name 2>/dev/null` \

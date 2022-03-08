@@ -474,6 +474,8 @@ src/regression/scanf-bytes-consumed-dynamic.exe
 src/regression/scanf-bytes-consumed-static.exe
 src/regression/scanf-match-literal-eof-dynamic.exe
 src/regression/scanf-match-literal-eof-static.exe
+src/regression/setvbuf-unget-dynamic.exe
+src/regression/setvbuf-unget-static.exe
 src/regression/sscanf-eof-dynamic.exe
 src/regression/sscanf-eof-static.exe
 src/regression/statvfs-dynamic.exe

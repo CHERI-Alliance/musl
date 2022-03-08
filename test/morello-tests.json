@@ -1361,8 +1361,34 @@
     },
     {
         "app": "${build}/stdio_misc.exe",
-        "name": "getdelim",
+        "name": "setvbuf-stdout-full",
         "args": ["4"],
+        "xrc": [0],
+        "stdout": ["abcdef"]
+    },
+    {
+        "app": "${build}/stdio_misc.exe",
+        "name": "setvbuf-stdout-line",
+        "args": ["5"],
+        "xrc": [0],
+        "stdout": ["abcdef"]
+    },
+    {
+        "app": "${build}/stdio_misc.exe",
+        "name": "getdelim",
+        "args": ["6"],
+        "xrc": [0]
+    },
+    {
+        "app": "${build}/stdio_misc.exe",
+        "name": "freopen-fgetpos",
+        "args": ["7"],
+        "xrc": [0]
+    },
+    {
+        "app": "${build}/stdio_misc.exe",
+        "name": "fmemopen_memstream",
+        "args": ["8"],
         "xrc": [0]
     },
     {
@@ -1797,13 +1823,15 @@
         "app": "${build}/exit.exe",
         "name": "exit",
         "args": ["0"],
-        "xrc": [1]
+        "xrc": [1],
+        "stdout": ["exit() called"]
     },
     {
         "app": "${build}/exit.exe",
         "name": "quick_exit",
         "args": ["1"],
-        "xrc": [1]
+        "xrc": [1],
+        "stdout": ["quick_exit() called"]
     },
     {
         "app": "${build}/exit.exe",

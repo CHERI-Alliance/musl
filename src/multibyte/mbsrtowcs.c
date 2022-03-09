@@ -4,6 +4,7 @@
 #include <string.h>
 #include <stdlib.h>
 #include "internal.h"
+#include "morello_helpers.h"
 
 size_t mbsrtowcs(wchar_t *restrict ws, const char **restrict src, size_t wn, mbstate_t *restrict st)
 {
@@ -75,7 +76,9 @@ resume0:
 #ifdef __GNUC__
 		typedef uint32_t __attribute__((__may_alias__)) w32;
 		if (*s-1u < 0x7f && (uintptr_t)s%4 == 0) {
-			while (wn>=5 && !(( *(w32*)s | *(w32*)s-0x01010101) & 0x80808080)) {
+			while (wn>=5 &&
+			       CAP_TAIL_LENGTH(s)>=5 &&
+			       !(( *(w32*)s | *(w32*)s-0x01010101) & 0x80808080)) {
 				*ws++ = *s++;
 				*ws++ = *s++;
 				*ws++ = *s++;

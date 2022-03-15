@@ -16,7 +16,8 @@ extern weak hidden void (*const __fini_array_start)(void), (*const __fini_array_
 
 static void libc_exit_fini(void)
 {
-	uintptr_t a = (uintptr_t)&__fini_array_end;
+	uintptr_t a = (uintptr_t)&__fini_array_start;
+	a += (ptraddr_t)&__fini_array_end - (ptraddr_t)a;
 	for (; a>(uintptr_t)&__fini_array_start; a-=sizeof(void(*)()))
 		(*(void (**)())(a-sizeof(void(*)())))();
 	_fini();

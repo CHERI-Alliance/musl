@@ -1840,6 +1840,12 @@
         "xrc": [-6]
     },
     {
+        "app": "${build}/ctor_dtor.exe",
+        "name": "ctor_dtor",
+        "xrc": [0],
+        "stdout": ["ctor call dtor call"]
+    },
+    {
         "app": "${build}/popen.exe",
         "name": "popen",
         "xrc": [0]

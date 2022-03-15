@@ -4,9 +4,16 @@
 #include <fcntl.h>
 #include <errno.h>
 #include <unistd.h>
+#include <sys/stat.h>
+#include <stdlib.h>
+
+#define TMP_DIR "/tmp/morello-musl-tests-fcntl/"
+#define IN_TMP_DIR(f) TMP_DIR f
+
 
 int create_tmp_file() {
-  return open(".", O_RDWR | O_EXCL | O_TMPFILE, S_IRWXU);
+  char template[] = IN_TMP_DIR("testXXXXXX");
+  return mkstemp(template);
 }
 
 int test_fcntl_flock() {
@@ -83,7 +90,7 @@ int test_fcntl_fl() {
   }
 
   int status_flags = fcntl(fd, F_GETFL);
-  if (!(status_flags & O_TMPFILE) || (status_flags & O_NOATIME)) {
+  if (status_flags & O_NOATIME) {
     return 8;
   }
 
@@ -93,7 +100,7 @@ int test_fcntl_fl() {
   }
 
   status_flags = fcntl(fd, F_GETFL);
-  if (!(status_flags & O_TMPFILE) || !(status_flags & O_NOATIME)) {
+  if (!(status_flags & O_NOATIME)) {
     return 10;
   }
 
@@ -106,6 +113,13 @@ int test_fcntl_fl() {
 
 
 int main(int argc, char **argv) {
+  if (argc < 2) return -1;
+
+  umask(0);
+
+  // set up root dir in /tmp
+  if (mkdir(TMP_DIR, 0777) && errno != EEXIST) return -2;
+
   switch (argv[1][0]) {
     case '0': // fcntl_flck
       return test_fcntl_flock();

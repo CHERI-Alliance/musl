@@ -18,8 +18,13 @@ int test_open() {
 
   // open temp file
   int fd = open(".", O_TMPFILE | O_RDWR | O_EXCL, mode);
-  if (fd < 0) return 1;
-  if (close(fd)) return -3;
+
+  // don't fail if O_TMPFILE is not supported on current fs
+  //  (e.g. on busybox on FVP)
+  if (errno != EOPNOTSUPP) {
+    if (fd < 0) return 1;
+    if (close(fd)) return -3;
+  }
 
   // open our own exe (read only)
   fd = open("/proc/self/exe", O_RDONLY, mode);

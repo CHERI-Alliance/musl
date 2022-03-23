@@ -21,6 +21,7 @@ START ":\n"
 "	add c1, c1, #:lo12:_DYNAMIC\n"
 "	alignd csp, csp, #4\n"
 "	b " START "_c\n"
+".size " START ", .-" START "\n"
 );
 
 __asm__ (".text \n"

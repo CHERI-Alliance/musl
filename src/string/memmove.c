@@ -2,7 +2,7 @@
 #include <stdint.h>
 
 #ifdef __GNUC__
-typedef __attribute__((__may_alias__)) size_t WT;
+typedef __attribute__((__may_alias__)) void* WT;
 #define WS (sizeof(WT))
 #endif
 

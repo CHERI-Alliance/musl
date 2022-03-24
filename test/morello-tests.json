@@ -1057,7 +1057,8 @@
     {
         "app": "${build}/pthread_cleanup.exe",
         "name": "pthread-cleanup",
-        "xrc": [0]
+        "xrc": [0],
+        "skip": "flaky"
     },
     {
         "app": "${build}/printf_plain_text.exe",

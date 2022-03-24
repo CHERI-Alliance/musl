@@ -510,6 +510,7 @@ if test "$libshim" = yes ; then
     else
         fail "$0: Libshim is only applicable for Morello targets"
     fi
+    test "$debug" = yes && LIBSHIM_FLAGS="-g ${LIBSHIM_FLAGS}"
     if test "$libshim_path" = auto ; then
         libshim_path=$(realpath -m $(pwd)/../libshim)
     fi

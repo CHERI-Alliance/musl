@@ -503,10 +503,14 @@ static int fmt_cap(FILE *f, const void *cap) {
 								__CHERI_CAP_PERMISSION_PERMIT_EXECUTE__,
 								__CHERI_CAP_PERMISSION_PERMIT_STORE__,
 								__CHERI_CAP_PERMISSION_PERMIT_LOAD__};
-	char perms_char_rep[] = {'E', 'W', 'R', 'x', 'w', 'r'};
+	char perms_char_rep[] = {
+#ifdef __ARM_CAP_PERMISSION_EXECUTIVE__
+		'E',
+#endif
+		'W', 'R', 'x', 'w', 'r'};
 	size_t perms = __builtin_cheri_perms_get(cap);
 	*--z = ',';
-	for (int i = 0; i < 6; i++) {
+	for (int i = 0; i < (sizeof(perms_char_rep) / sizeof(perms_char_rep[0])); i++) {
 		if ((perms & perms_macros[i]) != 0) {
 			*--z = perms_char_rep[i];
 		}

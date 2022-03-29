@@ -1051,14 +1051,12 @@
     {
         "app": "${build}/pthread_cancel.exe",
         "name": "pthread-cancel",
-        "xrc": [0],
-        "skip": "flaky"
+        "xrc": [0]
     },
     {
         "app": "${build}/pthread_cleanup.exe",
         "name": "pthread-cleanup",
-        "xrc": [0],
-        "skip": "flaky"
+        "xrc": [0]
     },
     {
         "app": "${build}/printf_plain_text.exe",
@@ -1468,8 +1466,7 @@
         "app": "${build}/malloc_regression.exe",
         "name": "malloc_regression_map_key_not_reset",
         "args": ["0"],
-        "xrc": [0],
-        "skip": "jenkins"
+        "xrc": [0]
     },
     {
         "app": "${build}/strdup.exe",
@@ -1818,7 +1815,8 @@
         "app": "${build}/signal.exe",
         "name": "signal",
         "xrc": [0],
-        "skip": "flaky"
+        "skip": "flaky",
+        "comment": "This test should pass on a real Morello system"
     },
     {
         "app": "${build}/exit.exe",

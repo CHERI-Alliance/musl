@@ -296,6 +296,7 @@ if __name__ == '__main__':
     testcases = []  # list of results
     ntests, failures, skipped = 0, 0, 0  # counters for tests
     failed_tests = []
+    skipped_tests = []
     total = 0.0  # total execution time
     skip_reasons = {}  # why tests are skipped
 
@@ -311,6 +312,8 @@ if __name__ == '__main__':
         failures += sfailure
         if sfailure > 0:
             failed_tests.append(stname)
+        if sskipped > 0:
+            skipped_tests.append(stname)
         total += stime
         for s, n in ssreasons.items():
             if s not in skip_reasons:
@@ -338,7 +341,15 @@ if __name__ == '__main__':
         print('Failed tests:')
         for tn in failed_tests:
             print('- failed: %s' % tn)
+        if skipped_tests:
+            print('Skipped tests:')
+            for tn in skipped_tests:
+                print('- skipped: %s' % tn)
         sys.exit(1)
     else:
+        if skipped_tests:
+            print('Skipped tests:')
+            for tn in skipped_tests:
+                print('- skipped: %s' % tn)
         print('All %s tests passed (%s skipped%s)' % (ntests - skipped, skipped, skipped_info))
         sys.exit(0)

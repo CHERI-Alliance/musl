@@ -1,6 +1,10 @@
 #define __SYSCALL_LL_E(x) (x)
 #define __SYSCALL_LL_O(x) (x)
 
+#ifdef LIBSHIM
+#include <syscall_libshim.h>
+#else
+
 #define __asm_syscall(...) do { \
 	__asm__ __volatile__ ( "svc 0" \
 	: "=r"(x0) : __VA_ARGS__ : "memory", "cc"); \
@@ -70,6 +74,8 @@ static inline long __syscall6(long n, long a, long b, long c, long d, long e, lo
 	register long x5 __asm__("x5") = f;
 	__asm_syscall("r"(x8), "0"(x0), "r"(x1), "r"(x2), "r"(x3), "r"(x4), "r"(x5));
 }
+
+#endif // LIBSHIM
 
 #define VDSO_USEFUL
 #define VDSO_CGT_SYM "__kernel_clock_gettime"

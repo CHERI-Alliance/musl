@@ -1,7 +1,7 @@
 #include <string.h>
 #include <libgen.h>
 #include <limits.h>
-#include "morello_helpers.h"
+#include "cheri_helpers.h"
 
 char *basename(char *s)
 {
@@ -16,7 +16,7 @@ char *basename(char *s)
 	sz -= i;
 	strncpy(d, s+i, sz);
 	d[sz] = 0;
-	return RESTRICT_BNDS_IF_MORELLO(d, sz+1);
+	return RESTRICT_BNDS_IF_CHERI(d, sz+1);
 }
 
 weak_alias(basename, __xpg_basename);

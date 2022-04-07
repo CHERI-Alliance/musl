@@ -3,7 +3,7 @@
 #include <limits.h>
 #include <stdbool.h>
 
-#include "morello_helpers.h"
+#include "cheri_helpers.h"
 
 #define ALIGN (sizeof(size_t))
 #define ONES ((size_t)-1/UCHAR_MAX)
@@ -20,7 +20,7 @@ size_t strlen(const char *s)
 	const word *w;
 	for (; (uintptr_t)s % ALIGN; s++, i++) if (!*s) return s - a;
 	for (w = (const void *)s;
-	     LT_IF_MORELLO_ELSE(i + sizeof(word) - 1, max_i, true) && !HASZERO(*w);
+	     LT_IF_CHERI_ELSE(i + sizeof(word) - 1, max_i, true) && !HASZERO(*w);
 	     w++, i += sizeof(word))
 	  ;
 	s = (const void *)w;

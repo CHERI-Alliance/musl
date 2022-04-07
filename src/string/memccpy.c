@@ -3,7 +3,7 @@
 #include <limits.h>
 #include <stdbool.h>
 
-#include "morello_helpers.h"
+#include "cheri_helpers.h"
 
 #define ALIGN (sizeof(size_t)-1)
 #define ONES ((size_t)-1/UCHAR_MAX)
@@ -27,12 +27,12 @@ void *memccpy(void *restrict dest, const void *restrict src, int c, size_t n)
 	if (((uintptr_t)s & ALIGN) == ((uintptr_t)d & ALIGN)) {
 		for (; ((uintptr_t)s & ALIGN) && n && (*d=*s)!=c; n--, s++, d++, i++);
 		if ((uintptr_t)s & ALIGN) goto tail;
-		if (LT_IF_MORELLO_ELSE(i + sizeof(word) - 1, max_i, false)) {
+		if (LT_IF_CHERI_ELSE(i + sizeof(word) - 1, max_i, false)) {
 			size_t k = ONES * c;
 			wd = (void *)d;
 			ws = (const void *)s;
 			for (;
-			     LT_IF_MORELLO_ELSE(i + sizeof(word) - 1, max_i, true) &&
+			     LT_IF_CHERI_ELSE(i + sizeof(word) - 1, max_i, true) &&
 			     n >= sizeof(size_t) && !HASZERO(*ws ^ k);
 			     n -= sizeof(size_t), ws++, wd++, i += sizeof(word))
 				*wd = *ws;

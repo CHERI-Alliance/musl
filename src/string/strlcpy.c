@@ -4,7 +4,7 @@
 #include <limits.h>
 #include <stdbool.h>
 
-#include "morello_helpers.h"
+#include "cheri_helpers.h"
 
 #define ALIGN (sizeof(size_t)-1)
 #define ONES ((size_t)-1/UCHAR_MAX)
@@ -27,9 +27,9 @@ size_t strlcpy(char *d, const char *s, size_t n)
 	if (((uintptr_t)s & ALIGN) == ((uintptr_t)d & ALIGN)) {
 		for (; ((uintptr_t)s & ALIGN) && n && (*d=*s); n--, s++, d++, i++);
 		if (n && *s) {
-			if (LT_IF_MORELLO_ELSE(i + sizeof(word) - 1, max_i, true)) {
+			if (LT_IF_CHERI_ELSE(i + sizeof(word) - 1, max_i, true)) {
 				wd=(void *)d; ws=(const void *)s;
-				for (; LT_IF_MORELLO_ELSE(i + sizeof(word) - 1, max_i, true) &&
+				for (; LT_IF_CHERI_ELSE(i + sizeof(word) - 1, max_i, true) &&
 				       n>=sizeof(size_t) && !HASZERO(*ws);
 				     n-=sizeof(size_t), ws++, wd++, i += sizeof(word)) *wd = *ws;
 				d=(void *)wd; s=(const void *)ws;

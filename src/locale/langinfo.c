@@ -1,7 +1,7 @@
 #include <locale.h>
 #include <langinfo.h>
 #include "locale_impl.h"
-#include "morello_helpers.h"
+#include "cheri_helpers.h"
 
 static const char c_time[] =
 	"Sun\0" "Mon\0" "Tue\0" "Wed\0" "Thu\0" "Fri\0" "Sat\0"
@@ -62,7 +62,7 @@ char *__nl_langinfo_l(nl_item item, locale_t loc)
 
 	for (; idx; idx--, str++) for (; *str; str++);
 	if (cat != LC_NUMERIC && *str) str = LCTRANS(str, cat, loc);
-	return RESTRICT_BNDS_IF_MORELLO((char *)str, strlen(str) + 1);
+	return RESTRICT_BNDS_IF_CHERI((char *)str, strlen(str) + 1);
 }
 
 char *__nl_langinfo(nl_item item)

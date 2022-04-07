@@ -4,7 +4,7 @@
 #include <string.h>
 #include <stdlib.h>
 #include "internal.h"
-#include "morello_helpers.h"
+#include "cheri_helpers.h"
 
 size_t mbsrtowcs(wchar_t *restrict ws, const char **restrict src, size_t wn, mbstate_t *restrict st)
 {

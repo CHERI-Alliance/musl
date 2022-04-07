@@ -44,7 +44,7 @@ hidden intptr_t __syscall_ret(uintptr_t);
 typedef long syscall_arg_t;
 hidden long __syscall_ret(unsigned long);
 #endif // __CHERI_PURE_CAPABILITY__
-hidden syscall_arg_t __syscall_cp(syscall_arg_t, syscall_arg_t, syscall_arg_t, syscall_arg_t,
+hidden syscall_arg_t __syscall_cp(long, syscall_arg_t, syscall_arg_t, syscall_arg_t,
 	syscall_arg_t, syscall_arg_t, syscall_arg_t);
 #endif // #ifndef __scc
 

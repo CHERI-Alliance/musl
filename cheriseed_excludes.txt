@@ -3,3 +3,5 @@ global:__init_array_start
 global:__init_array_end
 global:__fini_array_start
 global:__fini_array_end
+global:__shim_cp_begin
+global:__shim_cp_end

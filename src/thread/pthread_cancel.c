@@ -1,12 +1,24 @@
 #define _GNU_SOURCE
 #include <string.h>
 #include "pthread_impl.h"
+#include "stdbool.h"
 #include "syscall.h"
 
-hidden intptr_t __cancel();
-hidden intptr_t __syscall_cp_asm(), __syscall_cp_c();
+// cancel_pc_t is the type of PC: it changes if the sanitizer is enabled.
+#ifdef __SANITIZE_CHERISEED__
+#define cancel_pc_t long
+#else
+#define cancel_pc_t uintptr_t
+#endif
 
-intptr_t __cancel()
+hidden cancel_pc_t __cancel();
+#ifdef __SANITIZE_CHERISEED__
+// In cancel_handler it might happen that the interrupted SP is not
+// 16-bytes aligned. CHERIseed requires correct capability alignment.
+// This attribute ensures that the stack is always re-aligned in __cancel().
+__attribute__((force_align_arg_pointer))
+#endif
+cancel_pc_t __cancel()
 {
 	pthread_t self = __pthread_self();
 	if (self->canceldisable == PTHREAD_CANCEL_ENABLE || self->cancelasync)
@@ -15,11 +27,47 @@ intptr_t __cancel()
 	return -ECANCELED;
 }
 
-intptr_t __syscall_cp_asm(volatile void *, syscall_arg_t,
+#ifdef LIBSHIM
+
+static intptr_t __syscall_cp_asm(volatile int *cp, long nr,
+                    syscall_arg_t u, syscall_arg_t v, syscall_arg_t w,
+                    syscall_arg_t x, syscall_arg_t y, syscall_arg_t z)
+{
+	if (*cp)
+		return __cancel();
+	return __shim_syscall(cp, nr, u, v, w, x, y, z);
+}
+
+extern const char __shim_cp_begin[1], __shim_cp_end[1];
+#define __cp_cancel __cancel
+
+static bool is_pc_cancellable(pthread_t self, cancel_pc_t pc)
+{
+	// Only cancel if the system call is cancellable and PC is within the
+	// the cancellable range.
+	return (cancel_pc_t)__shim_cp_begin <= pc && pc < (cancel_pc_t)__shim_cp_end;
+}
+
+cancel_pc_t __shim_cancel_syscall(void) __attribute__((alias("__cancel")));
+
+#else  // #ifdef LIBSHIM
+
+hidden intptr_t __syscall_cp_asm();
+intptr_t __syscall_cp_asm(volatile int *, long,
                       syscall_arg_t, syscall_arg_t, syscall_arg_t,
                       syscall_arg_t, syscall_arg_t, syscall_arg_t);
 
-intptr_t __syscall_cp_c(syscall_arg_t nr,
+extern hidden const char __cp_begin[1], __cp_end[1], __cp_cancel[1];
+
+static bool is_pc_cancellable(pthread_t, cancel_pc_t pc)
+{
+	return pc >= (cancel_pc_t)__cp_begin && pc < (cancel_pc_t)__cp_end;
+}
+
+#endif  // #ifdef LIBSHIM
+
+hidden intptr_t __syscall_cp_c();
+intptr_t __syscall_cp_c(long nr,
                     syscall_arg_t u, syscall_arg_t v, syscall_arg_t w,
                     syscall_arg_t x, syscall_arg_t y, syscall_arg_t z)
 {
@@ -44,30 +92,21 @@ static void _sigaddset(sigset_t *set, int sig)
 	set->__bits[s/8/sizeof *set->__bits] |= 1UL<<(s&8*sizeof *set->__bits-1);
 }
 
-extern hidden const char __cp_begin[1], __cp_end[1], __cp_cancel[1];
-
 static void cancel_handler(int sig, siginfo_t *si, void *ctx)
 {
 	pthread_t self = __pthread_self();
 	ucontext_t *uc = ctx;
-	uintptr_t pc = uc->uc_mcontext.MC_PC;
+	cancel_pc_t pc = uc->uc_mcontext.MC_PC;
 
 	a_barrier();
 	if (!self->cancel || self->canceldisable == PTHREAD_CANCEL_DISABLE) return;
 
 	_sigaddset(&uc->uc_sigmask, SIGCANCEL);
 
-	if (self->cancelasync || pc >= (uintptr_t)__cp_begin && pc < (uintptr_t)__cp_end
-#ifdef LIBSHIM
-		|| self->in_syscall_cp
-#endif
-	) {
-		uc->uc_mcontext.MC_PC = (uintptr_t)__cp_cancel;
+	if (self->cancelasync || is_pc_cancellable(self, pc)) {
+		uc->uc_mcontext.MC_PC = (cancel_pc_t)__cp_cancel;
 #ifdef CANCEL_GOT
 		uc->uc_mcontext.MC_GOT = CANCEL_GOT;
-#endif
-#ifdef LIBSHIM
-		self->in_syscall_cp = 0;
 #endif
 		return;
 	}

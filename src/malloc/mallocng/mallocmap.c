@@ -36,13 +36,34 @@ There are some special values that can be used for key:
 #define MINSIZE 8
 #define MAXSIZE ((size_t)-1/2 + 1)
 
-inline static size_t __attribute__((naked)) mallocmap_keyhash(void *k)
+inline static size_t __attribute__((naked)) mallocmap_keyhash_impl(ptraddr_t k)
 {
+#if defined(__aarch64__)
+# if defined(__ARM_FEATURE_CRC32)
 	__asm__ volatile(
 		"mov     w1, #42\n"
 		"crc32cx w0, w1, x0\n"
-		"ret"
+		"ret\n"
 	);
+# else
+	// A very simple "hash" function: the value of 'k' can be used as a key.
+	// Equivalent to 'return k & 0xfffffffful;'
+	__asm__ volatile(
+		"and x0, x0, #0xffffffff\n"
+		"ret\n"
+	);
+# endif
+#elif defined(__x86_64__)
+	__asm__ volatile(
+		"mov   $42, %rax\n"
+		"crc32 %rdi, %rax\n"
+		"ret\n"
+	);
+#endif
+}
+
+inline static size_t mallocmap_keyhash(void *k) {
+	return mallocmap_keyhash_impl(__builtin_cheri_address_get(k));
 }
 
 static int mallocmap_resize(size_t nel, struct __mallocmap_tab *htab)

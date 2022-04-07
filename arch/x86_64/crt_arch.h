@@ -4,6 +4,9 @@ __asm__(
 START ": \n"
 "	xor %rbp,%rbp \n"
 "	mov %rsp,%rdi \n"
+#if defined(__CHERI_PURE_CAPABILITY__)
+"	call __shim_marshal_program_arguments \n"
+#endif
 ".weak _DYNAMIC \n"
 ".hidden _DYNAMIC \n"
 "	lea _DYNAMIC(%rip),%rsi \n"

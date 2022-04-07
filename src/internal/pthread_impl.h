@@ -200,7 +200,16 @@ extern hidden volatile size_t __pthread_tsd_size;
 extern hidden void *__pthread_tsd_main[];
 extern hidden volatile int __eintr_valid_flag;
 
+#ifdef __SANITIZE_CHERISEED__
+// __clone is in assembly for all architectures, therefore it is easier to wrap
+// the original functions and leave the hand-rolled assembly snippets intact.
+// The original __clone takes 7 arguments in total.
+hidden int __clone_cheriseed(int (*)(void *), void *, int, void *, void *, void *, void *);
+// Redirect __clone to __clone_cheriseed
+#define __clone __clone_cheriseed
+#else
 hidden int __clone(int (*)(void *), void *, int, void *, ...);
+#endif
 hidden int __set_thread_area(void *);
 hidden int __libc_sigaction(int, const struct sigaction *, struct sigaction *);
 hidden void __unmapself(void *, size_t);

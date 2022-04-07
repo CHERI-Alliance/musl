@@ -190,8 +190,10 @@ int posix_spawn(pid_t *restrict res, const char *restrict path,
 		goto fail;
 	}
 
+	// __clone unconditionally uses 7 arguments, set the last 3 to explicit zeros.
 	pid = __clone(child, stack+sizeof stack,
-		CLONE_VM|CLONE_VFORK|SIGCHLD, &args);
+		CLONE_VM|CLONE_VFORK|SIGCHLD, &args,
+		NULL, NULL, NULL);
 	close(args.p[1]);
 	UNLOCK(__abort_lock);
 

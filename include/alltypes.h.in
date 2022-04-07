@@ -82,6 +82,13 @@ STRUCT winsize { unsigned short ws_row, ws_col, ws_xpixel, ws_ypixel; };
 TYPEDEF unsigned socklen_t;
 TYPEDEF unsigned short sa_family_t;
 
+#if defined(__CHERI__)
+typedef __intcap_t intcap_t;
+typedef __uintcap_t uintcap_t;
+typedef __PTRADDR_TYPE__ ptraddr_t;
+#else
+typedef _Addr ptraddr_t;
+#endif
 
 // TODO: Once all objects are built with MORELLO defined, the lines which set different sizes when Morello is not enabled can be uncommented
 // TODO: Once the above is complete, work out minimum required lengths of arrays for morello within the union

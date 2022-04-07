@@ -21,7 +21,10 @@ static const unsigned long USER_PTR_PERMS_PRESENT =
     __CHERI_CAP_PERMISSION_PERMIT_LOAD__ |
     __CHERI_CAP_PERMISSION_PERMIT_STORE__ |
     __CHERI_CAP_PERMISSION_PERMIT_STORE_CAPABILITY__ |
+// CHERIseed does not support this permission.
+#ifndef __SANITIZE_CHERISEED__
     __CHERI_CAP_PERMISSION_PERMIT_STORE_LOCAL__ |
+#endif
     __CHERI_CAP_PERMISSION_PERMIT_LOAD_CAPABILITY__;
 
 static const unsigned long USER_PTR_PERMS_REMOVED =
@@ -34,9 +37,12 @@ static const unsigned long USER_PTR_PERMS_REMOVED =
 #ifdef __ARM_CAP_PERMISSION_BRANCH_SEALED_PAIR__
 	__ARM_CAP_PERMISSION_BRANCH_SEALED_PAIR__ |
 #endif
+// CHERIseed does not support these permissions.
+#ifndef __SANITIZE_CHERISEED__
     __CHERI_CAP_PERMISSION_ACCESS_SYSTEM_REGISTERS__ |
     __CHERI_CAP_PERMISSION_PERMIT_UNSEAL__ |
     __CHERI_CAP_PERMISSION_PERMIT_SEAL__ |
+#endif
     __CHERI_CAP_PERMISSION_PERMIT_EXECUTE__;
 
 inline static void testptr_aligned(void* ptr, size_t alloc_size, size_t alignment) {

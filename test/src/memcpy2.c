@@ -14,7 +14,13 @@ int z = 0;
 __attribute__ ((naked,noinline))
 static void *copy_bytes(register void * c0, register void *c1, register size_t x2)
 {
+#if defined(__aarch64__)
 	__asm__ volatile ("b memcpy\n");
+#elif defined(__x86_64__)
+	__asm__ volatile ("jmp memcpy\n");
+#else
+#error "Not implemented"
+#endif
 }
 
 #define CHECK(res, dst, src, num) ({                          \

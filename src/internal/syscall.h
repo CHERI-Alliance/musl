@@ -10,6 +10,17 @@
 #include <sys/syscall.h>
 #include "syscall_arch.h"
 
+// VDSO is not yet supported with CHERIseed
+// This is placed here so that it affects all architectures with support
+// for CHERIseed. Undefine some macros, which are all defined in
+// 'syscall_arch.h'.
+#ifdef __SANITIZE_CHERISEED__
+#undef VDSO_USEFUL
+#undef VDSO_CGT_SYM
+#undef VDSO_CGT32_SYM
+#undef VDSO_GETCPU_SYM
+#endif
+
 #ifndef SYSCALL_RLIM_INFINITY
 #define SYSCALL_RLIM_INFINITY (~0ULL)
 #endif

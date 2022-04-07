@@ -11,6 +11,8 @@
  *
  */
 
+// In pure-capability ABI use capability-aware memset instead.
+#if !defined(__CHERI_PURE_CAPABILITY__)
 #define dstin   x0
 #define val     x1
 #define valw    w1
@@ -112,4 +114,4 @@ memset:
 	ret
 
 .size memset,.-memset
-
+#endif

@@ -11,6 +11,8 @@
  *
  */
 
+// In pure-capability ABI use capability-aware memcpy instead.
+#if !defined(__CHERI_PURE_CAPABILITY__)
 #define dstin   x0
 #define src     x1
 #define count   x2
@@ -184,3 +186,4 @@ memcpy:
 	ret
 
 .size memcpy,.-memcpy
+#endif

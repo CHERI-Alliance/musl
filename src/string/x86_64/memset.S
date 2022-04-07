@@ -1,3 +1,5 @@
+// In pure-capability ABI use capability-aware memset instead.
+#if !defined(__CHERI_PURE_CAPABILITY__)
 .global memset
 .type memset,@function
 memset:
@@ -70,3 +72,4 @@ memset:
 	sub %rdx,%rcx
 	add %rdx,%rdi
 	jmp 1b
+#endif

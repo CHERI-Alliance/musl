@@ -28,6 +28,18 @@ void *memset (void *, int, size_t);
 int memcmp (const void *, const void *, size_t);
 void *memchr (const void *, int, size_t);
 
+#if defined(__CHERI__)
+// Capability aware implementations, will replace the base functions
+// in pure-cap.
+void *__capability memcpy_c (void *__capability __restrict,
+                             const void *__capability __restrict,
+                             size_t);
+void *__capability memmove_c (void *__capability,
+                              const void *__capability,
+                              size_t);
+void *__capability memset_c (void *__capability, int, size_t);
+#endif
+
 char *strcpy (char *__restrict, const char *__restrict);
 char *strncpy (char *__restrict, const char *__restrict, size_t);
 

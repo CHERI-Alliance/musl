@@ -1,3 +1,5 @@
+// In pure-capability ABI use capability-aware memcpy instead.
+#if !defined(__CHERI_PURE_CAPABILITY__)
 .global memcpy
 .global __memcpy_fwd
 .hidden __memcpy_fwd
@@ -23,3 +25,4 @@ __memcpy_fwd:
 	dec %edx
 	jnz 2b
 1:	ret
+#endif

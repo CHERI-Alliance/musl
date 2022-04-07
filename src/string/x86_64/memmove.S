@@ -1,3 +1,5 @@
+// In pure-capability ABI use capability-aware memove instead.
+#if !defined(__CHERI_PURE_CAPABILITY__)
 .global memmove
 .type memmove,@function
 memmove:
@@ -14,3 +16,4 @@ memmove:
 	cld
 	lea 1(%rdi),%rax
 	ret
+#endif

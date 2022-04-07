@@ -1,3 +1,5 @@
+#if !defined(MUSL_USE_COMPILER_BUILTINS)
+
 #define a_ll a_ll
 static inline int a_ll(volatile int *p)
 {
@@ -80,3 +82,5 @@ static inline int a_clz_64(uint64_t x)
 	__asm__("clz %0, %1" : "=r"(x) : "r"(x));
 	return x;
 }
+
+#endif  // !defined(MUSL_USE_COMPILER_BUILTINS)

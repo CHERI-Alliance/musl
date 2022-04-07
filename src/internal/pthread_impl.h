@@ -13,6 +13,13 @@
 
 #include "pthread_arch.h"
 
+#if defined(MUSL_USE_COMPILER_BUILTINS)
+static inline uintptr_t __get_tp()
+{
+	return __builtin_thread_pointer();
+}
+#endif
+
 #define pthread __pthread
 
 struct pthread {

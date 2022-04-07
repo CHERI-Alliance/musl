@@ -35,6 +35,7 @@ Optional features:
   --enable-wrapper=...    build given musl toolchain wrapper [auto]
   --enable-shared         enable building shared library [disabled]
   --disable-static        inhibit building static library [enabled]
+  --enable-builtins       prefer compiler builtins when possible [disabled]
   --disable-morello       inhibit using Morello features (only for AArch64 targets) [enabled]
   --disable-libshim       inhibit building with syscall libshim [auto]
   --libshim-path=<path>   path to libshim [libshim]
@@ -168,6 +169,7 @@ wrapper=auto
 gcc_wrapper=no
 clang_wrapper=no
 malloc_dir=mallocng
+enable_builtins=no
 
 for arg ; do
 case "$arg" in
@@ -204,6 +206,8 @@ case "$arg" in
 --enable-gcc-wrapper|--enable-gcc-wrapper=yes) wrapper=yes ; gcc_wrapper=yes ;;
 --disable-gcc-wrapper|--enable-gcc-wrapper=no) wrapper=no ;;
 --with-malloc=*) malloc_dir=${arg#*=} ;;
+--enable-builtins|--enable-builtins=yes) enable_builtins=yes ;;
+--disable-builtins|--enable-builtins=no) enable_builtins=no ;;
 --enable-*|--disable-*|--with-*|--without-*|--*dir=*) ;;
 --host=*|--target=*) target=${arg#*=} ;;
 --build=*) build=${arg#*=} ;;
@@ -527,6 +531,18 @@ if test "$libshim" = yes ; then
     else
         printf "%s (does not exist)\n" $LIBARCHCAP_PATH
     fi
+fi
+
+#
+# Use compiler builtins as much as possible, if requested.
+# This switch is off by default for backward compatibility.
+#
+if test "$enable_builtins" = yes ; then
+  case "$ARCH" in
+    aarch64|morello|x86_64) ;;
+    *) fail "$0: $ARCH is not checked for compiler builtins yet";;
+  esac
+  CFLAGS_AUTO="$CFLAGS_AUTO -DMUSL_USE_COMPILER_BUILTINS"
 fi
 
 #

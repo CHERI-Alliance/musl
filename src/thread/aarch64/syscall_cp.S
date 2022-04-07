@@ -1,3 +1,5 @@
+#ifndef LIBSHIM
+
 // __syscall_cp_asm(&self->cancel, nr, u, v, w, x, y, z)
 //                  x0             x1  x2 x3 x4 x5 x6 x7
 
@@ -30,3 +32,5 @@ __cp_end:
 	ret
 __cp_cancel:
 	b __cancel
+
+#endif

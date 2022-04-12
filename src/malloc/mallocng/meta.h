@@ -269,6 +269,7 @@ static inline void *enframe(struct meta *g, int idx, size_t n, int ctr, size_t a
 		if (off > slack) off -= slack+1;
 		assert(off <= slack);
 	}
+	assert(g->sizeclass == 63 || off <= size_classes[g->sizeclass] * (idx+1));
 	if (off) {
 		// store offset in unused header at offset zero
 		// if enframing at non-zero offset.
@@ -290,7 +291,7 @@ static inline int size_to_class(size_t n)
 	// shift by 4 to divide by 16 (UNIT)
 	n = (n+IB-1)>>4;
 	if (n<10) return n;
-	n++;
+	n += GRP_SIZE >> 4;
 	int i = (28-a_clz_32(n))*4 + 8;
 	if (n>size_classes[i+1]) i+=2;
 	if (n>size_classes[i]) i++;

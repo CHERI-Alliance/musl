@@ -9,6 +9,21 @@
 
 LOCK_OBJ_DEF;
 
+#ifdef __CHERI_PURE_CAPABILITY__
+const uint16_t size_classes[] = {
+	1, 2, 3, 4, 5, 6, 7, 8,
+	9, 10, 12, 15,
+	18, 20, 25, 31,
+	36, 42, 50, 63,
+	72, 84, 102, 127,
+	146, 170, 204, 254,
+	292, 340, 409, 510,
+	584, 682, 818, 1022,
+	1169, 1364, 1637, 2046,
+	2340, 2730, 3276, 4094,
+	4680, 5460, 6552, 8190,
+};
+#else
 const uint16_t size_classes[] = {
 	1, 2, 3, 4, 5, 6, 7, 8,
 	9, 10, 12, 15,
@@ -22,6 +37,8 @@ const uint16_t size_classes[] = {
 	2340, 2730, 3276, 4095,
 	4680, 5460, 6552, 8191,
 };
+#endif
+
 // There's a hidden dependency on the biggest sizeclass not being (much) above 8k.
 // there are 32 slots in one group, so that make the start of the last biggest group
 // just below 64k. The offset to access the start of each slot is encoded with 16 bits

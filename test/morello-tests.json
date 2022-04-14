@@ -1704,13 +1704,17 @@
         "app": "${build}/getserv.exe",
         "args": ["0"],
         "name": "test_getservbyname",
-        "xrc": [0]
+        "xrc": [0],
+        "skip": "flaky",
+        "comment": "may fail in GitLab CI"
     },
     {
         "app": "${build}/getserv.exe",
         "args": ["1"],
         "name": "test_getservbyport",
-        "xrc": [0]
+        "xrc": [0],
+        "skip": "flaky",
+        "comment": "may fail in GitLab CI"
     },
     {
         "app": "${build}/if_nameindex.exe",

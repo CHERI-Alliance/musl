@@ -58,6 +58,7 @@ passcase = Template('''<testcase classname="${suite}" name="${name}" time="${tim
 failcase = Template('''<testcase classname="${suite}" name="${name}" time="${time}" status="run">
 <failure message="${name} has failed with return code ${rc}" type="failure">
 <![CDATA[
+Test ${name} has failed with return code ${rc}
 ${description}
 stdout: ${stdout}
 stderr: ${stderr}

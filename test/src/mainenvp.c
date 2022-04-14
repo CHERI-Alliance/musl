@@ -22,7 +22,7 @@ int main (int argc, char *argv[], char *envp[])
 		if ((sz = __builtin_cheri_length_get(*envp)) != xsz) {
 			return 6;
 		}
-		printf("envp[%d]=`%s` has length %zu (expected %zu)\n", n, *envp, sz, xsz);
+		printf("envp[%d] has length %zu (expected %zu)\n", n, sz, xsz);
 		envp++;
 		n++;
 	}

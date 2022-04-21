@@ -142,13 +142,20 @@ void test_alignment_increase() {
 void test_high_count_bounds() {
     // Increase ctx.mmap_counter to increase offset
     for (int i = 0; i < 1000; i++) {
-         malloc(i);
+        malloc(i);
     }
     // malloc and realloc to smaller size, testing if data is within
     // slot, and if the offset is appropriate for slack
     for (int i = 1; i < 1000; i++) {
         void* large_alloc = malloc(2328+i);
         large_alloc = realloc(large_alloc, 2328);
+    }
+}
+
+void test_half_page_alloc() {
+    for (int i = 1620; i < 2032; i++) {
+	void* ptr = malloc(i);
+	free(ptr);
     }
 }
 
@@ -172,6 +179,9 @@ int main(int argc, char **argv)
         break;
     case '5': // realloc, with one page/slot groups and high mmap_count
         test_high_count_bounds();
+        break;
+    case '6': // realloc, checking offset valid with half page slots
+        test_half_page_alloc();
         break;
     default:
         return BAD_TEST_NUMBER;

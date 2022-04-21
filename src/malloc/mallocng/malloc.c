@@ -233,11 +233,11 @@ static struct meta *alloc_group(int sc, size_t req)
 
 	// If we selected a count of 1 above but it's not sufficient to use
 	// mmap, increase to 2. Then it might be; if not it will nest.
-	if (cnt==1 && size*cnt+GRP_SIZE <= pagesize/2) cnt = 2;
+	if (cnt==1 && size*cnt <= (pagesize-GRP_SIZE)/2) cnt = 2;
 
 	// All choices of size*cnt are "just below" a power of two, so anything
 	// larger than half the page size should be allocated as whole pages.
-	if (size*cnt+GRP_SIZE > pagesize/2) {
+	if (size*cnt > (pagesize- GRP_SIZE)/2) {
 		// check/update bounce counter to start/increase retention
 		// of freed maps, and inhibit use of low-count, odd-size
 		// small mappings and single-slot groups if activated.

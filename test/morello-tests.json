@@ -1349,6 +1349,12 @@
         "xrc": [0]
     },
     {
+        "app": "${build}/realloc.exe",
+        "name": "realloc-half-page-offset",
+        "args": ["6"],
+        "xrc": [0]
+    },
+    {
         "app": "${build}/calloc.exe",
         "name": "calloc",
         "xrc": [0]

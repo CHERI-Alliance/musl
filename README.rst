@@ -15,6 +15,10 @@ libc functionality. Current limitations include:
 * No support for dynamic linking and dynamic loading (only static linking to ``libc.a``
   is supported).
 
+The *cheriseed* branch contains further work intended to enable CHERIseed, a *software-only*
+implementation of `CHERI <https://www.cl.cam.ac.uk/research/security/ctsrd/cheri/>`
+semantics. See section ``CHERIseed`` for details.
+
 Kernel ABI
 ^^^^^^^^^^
 
@@ -335,6 +339,35 @@ This file is used in the following configure command for compiler-rt (note that 
 
    mv lib/linux/libclang_rt.builtins-aarch64.a \
        $(${MORELLO_HOME}/bin/clang -print-resource-dir)/lib/aarch64-linux-musl_purecap/libclang_rt.builtins.a
+
+CHERIseed
+---------
+
+This version of Musl also includes changes to enable CHERIseed, a software-only implementation of
+`CHERI <https://www.cl.cam.ac.uk/research/security/ctsrd/cheri/>` semantics.
+
+The aim of CHERIseed is to facilitate the porting effort of existing code to CHERI hardware platforms, by providing some of the functionality while running on a host machine that is not capability aware. This functionality includes:
+
+ - 128-bit pointers for a 64-bit address space (64 bits of “metadata”).
+ - Bounds checking on pointer dereferences.
+ - Permissions checking for pointers where permissions are restricted.
+
+By compiling and running code with CHERIseed a user can experiment with CHERI programming (see the `CHERI C/C++ Programming Guide <https://www.cl.cam.ac.uk/techreports/UCAM-CL-TR-947.pdf>), and identify potentially unsafe code that would fault on real CHERI hardware.
+
+The CHERIseed LLVM Project can be found `here <https://git.morello-project.org/morello/llvm-project/-/tree/cheriseed>`
+See: `CHERIseed.rst <https://git.morello-project.org/morello/llvm-project/-/blob/cheriseed/clang/docs/CHERIseed.rst>`` for how to build CHERIseed enabled clang.
+
+CHERIseed-enabled `libshim <https://git.morello-project.org/morello/android/platform/external/libshim/-/tree/cheriseed>`
+ and `libarchcap <https://git.morello-project.org/morello/android/platform/external/libarchcap/-/tree/cheriseed>` are
+also required.
+
+To build Musl with CHERIseed enabled, Musl should be configured with:
+
+.. code-block::
+
+   # configure command
+   CC=${CHERISEED_LLVM}/build/bin/clang ./configure \
+       --disable-shared --disable-morello --enable-cheriseed --libshim-path=${CHERISEED_LIBSHIM} --prefix=${MUSL_HOME}
 
 Contributing
 ------------

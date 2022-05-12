@@ -57,7 +57,7 @@ To configure the build, run
 
 We use ``--disable-shared`` because dynamic linking and dynamic loading is currently not
 supported. We use ``--enable-morello`` to build the Morello version of the library. This
-option also impllies ``--target=aarch64-linux-musl_purecap``. When this is disabled,
+option also implies ``--target=aarch64-linux-musl_purecap``. When this is disabled,
 an AArch64 version of the library will be built. Finally, using ``--enable-libshim`` is
 required to produce build which uses the ``libshim`` library for system calls. This option
 only works when Morello is enabled. To build this library targeting system with Morello

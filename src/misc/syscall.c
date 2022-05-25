@@ -5,6 +5,14 @@
 
 #undef syscall
 
+#if defined(__CHERI_PURE_CAPABILITY__)
+#undef va_arg
+#define va_arg(v, l) ( \
+	((v) != ((void*)0) && __builtin_cheri_length_get(v) >= (__builtin_cheri_offset_get(v) + sizeof(l))) \
+	? __builtin_va_arg(v, l) : ((l){0})    \
+)
+#endif
+
 intptr_t syscall(long n, ...)
 {
 	va_list ap;

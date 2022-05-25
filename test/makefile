@@ -29,7 +29,7 @@ OBJS := $(patsubst %.c, %.o, $(SOURCES))
 MKFS := $(patsubst %.c, %.mk, $(SOURCES))
 EXE_STATIC := $(patsubst %.c, %-static.exe, $(SOURCES))
 
-MIE_ARGS ?= -fail-early c64-a64
+MIE_ARGS ?=
 
 all: test
 

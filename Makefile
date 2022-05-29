@@ -179,7 +179,7 @@ override LIBSHIM_OBJECTS := $$(find $(LIBSHIM_BUILD) -type f -name \*.o)
 # subst: libshim's generator expects 'aarch64' to be named 'arm64'.
 LIBSHIM_JSON_PATH ?= $(LIBSHIM_PATH)/musl_$(subst aarch64,arm64,$(ARCH)).json
 
-$(LIBSHIM_LIB): $(LIBSHIM_LIBC_PATH) $(LIBSHIM_PATH) $(LIBARCHCAP_PATH)
+$(LIBSHIM_LIB): $(LIBSHIM_LIBC_PATH) $(LIBSHIM_PATH) $(LIBARCHCAP_PATH) FORCE
 	$(MAKE) -C $(LIBSHIM_PATH) LIBC=musl ARCH=$(ARCH) LIBC_PATH=$(LIBSHIM_LIBC_PATH) \
 	CC=$(CC) CXX=$(CC)++ AR=$(AR) RANLIB=$(RANLIB) CFLAGS="$(LIBSHIM_FLAGS)" CXXFLAGS="$(LIBSHIM_FLAGS)" \
 	LIBSHIM_JSON_PATH=$(shell realpath $(LIBSHIM_JSON_PATH)) \
@@ -319,3 +319,5 @@ endif
 .SUFFIXES:
 
 .PHONY: all clean install install-libs install-headers install-tools test
+
+FORCE:

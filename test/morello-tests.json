@@ -1098,6 +1098,13 @@
         "skip": "flaky"
     },
     {
+        "app": "${build}/pthread_cancel.exe",
+        "name": "pthread-cancel-deferred-in-cp-custom",
+        "args": ["9"],
+        "xrc": [0],
+        "skip": "flaky"
+    },
+    {
         "app": "${build}/pthread_cleanup.exe",
         "name": "pthread-cleanup",
         "xrc": [0]

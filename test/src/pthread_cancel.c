@@ -41,22 +41,25 @@
 #define ALDR(__obj) __atomic_load_n(&(__obj), __ATOMIC_RELAXED)
 
 static sem_t sem;
-static int checkpoint;
+static int checkpoint = 0;
+
+#ifdef LIBSHIM
 static unsigned long hooked_thread_id = 0;
 
-//// syscall_cp_asm_hook() is specific to libshim integration.
-//// Using it it is possible to test for incorrect cancellation point
-//// implementation.
-//void __syscall_cp_asm_hook() {
-//  unsigned long self_id = __builtin_cheri_address_get(pthread_self());
-//  if (ALDR(hooked_thread_id) != self_id) {
-//    return;
-//  }
-//  ASTR(checkpoint, 1);
-//  while (1 == ALDR(checkpoint)) {
-//    sched_yield();
-//  }
-//}
+// __syscall_cp_hook() is specific to libshim integration.
+// Using it it is possible to test for incorrect cancellation point
+// implementation.
+int __shim_pause_in_cp(void) {
+  unsigned long self_id = __builtin_cheri_address_get(pthread_self());
+  if (ALDR(hooked_thread_id) == self_id) {
+    // Don't pause more system calls.
+    ASTR(hooked_thread_id, -1);
+    ASTR(checkpoint, 1);
+    return 1;
+  }
+  return 0;
+}
+#endif  // #ifdef LIBSHIM
 
 // T-1
 // Test asynchronous cancellation
@@ -152,7 +155,10 @@ static int cancel_deferred_no_cp() {
 void *test_cancel_deferred_in_cp(void *arg) {
   pthread_setcanceltype(PTHREAD_CANCEL_DEFERRED, NULL);
   T(sem_post(&sem), "sem_post failed");
+  errno = 0;
   sleep(100);
+  T(errno == -ECANCELED, "Expected -ECANCELED");
+  sleep(1);
   T(1, "Should not get here");
   return NULL;
 }
@@ -178,8 +184,10 @@ void *test_cancel_async_disabled(void *arg) {
     pthread_setcancelstate(PTHREAD_CANCEL_DISABLE, NULL);
     T(sem_post(&sem), "sem_post failed");
     ASTR(checkpoint, 1);
+    while (1 == ALDR(checkpoint))
+      sched_yield();
     pthread_setcancelstate(PTHREAD_CANCEL_ENABLE, NULL);
-    ASTR(checkpoint, 2);
+    ASTR(checkpoint, 3);
   }
   sleep(100);
   T(1, "Should not get here");
@@ -193,10 +201,12 @@ static int cancel_async_disabled() {
   pthread_create(&thread, NULL, test_cancel_async_disabled, NULL);
   T(sem_wait(&sem), "sem_wait failed");
   T(sleep(1), "sleep failed");
+  T(1 != ALDR(checkpoint), "Thread did something wrong");
   pthread_cancel(thread);
+  ASTR(checkpoint, 2);
   pthread_join(thread, &thread_ret);
   T(thread_ret != PTHREAD_CANCELED, "Thread exit code is not PTHREAD_CANCELED");
-  T(2 != ALDR(checkpoint), "Thread did something wrong");
+  T(3 != ALDR(checkpoint), "Thread did something wrong");
   return 0;
 }
 
@@ -209,8 +219,10 @@ void *test_cancel_deferred_disabled(void *arg) {
     pthread_setcancelstate(PTHREAD_CANCEL_DISABLE, NULL);
     T(sem_post(&sem), "sem_post failed");
     ASTR(checkpoint, 1);
+    while (1 == ALDR(checkpoint))
+      sched_yield();
     pthread_setcancelstate(PTHREAD_CANCEL_ENABLE, NULL);
-    ASTR(checkpoint, 2);
+    ASTR(checkpoint, 3);
   }
   sleep(100);
   T(1, "Should not get here");
@@ -224,10 +236,12 @@ static int cancel_deferred_disabled() {
   pthread_create(&thread, NULL, test_cancel_deferred_disabled, NULL);
   T(sem_wait(&sem), "sem_wait failed");
   T(sleep(1), "sleep failed");
+  T(1 != ALDR(checkpoint), "Thread did something wrong");
   pthread_cancel(thread);
+  ASTR(checkpoint, 2);
   pthread_join(thread, &thread_ret);
   T(thread_ret != PTHREAD_CANCELED, "Thread exit code is not PTHREAD_CANCELED");
-  T(2 != ALDR(checkpoint), "Thread did something wrong");
+  T(3 != ALDR(checkpoint), "Thread did something wrong");
   return 0;
 }
 
@@ -257,6 +271,8 @@ static int cancel_async_masked() {
   return 0;
 }
 
+#ifdef LIBSHIM
+
 // T-8
 // Test deferred cancellation when cancellations are masked.
 // This is a musl-libc extension, but it is potentially broken with libshim.
@@ -265,7 +281,11 @@ void *test_cancel_deferred_masked(void *arg) {
   pthread_setcancelstate(PTHREAD_CANCEL_MASKED, NULL);
   T(sem_wait(&sem), "sem_wait failed");
   errno = 0;
-  T(10 != sleep(10), "Shouldn't have slept for so long");
+  // This will stop in sleep() at a cancellation point. It is expected that
+  // the execution can return from sleep().
+  ASTR(hooked_thread_id, __builtin_cheri_address_get(pthread_self()));
+  T(0 == sleep(10),
+    "Shouldn't have slept for so long. This test needs libshim.");
   return 0;
 }
 
@@ -274,14 +294,48 @@ static int cancel_deferred_masked() {
   ASTR(checkpoint, 0);
   pthread_t thread;
   pthread_create(&thread, NULL, test_cancel_deferred_masked, NULL);
-  ASTR(hooked_thread_id, __builtin_cheri_address_get(thread));
   T(sem_post(&sem), "sem_post failed");
   T(sleep(1), "sleep failed");
   T(1 != ALDR(checkpoint), "Thread did something wrong");
   pthread_cancel(thread);
-  ASTR(checkpoint, 2);
   pthread_join(thread, &thread_ret);
-  T(thread_ret != 0, "Thread exit code is not 0");
+  T(thread_ret != 0, "Thread exit code is not 0. This test needs libshim.");
+  return 0;
+}
+
+#endif  // #ifdef LIBSHIM
+
+// T-9
+// TBD
+void *test_cancel_deferred_in_cp_custom(void *arg) {
+  pthread_mutex_t mutex;
+  pthread_cond_t cond;
+
+  pthread_setcanceltype(PTHREAD_CANCEL_DEFERRED, NULL);
+
+  pthread_mutex_init(&mutex, NULL);
+  pthread_cond_init(&cond, NULL);
+
+  pthread_mutex_lock(&mutex);
+
+  T(sem_post(&sem), "sem_post failed");
+  pthread_cond_timedwait(&cond, &mutex, NULL);
+
+  T(1, "Should not get here");
+  return NULL;
+}
+
+static int cancel_deferred_in_cp_custom() {
+  void *thread_ret = 0;
+  pthread_t thread;
+  for (int i = 0; i < 10000; i++) {
+    pthread_create(&thread, NULL, test_cancel_deferred_in_cp_custom, NULL);
+    T(sem_wait(&sem), "sem_wait failed");
+    pthread_cancel(thread);
+    pthread_join(thread, &thread_ret);
+    T(thread_ret != PTHREAD_CANCELED,
+      "Thread exit code is not PTHREAD_CANCELED");
+  }
   return 0;
 }
 
@@ -307,7 +361,11 @@ int main(int argc, char **argv) {
     return cancel_deferred_disabled();
   case '7': // pthread-cancel-async-masked
     return cancel_async_masked();
+#if LIBSHIM
   case '8': // pthread-cancel-deferred-masked
     return cancel_deferred_masked();
+#endif
+  case '9': // pthread-cancel-deferred-in-cp-custom
+    return cancel_deferred_in_cp_custom();
   }
 }

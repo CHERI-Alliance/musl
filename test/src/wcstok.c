@@ -15,7 +15,9 @@ int main() {
     if (wcscmp(words[i++], tok)) return 3;
   } while ((tok = wcstok(0, L" ? ", &buf)));
 
+#ifndef __SANITIZE_CHERISEED__
   if (__builtin_cheri_tag_get(tok) != 0) return 4;
+#endif
   if (tok != NULL) return 5;
 
   return 0;

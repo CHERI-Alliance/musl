@@ -44,9 +44,11 @@ int main(int argc, char **argv) {
   case '2':
     k = 11;
     res = bsearch(&k, arr, 8, sizeof(elem), cmp);
+#ifndef __SANITIZE_CHERISEED__
     if (__builtin_cheri_tag_get(res)) {
       return 1;
     }
+#endif
     if (res) {
       return 2;
     }

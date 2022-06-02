@@ -47,8 +47,7 @@ int faccessat(int fd, const char *filename, int amode, int flag)
 
 	__block_all_sigs(&set);
 
-	// __clone unconditionally uses 7 arguments, set the last 3 to explicit zeros.
-	pid = __clone(checker, stack+sizeof stack, 0, &c, NULL, NULL, NULL);
+	pid = __clone(checker, stack+sizeof stack, 0, &c);
 	__syscall(SYS_close, p[1]);
 
 	if (pid<0 || __syscall(SYS_read, p[0], &ret, sizeof ret) != sizeof(ret))

@@ -519,17 +519,11 @@ if test "$libshim" = yes ; then
         libshim_path=$(realpath -m $(pwd)/../libshim)
     fi
     LIBSHIM_PATH="$libshim_path"
-    LIBARCHCAP_PATH="$(realpath -m $libshim_path/../libarchcap)"
     printf "checking for libshim sources... "
     if test -d $LIBSHIM_PATH ; then
-        printf "%s (exists) " $LIBSHIM_PATH
+        printf "%s (exists)\n" $LIBSHIM_PATH
     else
         printf "%s (does not exist)\n" $LIBSHIM_PATH
-    fi
-    if test -d $LIBARCHCAP_PATH ; then
-        printf "%s (exists)\n" $LIBARCHCAP_PATH
-    else
-        printf "%s (does not exist)\n" $LIBARCHCAP_PATH
     fi
 fi
 
@@ -950,7 +944,6 @@ LDFLAGS_MORELLO = $LDFLAGS_MORELLO
 LIBSHIM = $libshim
 LIBSHIM_FLAGS = $LIBSHIM_FLAGS
 LIBSHIM_PATH = $LIBSHIM_PATH
-LIBARCHCAP_PATH = $LIBARCHCAP_PATH
 EOF
 test "x$static" = xno && echo "STATIC_LIBS ="
 test "x$shared" = xno && echo "SHARED_LIBS ="

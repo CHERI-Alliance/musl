@@ -170,7 +170,6 @@ obj/%.lo: $(srcdir)/%.c $(GENH) $(IMPH)
 ifeq ($(LIBSHIM),yes)
 
 # LIBSHIM_PATH is defined in config.mak
-# LIBARCHCAP_PATH is defined in config.mak
 override LIBSHIM_BUILD = $(LIBSHIM_PATH)/build
 override LIBSHIM_LIB = $(LIBSHIM_BUILD)/libshim.a
 override LIBSHIM_LIBC_PATH = $(shell realpath $(srcdir))/lib/libshim-libc
@@ -179,7 +178,7 @@ override LIBSHIM_OBJECTS := $$(find $(LIBSHIM_BUILD) -type f -name \*.o)
 # subst: libshim's generator expects 'aarch64' to be named 'arm64'.
 LIBSHIM_JSON_PATH ?= $(LIBSHIM_PATH)/musl_$(subst aarch64,arm64,$(ARCH)).json
 
-$(LIBSHIM_LIB): $(LIBSHIM_LIBC_PATH) $(LIBSHIM_PATH) $(LIBARCHCAP_PATH) FORCE
+$(LIBSHIM_LIB): $(LIBSHIM_LIBC_PATH) $(LIBSHIM_PATH) FORCE
 	$(MAKE) -C $(LIBSHIM_PATH) LIBC=musl ARCH=$(ARCH) LIBC_PATH=$(LIBSHIM_LIBC_PATH) \
 	CC=$(CC) CXX=$(CC)++ AR=$(AR) RANLIB=$(RANLIB) CFLAGS="$(LIBSHIM_FLAGS)" CXXFLAGS="$(LIBSHIM_FLAGS)" \
 	LIBSHIM_JSON_PATH=$(shell realpath $(LIBSHIM_JSON_PATH)) \
@@ -205,7 +204,6 @@ $(LIBSHIM_LIBC_PATH)/include/%: $(srcdir)/include/%
 $(LIBSHIM_LIBC_PATH): $(ALL_INCLUDES:include/%=$(LIBSHIM_LIBC_PATH)/include/%)
 
 lib/revisions.txt:
-	@echo "Libarchcap: `bash $(srcdir)/tools/revision.bash $(LIBARCHCAP_PATH)`" > $@
 	@echo "Libshim: `bash $(srcdir)/tools/revision.bash $(LIBSHIM_PATH)`" >> $@
 	@echo "Musl: `bash $(srcdir)/tools/revision.bash $(srcdir)`" >> $@
 

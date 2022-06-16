@@ -28,13 +28,11 @@ library for implementing system calls to non-Morello kernel. This allows using p
 Morello applications on systems with non-Morello kernel subject to common libshim
 limitations.
 
-You need to clone the libshim and libarchcap sources separately and place them next to the
-Musl's root folder:
+You need to clone libshim separately and place it next to Musl's root folder:
 
 .. code-block::
 
    git clone https://git.morello-project.org/morello/android/platform/external/libshim.git
-   git clone https://git.morello-project.org/morello/android/platform/external/libarchcap.git
    git clone https://git.morello-project.org/morello/musl-libc.git musl
 
 Using this library
@@ -67,8 +65,8 @@ required to produce build which uses the ``libshim`` library for system calls. T
 only works when Morello is enabled. To build this library targeting system with Morello
 kernel, use ``--disable-libshim`` in the command above.
 
-Make sure that ``libshim`` and ``libarchcap`` folders contain sources and are located
-next to the source root of Musl. Alternatively, use ``--libshim-path=<path>`` configure
+Make sure that ``libshim`` folder contain sources and is located next to the
+source root of Musl. Alternatively, use ``--libshim-path=<path>`` configure
 option.
 
 Currently, by default, Morello and use of libshim is enabled and building shared library
@@ -83,8 +81,6 @@ To build and install, just run
 
 When ``--enable-libshim`` is used, source code for
 `libshim <https://git.morello-project.org/morello/android/platform/external/libshim>`_
-and
-`libarchcap <https://git.morello-project.org/morello/android/platform/external/libarchcap>`_
 is downloaded (from ``mainline`` branch) and built. The ``libshim`` objects are then added
 to the ``libc.a`` archive which can then be used in a usual way.
 
@@ -358,8 +354,7 @@ The CHERIseed LLVM Project can be found `here <https://git.morello-project.org/m
 See: `CHERIseed.rst <https://git.morello-project.org/morello/llvm-project/-/blob/cheriseed/clang/docs/CHERIseed.rst>`` for how to build CHERIseed enabled clang.
 
 CHERIseed-enabled `libshim <https://git.morello-project.org/morello/android/platform/external/libshim/-/tree/cheriseed>`
- and `libarchcap <https://git.morello-project.org/morello/android/platform/external/libarchcap/-/tree/cheriseed>` are
-also required.
+is also required.
 
 To build Musl with CHERIseed enabled, Musl should be configured with:
 

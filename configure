@@ -553,7 +553,7 @@ if test "$libshim" = yes ; then
     LIBSHIM_PATH="$libshim_path"
     printf "checking for libshim sources... "
     if test -d $LIBSHIM_PATH ; then
-        printf "%s (exists) " $LIBSHIM_PATH
+        printf "%s (exists)\n" $LIBSHIM_PATH
     else
         printf "%s (does not exist)\n" $LIBSHIM_PATH
     fi

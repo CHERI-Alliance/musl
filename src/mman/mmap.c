@@ -9,7 +9,15 @@ static void dummy(void) { }
 weak_alias(dummy, __vm_wait);
 
 #define UNIT SYSCALL_MMAP2_UNIT
-#define OFF_MASK ((-0x2000ULL << (8*sizeof(syscall_arg_t)-1)) | (UNIT-1))
+#define OFF_LOW_MASK (UNIT-1)
+
+#ifdef SYS_mmap2
+#define OFF_HIGH_MASK (-0x2000ULL << (8*sizeof(syscall_arg_t)-1))
+#else
+#define OFF_HIGH_MASK 0x0
+#endif
+
+#define OFF_MASK (OFF_HIGH_MASK | OFF_LOW_MASK)
 
 void *__mmap(void *start, size_t len, int prot, int flags, int fd, off_t off)
 {

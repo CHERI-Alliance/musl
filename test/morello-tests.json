@@ -872,6 +872,13 @@
     {
         "app": "${build}/mmap.exe",
         "name": "mmap",
+        "args": ["0"],
+        "xrc": [0]
+    },
+    {
+        "app": "${build}/mmap.exe",
+        "name": "mmap-offset",
+        "args": ["1"],
         "xrc": [0]
     },
     {

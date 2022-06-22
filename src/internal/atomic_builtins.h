@@ -32,11 +32,9 @@ static inline int a_cas(volatile int *p, int t, int s) {
 
 #define a_cas_p a_cas_p
 static inline void *a_cas_p(volatile void *p, void *t, void *s) {
-  ptraddr_t t_v = (ptraddr_t)t;
-  __atomic_compare_exchange_n((volatile ptraddr_t *)p, &t_v,
-                            (ptraddr_t)s, 0, __ATOMIC_SEQ_CST,
-                            __ATOMIC_SEQ_CST);
-  return (void*)t_v;
+  __atomic_compare_exchange_n((void *volatile *)p, &t, s,
+                              0, __ATOMIC_SEQ_CST, __ATOMIC_SEQ_CST);
+  return t;
 }
 
 #define a_swap a_swap

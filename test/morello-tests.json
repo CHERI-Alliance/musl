@@ -1910,5 +1910,12 @@
         "name": "ctor_dtor",
         "xrc": [0],
         "stdout": ["ctor call dtor call"]
+    },
+    {
+        "app": "${build}/libintl.exe",
+        "name": "bindtextdomain",
+        "args": ["0"],
+        "xrc": [0],
+        "stdout": ["musl"]
     }
 ]

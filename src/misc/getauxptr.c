@@ -22,6 +22,7 @@ void *__getauxptr(unsigned long item)
 		case AT_CHERI_EXEC_RX_CAP:
 		case AT_CHERI_INTERP_RW_CAP:
 		case AT_CHERI_INTERP_RX_CAP:
+		case AT_CHERI_STACK_CAP:
 		case AT_CHERI_SEAL_CAP:
 		{
 			auxv_entry *auxv = libc.auxv;

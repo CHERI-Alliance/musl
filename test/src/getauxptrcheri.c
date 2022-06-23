@@ -15,18 +15,21 @@ int main (void) {
 	uint items[] = {
 		AT_CHERI_EXEC_RW_CAP,
 		AT_CHERI_EXEC_RX_CAP,
+		AT_CHERI_STACK_CAP,
 		AT_CHERI_SEAL_CAP
 	};
 
 	uint req_perms[] = {
 		RW_PERMS,
 		RX_PERMS,
+		RW_PERMS,
 		SEAL_CAP_PERMS
 	};
 
 	const char* names[] = {
 		"AT_CHERI_EXEC_RW_CAP",
 		"AT_CHERI_EXEC_RX_CAP",
+		"AT_CHERI_STACK_CAP",
 		"AT_CHERI_SEAL_CAP"
 	};
 

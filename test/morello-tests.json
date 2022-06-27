@@ -1375,6 +1375,7 @@
         "app": "${build}/newlocale.exe",
         "name": "newlocale",
         "stdout": [
+            "123456.789",
             "123456.789"
         ],
         "xrc": [0]

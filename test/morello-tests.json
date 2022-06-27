@@ -1375,6 +1375,7 @@
         "app": "${build}/newlocale.exe",
         "name": "newlocale",
         "stdout": [
+            "123456.789",
             "123456.789"
         ],
         "xrc": [0]
@@ -1825,7 +1826,10 @@
         "app": "${build}/unistd.exe",
         "args": ["1"],
         "name": "test_getlogin_r",
-        "xrc": [0]
+        "xrc": [0],
+        "env": {
+            "LOGNAME": "morello"
+        }
     },
     {
         "app": "${build}/unistd.exe",

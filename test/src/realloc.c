@@ -16,10 +16,10 @@ void fill(char* ptr, size_t size)
     // fill with "random" data
     int effective_thickness = MIN(size/2,FILL_THICKNESS);
     for(int i = 0; i < effective_thickness; i++){
-        ptr[i] = (i ? i : -i) & 255;
+        ptr[i] = (char)(i ? i : -i) & 255;
     }
     for(int i = size-1; i >= size-1-effective_thickness; i--){
-        ptr[i] = (i ? i : -i) & 255;
+        ptr[i] = (char)(i ? i : -i) & 255;
     }
 
     // add a capability at the start and at the end
@@ -57,7 +57,7 @@ void check_fill(char* ptr, size_t size)
 
     // check the "random" data
     for(int i = 0; i < effective_thickness; i++){
-        if (ptr[i] != ((i ? i : -i) & 255)){
+        if (ptr[i] != (char)((i ? i : -i) & 255)){
             // the two capability are legit missmatch, don't report them
             if ( size>=48 && (ptr+i) >= (char*)first_slot && (ptr+i) < ((char*)first_slot+16) )
                 continue;
@@ -65,7 +65,7 @@ void check_fill(char* ptr, size_t size)
         }
     }
     for(int i = size-1; i >= size-1-effective_thickness; i--){
-        if (ptr[i] != ((i ? i : -i) & 255)){
+        if (ptr[i] != (char)((i ? i : -i) & 255)){
             // the two capability are legit missmatch, don't report them
             if ( size>=48 && (ptr+i) >= (char*)last_slot && (ptr+i) < ((char*)last_slot+16) )
                 continue;

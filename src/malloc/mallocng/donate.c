@@ -15,7 +15,7 @@ static void donate(unsigned char *base, size_t len)
 	b -= b & (UNIT-1);
 	memset(base, 0, len);
 	for (int sc=47; sc>0 && b>a; sc-=4) {
-		if (b-a < (size_classes[sc]+1)*UNIT) continue;
+		if (b-a < (size_classes[sc]*UNIT+GRP_SIZE)) continue;
 		struct meta *m = alloc_meta();
 		m->avail_mask = 0;
 		m->freed_mask = 1;
@@ -25,11 +25,11 @@ static void donate(unsigned char *base, size_t len)
 		m->freeable = 0;
 		m->sizeclass = sc;
 		m->maplen = 0;
-		*((unsigned char *)m->mem+UNIT-4) = 0;
-		*((unsigned char *)m->mem+UNIT-3) = 255;
+		*((unsigned char *)m->mem+GRP_SIZE-4) = 0;
+		*((unsigned char *)m->mem+GRP_SIZE-3) = 255;
 		m->mem->storage[size_classes[sc]*UNIT-4] = 0;
 		queue(&ctx.active[sc], m);
-		a += (size_classes[sc]+1)*UNIT;
+		a += size_classes[sc]*UNIT+GRP_SIZE;
 	}
 }
 

@@ -1921,5 +1921,10 @@
         "args": ["0"],
         "xrc": [0],
         "stdout": ["musl"]
+    },
+    {
+        "app": "${build}/malloc_donate.exe",
+        "name": "malloc_donate",
+        "xrc": [0]
     }
 ]

@@ -44,7 +44,7 @@ int test_mmap() {
 }
 
 int test_mmap_offset() {
-	int fd = open(".", O_TMPFILE | O_RDWR | O_EXCL);
+	int fd = open(".", O_TMPFILE | O_RDWR | O_EXCL, 600);
 	if (fd < 0) return -1;
 	off_t offset = getpagesize();
 	size_t len = 128;
@@ -67,4 +67,3 @@ int test_mmap_offset() {
 	if (close(fd)) return -3;
 	return z;
 }
-

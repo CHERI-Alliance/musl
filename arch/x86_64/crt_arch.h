@@ -5,6 +5,8 @@ START ": \n"
 "	xor %rbp,%rbp \n"
 "	mov %rsp,%rdi \n"
 #if defined(__SANITIZE_CHERISEED__)
+"	call __cheriseed_static_init \n"
+"	mov %rsp,%rdi \n"
 "	call __shim_marshal_program_arguments \n"
 #endif
 ".weak _DYNAMIC \n"

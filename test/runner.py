@@ -103,7 +103,10 @@ def build_test(_tc: dict, cwd: str, _runner: str, _mie_extra_params: str, _kind:
     args: list = _tc.get('args', [])
     _tname = _tc.get('name', '%s%s' % (basename(app).replace('.', '-'),
         ('-%s' % ('-'.join([str(t) for t in args]))) if args else ''))
-    _cmd: list = [_runner] + params + (_mie_extra_params.split(' ') if _mie_extra_params else []) + ['--', app] + args
+    if _runner == 'native':
+        _cmd: list = [app] + args
+    else:
+        _cmd: list = [_runner] + params + (_mie_extra_params.split(' ') if _mie_extra_params else []) + ['--', app] + args
     _xrc: list = _tc.get('xrc', [0])
     _xout: list = _tc.get('stdout', [])
     _xerr: list = _tc.get('stderr', [])

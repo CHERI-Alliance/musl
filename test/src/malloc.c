@@ -89,11 +89,10 @@ int main(int argc, char **argv) {
         }
         break;
     case '4'://segfault on use after free
-        all_ptr[0] = malloc(150);
-        testptr(all_ptr[0], 150);
-        free(all_ptr[0]);
-        *(int*)(all_ptr[0]) = 42;
-
+        /**
+         * This test has been removed
+         */
+        return BAD_TEST_NUMBER;
         break;
     case '5'://segfault on double free
         all_ptr[0] = malloc(16*32768);

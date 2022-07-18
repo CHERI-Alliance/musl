@@ -19,7 +19,13 @@ static void donate(unsigned char *base, size_t len)
 		struct meta *m = alloc_meta();
 		m->avail_mask = 0;
 		m->freed_mask = 1;
+#ifdef __CHERI_PURE_CAPABILITY__
+		void *restricted_ptr = restrict_user_ptr(a, size_classes[sc]*UNIT+GRP_SIZE);
+		restricted_ptr = restrict_perms(restricted_ptr);
+		m->mem = restricted_ptr;
+#else
 		m->mem = (void *)a;
+#endif
 		m->mem->meta = m;
 		m->last_idx = 0;
 		m->freeable = 0;

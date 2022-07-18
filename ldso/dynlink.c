@@ -40,7 +40,7 @@ static void error(const char *, ...);
 
 #define AUX_TYPE(p) ((p)->a_type)
 #define AUX_VAL(p) ((p)->a_un.a_val)
-#ifdef MORELLO
+#ifdef __CHERI_PURE_CAPABILITY__
 #define AUX_PTR(p) ((p)->a_un.a_ptr)
 #else
 #define AUX_PTR(p) ((p)->a_un.a_val)
@@ -373,9 +373,9 @@ static void do_relocs(struct dso *dso, size_t *rel, size_t rel_size, size_t stri
 	int type;
 	int sym_index;
 	struct symdef def;
-	size_t **reloc_addr;
-	size_t *sym_val;
-	size_t *tls_val;
+	char **reloc_addr;
+	char *sym_val;
+	char *tls_val;
 	size_t addend;
 	int skip_relative = 0, reuse_addends = 0, save_slot = 0;
 
@@ -452,16 +452,60 @@ static void do_relocs(struct dso *dso, size_t *rel, size_t rel_size, size_t stri
 		case REL_SYMBOLIC:
 		case REL_GOT:
 		case REL_PLT:
+#ifndef __CHERI_PURE_CAPABILITY__
 			*reloc_addr = sym_val + addend;
+#else
+			{
+				char *cap = sym_val + addend;
+				if (dso != &ldso) {
+					if (def.sym && ELF64_ST_TYPE(def.sym->st_info) == STT_FUNC) {
+						cap = __builtin_cheri_perms_and(cap, EXEC_CAP_PERMS | READ_CAP_PERMS);
+						if (type == REL_GOT)
+							cap = __builtin_cheri_seal_entry(cap);
+					} else if (def.dso->phdr->p_flags & PF_W) {
+						cap = __builtin_cheri_perms_and(cap, READ_CAP_PERMS | WRITE_CAP_PERMS);
+					} else {
+						cap = __builtin_cheri_perms_and(cap, READ_CAP_PERMS);
+					}
+				}
+				*reloc_addr = cap;
+			}
+#endif
 			break;
 		case REL_USYMBOLIC: {
 			size_t *temp = sym_val + addend;
 			memcpy(reloc_addr, &temp, sizeof(size_t *));
 			break;
 		}
-		case REL_RELATIVE:
+		case REL_RELATIVE: {
+#ifndef __CHERI_PURE_CAPABILITY__
 			*reloc_addr = base + addend;
+#else
+			/* aaelf64-morello reference on Elf64_Rela encoding:
+			https://github.com/ARM-software/abi-aa/blob/main/aaelf64-morello/aaelf64-morello.rst#445dynamic-linking-with-morello
+			*/
+			char *addr = base + ((morello_reloc_cap_t *)reloc_addr)->address;
+			size_t len = ((morello_reloc_cap_t *)reloc_addr)->length;
+			size_t perms = ((morello_reloc_cap_t *)reloc_addr)->perms;
+			char *cap = __builtin_cheri_bounds_set_exact(addr, len);
+			switch (perms) {
+				case MORELLO_RELA_PERM_R:
+					cap = __builtin_cheri_perms_and(cap, READ_CAP_PERMS);
+					break;
+				case MORELLO_RELA_PERM_RW:
+					cap = __builtin_cheri_perms_and(cap, READ_CAP_PERMS | WRITE_CAP_PERMS);
+					break;
+				case MORELLO_RELA_PERM_RX:
+					cap = __builtin_cheri_perms_and(cap, READ_CAP_PERMS | EXEC_CAP_PERMS);
+					break;
+				default:
+					cap = __builtin_cheri_perms_and(cap, 0);
+			}
+			cap += addend;
+			*reloc_addr = cap;
+#endif
 			break;
+		}
 		case REL_SYM_OR_REL:
 			if (sym) *reloc_addr = sym_val + addend;
 			else *reloc_addr = base + addend;
@@ -1450,8 +1494,8 @@ void __libc_exit_fini()
 		if (!p->constructed) continue;
 		decode_dyn_vec(p->dynv, dyn, DYN_CNT, &dyn_null);
 		if (dyn[DT_FINI_ARRAY] != &dyn_null) {
-			size_t n = DYN_VAL(dyn[DT_FINI_ARRAYSZ])/sizeof(size_t);
-			size_t *fn = (size_t *)laddr(p, DYN_VAL(dyn[DT_FINI_ARRAY]))+n;
+			size_t n = DYN_VAL(dyn[DT_FINI_ARRAYSZ])/sizeof(char *);
+			char **fn = (char **)laddr(p, DYN_VAL(dyn[DT_FINI_ARRAY]))+n;
 			while (n--) ((void (*)(void))*--fn)();
 		}
 #ifndef NO_LEGACY_INITFINI
@@ -1569,8 +1613,8 @@ static void do_init_fini(struct dso **queue)
 			fpaddr(p, DYN_VAL(dyn[DT_INIT]))();
 #endif
 		if (dyn[DT_INIT_ARRAY] != &dyn_null) {
-			size_t n = DYN_VAL(dyn[DT_INIT_ARRAYSZ])/sizeof(size_t);
-			size_t *fn = laddr(p, DYN_VAL(dyn[DT_INIT_ARRAY]));
+			size_t n = DYN_VAL(dyn[DT_INIT_ARRAYSZ])/sizeof(char *);
+			char **fn = laddr(p, DYN_VAL(dyn[DT_INIT_ARRAY]));
 			while (n--) ((void (*)(void))*fn++)();
 		}
 
@@ -1673,10 +1717,11 @@ static void install_new_tls(void)
  * linker itself, but some of the relocations performed may need to be
  * replaced later due to copy relocations in the main program. */
 
-hidden void __dls2(unsigned char *base, size_t *sp)
+hidden void __dls2(unsigned char *base, uintptr_t *sp)
 {
-	size_t *auxv;
-	for (auxv=sp+1+*sp+1; *auxv; auxv++);
+	uintptr_t *auxv;
+	size_t argc = *sp;
+	for (auxv=sp+1+argc+1; *auxv; auxv++);
 	auxv++;
 	if (DL_FDPIC) {
 		void *p1 = (void *)sp[-2];
@@ -1738,7 +1783,7 @@ hidden void __dls2(unsigned char *base, size_t *sp)
  * so that loads of the thread pointer and &errno can be pure/const and
  * thereby hoistable. */
 
-void __dls2b(size_t *sp, size_t *auxv)
+void __dls2b(uintptr_t *sp, size_t *auxv)
 {
 	/* Setup early thread pointer in builtin_tls for ldso/libc itself to
 	 * use during dynamic linking. If possible it will also serve as the
@@ -1763,14 +1808,14 @@ void __dls2b(size_t *sp, size_t *auxv)
  * process dependencies and relocations for the main application and
  * transfer control to its entry point. */
 
-void __dls3(size_t *sp, size_t *auxv)
+void __dls3(uintptr_t *sp, size_t *auxv)
 {
 	static struct dso app, vdso;
 	auxv_entry aux_null = {0}, *a, *aux[AUX_CNT];
 	size_t i;
 	char *env_preload=0;
 	char *replace_argv0=0;
-	size_t *vdso_base;
+	char *vdso_base;
 	int argc = *sp;
 	char **argv = (void *)(sp+1);
 	char **argv_orig = argv;
@@ -1805,7 +1850,7 @@ void __dls3(size_t *sp, size_t *auxv)
 		app.phentsize = AUX_VAL(aux[AT_PHENT]);
 		for (i=AUX_VAL(aux[AT_PHNUM]); i; i--, phdr=(void *)((char *)phdr + AUX_VAL(aux[AT_PHENT]))) {
 			if (phdr->p_type == PT_PHDR)
-				app.base = AUX_VAL(aux[AT_PHDR]) - phdr->p_vaddr;
+				app.base = AUX_PTR(aux[AT_PHDR]) - phdr->p_vaddr;
 			else if (phdr->p_type == PT_INTERP)
 				interp_off = (size_t)phdr->p_vaddr;
 			else if (phdr->p_type == PT_TLS) {
@@ -1936,14 +1981,14 @@ void __dls3(size_t *sp, size_t *auxv)
 	if (search_aux_vec(auxv, &a, AT_SYSINFO_EHDR) && AUX_PTR(a)) {
 		vdso_base = AUX_PTR(a);
 		Ehdr *ehdr = (void *)vdso_base;
-		Phdr *phdr = vdso.phdr = (void *)((char *)vdso_base + ehdr->e_phoff);
+		Phdr *phdr = vdso.phdr = (void *)(vdso_base + ehdr->e_phoff);
 		vdso.phnum = ehdr->e_phnum;
 		vdso.phentsize = ehdr->e_phentsize;
 		for (i=ehdr->e_phnum; i; i--, phdr=(void *)((char *)phdr + ehdr->e_phentsize)) {
 			if (phdr->p_type == PT_DYNAMIC)
-				vdso.dynv = (void *)((char *)vdso_base + phdr->p_offset);
+				vdso.dynv = (void *)(vdso_base + phdr->p_offset);
 			if (phdr->p_type == PT_LOAD)
-				vdso.base = (void *)((char *)vdso_base - phdr->p_vaddr + phdr->p_offset);
+				vdso.base = (void *)(vdso_base - phdr->p_vaddr + phdr->p_offset);
 		}
 		vdso.name = "";
 		vdso.shortname = "linux-gate.so.1";

@@ -15,12 +15,12 @@
  * (15*16)+32 = 272 (leaving 191), then allocate
  * (8*16)+32 = 160 (leaving 31), then stop
  */
+#ifndef DYNAMIC
 static char memory[MEM_SIZE];
 int blockSizes[] = {4096, 2064, 1040, 528, 272}; // we dont test the smallest block
 
 #define NUM_SIZES sizeof(blockSizes)/sizeof(int)
 
-#ifndef DYNAMIC
 void __malloc_donate(char *start, char *end);
 #endif
 

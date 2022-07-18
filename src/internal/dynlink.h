@@ -7,10 +7,16 @@
 #include <stddef.h>
 #include <stdarg.h>
 
+#ifdef __CHERI_PURE_CAPABILITY__
+#include "cap_perms.h"
+#endif
+
 #if UINTPTR_MAX == 0xffffffff
 typedef Elf32_Ehdr Ehdr;
 typedef Elf32_Phdr Phdr;
 typedef Elf32_Sym Sym;
+typedef Elf32_Rel Rel_t;
+typedef Elf32_Rela Rela_t;
 #define R_TYPE(x) ((x)&255)
 #define R_SYM(x) ((x)>>8)
 #define R_INFO ELF32_R_INFO
@@ -18,6 +24,8 @@ typedef Elf32_Sym Sym;
 typedef Elf64_Ehdr Ehdr;
 typedef Elf64_Phdr Phdr;
 typedef Elf64_Sym Sym;
+typedef Elf64_Rel Rel_t;
+typedef Elf64_Rela Rela_t;
 #define R_TYPE(x) ((x)&0x7fffffff)
 #define R_SYM(x) ((x)>>32)
 #define R_INFO ELF64_R_INFO

@@ -6,10 +6,16 @@ START ":\n"
 "	mov x29, #0\n"
 "	mov x30, #0\n"
 #ifdef LIBSHIM
+"	chktgd csp\n"
+"	b.cs .L1\n"
 "	mov x0, sp\n"
 "	cvtd c0, x0\n"
 "	bl do_raw_args_marshalling\n"
 "	mov csp, c0\n"
+"	b .L2\n"
+".L1:\n"
+"	mov c0, csp\n"
+".L2:\n"
 #else
 "	mov c0, csp\n"
 #endif

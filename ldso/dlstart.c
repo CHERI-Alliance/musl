@@ -21,7 +21,7 @@
 
 #define AUX_TYPE(p) ((p)->a_type)
 #define AUX_VAL(p) ((p)->a_un.a_val)
-#ifdef MORELLO
+#ifdef __CHERI_PURE_CAPABILITY__
 #define AUX_PTR(p) ((p)->a_un.a_ptr)
 #else
 #define AUX_PTR(p) ((p)->a_un.a_val)
@@ -32,12 +32,15 @@
 #define DYN_VAL(p) ((p).d_un.d_val)
 #define DYN_PTR(p) ((p).d_un.d_ptr)
 
-hidden void _dlstart_c(size_t *sp, size_t *dynv_raw)
+hidden void _dlstart_c(uintptr_t *sp, size_t *dynv_raw)
 {
 	size_t i;
 	auxv_entry aux_null = {0}, *aux[AUX_CNT];
 	dynv_entry dyn[DYN_CNT] = {{0}};
-	size_t *rel, rel_size, base;
+	size_t *rel, rel_size, rel_count;
+	Rel_t *rel_ptr;
+	Rela_t *rela_ptr;
+	char *base;
 
 	int argc = *sp;
 	char **argv = (void *)(sp+1);
@@ -138,27 +141,49 @@ hidden void _dlstart_c(size_t *sp, size_t *dynv_raw)
 		size_t *got = base + DYN_VAL(dyn[DT_PLTGOT]);
 		for (i=0; dynv[i].d_tag; i++) if (dynv[i].d_tag==DT_MIPS_LOCAL_GOTNO)
 			local_cnt = dynv[i].d_tag;
-		for (i=0; i<local_cnt; i++) got[i] += base;
+		for (i=0; i<local_cnt; i++) got[i] += (size_t)base;
 	}
 
-	rel = base+DYN_PTR(dyn[DT_REL]);
-	rel_size = DYN_VAL(dyn[DT_RELSZ]);
-	for (; rel_size; rel+=2, rel_size-=2*sizeof(size_t)) {
-		if (!IS_RELATIVE(rel[1], 0)) continue;
-		size_t *rel_addr = base + rel[0];
-		*rel_addr += base;
+	rel_ptr = base+DYN_VAL(dyn[DT_REL]);
+	rel_count = DYN_VAL(dyn[DT_RELSZ]) / sizeof(Rel_t);
+	for (; rel_count; rel_count--, rel_ptr++) {
+		if (!IS_RELATIVE(rel_ptr->r_info, 0)) continue;
+		size_t **rel_addr = base + rel_ptr->r_offset;
+		*rel_addr = base + (size_t)*rel_addr;
 	}
 
-	rel = base+DYN_PTR(dyn[DT_RELA]);
-	rel_size = DYN_PTR(dyn[DT_RELASZ]);
-	for (; rel_size; rel+=3, rel_size-=3*sizeof(size_t)) {
-		if (!IS_RELATIVE(rel[1], 0)) continue;
-		size_t *rel_addr = base + rel[0];
-		*rel_addr = base + rel[2];
+	rela_ptr = base+DYN_VAL(dyn[DT_RELA]);
+	rel_count = DYN_VAL(dyn[DT_RELASZ]) / sizeof(Rela_t);
+	for (; rel_count; rel_count--, rela_ptr++) {
+		if (!IS_RELATIVE(rela_ptr->r_info, 0)) continue;
+		char **rel_addr = base + rela_ptr->r_offset;
+#ifndef __CHERI_PURE_CAPABILITY__
+		*rel_addr = base + rela_ptr->r_addend;
+#else
+		char *addr = base + ((morello_reloc_cap_t *)rel_addr)->address;
+		size_t len = ((morello_reloc_cap_t *)rel_addr)->length;
+		size_t perms = ((morello_reloc_cap_t *)rel_addr)->perms;
+		char *cap = __builtin_cheri_bounds_set_exact(addr, len);
+		switch (perms) {
+		  case MORELLO_RELA_PERM_R:
+		    cap = __builtin_cheri_perms_and(cap, READ_CAP_PERMS);
+		    break;
+		  case MORELLO_RELA_PERM_RW:
+		    cap = __builtin_cheri_perms_and(cap, READ_CAP_PERMS | WRITE_CAP_PERMS);
+		    break;
+		  case MORELLO_RELA_PERM_RX:
+		    cap = __builtin_cheri_perms_and(cap, READ_CAP_PERMS | EXEC_CAP_PERMS);
+		    break;
+		  default:
+		    cap = __builtin_cheri_perms_and(cap, 0);
+		}
+		cap += rela_ptr->r_addend;
+		*rel_addr = cap;
+#endif
 	}
 #endif
 
 	stage2_func dls2;
-	GETFUNCSYM(&dls2, __dls2, DYN_VAL(base+dyn[DT_PLTGOT]));
+	GETFUNCSYM(&dls2, __dls2, base+DYN_VAL(dyn[DT_PLTGOT]));
 	dls2((void *)base, sp);
 }

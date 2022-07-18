@@ -1040,12 +1040,6 @@
     },
     {
         "app": "${build}/malloc.exe",
-        "name": "malloc_free_and_use",
-        "args": ["4"],
-        "xrc": [-11]
-    },
-    {
-        "app": "${build}/malloc.exe",
         "name": "malloc_double_free",
         "args": ["5"],
         "xrc": [-11]
@@ -1157,7 +1151,8 @@
         "stdout": [
             "THIS SHOULD BE UPPERCASE"
         ],
-        "xrc": [0]
+        "xrc": [0],
+        "skip": "flaky"
     },
     {
         "app": "${build}/printcap.exe",
@@ -1913,7 +1908,8 @@
         "app": "${build}/ctor_dtor.exe",
         "name": "ctor_dtor",
         "xrc": [0],
-        "stdout": ["ctor call dtor call"]
+        "stdout": ["ctor call dtor call"],
+        "stderr": ["ctor call2 dtor call2"]
     },
     {
         "app": "${build}/libintl.exe",

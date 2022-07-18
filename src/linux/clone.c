@@ -15,6 +15,10 @@ int clone(int (*func)(void *), void *stack, int flags, void *arg, ...)
 	pid_t *ptid = NULL, *ctid = NULL;
 	void  *tls = NULL;
 
+	if (!stack) {
+		return __syscall_ret(-EINVAL);
+	}
+
 	va_start(ap, arg);
 	if (0 != (flags & CLONE_PARENT_TID_FLAGS)) {
 		ptid = va_arg(ap, pid_t *);

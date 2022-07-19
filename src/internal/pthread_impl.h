@@ -80,6 +80,15 @@ enum {
 
 #define __SU (sizeof(long)/sizeof(int))
 
+#ifdef __CHERI_PURE_CAPABILITY__
+#define _a_stackaddr __u.__p[0]
+#define _a_stacksize __u.__s[2]
+#define _a_guardsize __u.__s[3]
+#define _a_detach __u.__i[8]
+#define _a_sched __u.__i[9]
+#define _a_policy __u.__i[10]
+#define _a_prio __u.__i[11]
+#else
 #define _a_stacksize __u.__s[0]
 #define _a_guardsize __u.__s[1]
 #define _a_stackaddr __u.__s[2]
@@ -87,6 +96,7 @@ enum {
 #define _a_sched __u.__i[3*__SU+1]
 #define _a_policy __u.__i[3*__SU+2]
 #define _a_prio __u.__i[3*__SU+3]
+#endif
 
 #ifdef __CHERI_PURE_CAPABILITY__
 #define _m_prev __u.__p[0]

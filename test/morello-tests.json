@@ -1047,6 +1047,13 @@
     {
         "app": "${build}/pthread.exe",
         "name": "pthread-basic",
+        "args": ["0"],
+        "xrc": [0]
+    },
+    {
+        "app": "${build}/pthread.exe",
+        "name": "pthread-setstack",
+        "args": ["1"],
         "xrc": [0]
     },
     {

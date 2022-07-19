@@ -40,7 +40,7 @@ int pthread_attr_getstack(const pthread_attr_t *restrict a, void **restrict addr
 	if (!a->_a_stackaddr)
 		return EINVAL;
 	*size = a->_a_stacksize;
-	*addr = (void *)(a->_a_stackaddr - *size);
+	*addr = a->_a_stackaddr - *size;
 	return 0;
 }
 

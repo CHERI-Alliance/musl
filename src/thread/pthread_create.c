@@ -273,8 +273,8 @@ int __pthread_create(pthread_t *restrict res, const pthread_attr_t *restrict att
 	if (attr._a_stackaddr) {
 		size_t need = libc.tls_size + __pthread_tsd_size;
 		size = attr._a_stacksize;
-		stack = (void *)(attr._a_stackaddr & -16);
-		stack_limit = (void *)(attr._a_stackaddr - size);
+		stack = __builtin_align_down(attr._a_stackaddr, 16);
+		stack_limit = attr._a_stackaddr - size;
 		/* Use application-provided stack for TLS only when
 		 * it does not take more than ~12% or 2k of the
 		 * application's stack space. */

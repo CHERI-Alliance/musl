@@ -33,7 +33,7 @@ Optional features:
   --enable-debug          build with debugging information [disabled]
   --disable-warnings      build with recommended warnings flags [enabled]
   --enable-wrapper=...    build given musl toolchain wrapper [auto]
-  --enable-shared         enable building shared library [disabled]
+  --disable-shared        disable building shared library [enabled]
   --disable-static        inhibit building static library [enabled]
   --disable-builtins      do not use compiler atomic builtins [enabled]
   --disable-morello       inhibit using Morello features (only for AArch64 targets) [enabled]
@@ -163,7 +163,7 @@ morello=yes
 libshim=auto
 libshim_path=auto
 warnings=yes
-shared=no
+shared=yes
 static=yes
 wrapper=auto
 gcc_wrapper=no

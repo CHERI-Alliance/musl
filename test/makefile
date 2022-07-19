@@ -39,17 +39,23 @@ all: test
 
 test: test-static test-dynamic
 
-test-static-native: $(EXE_STATIC) $(CURDIR)/runner.py
-	python3 runner.py --kind static --nproc $(MORELLO_TESTS_PROCS) --mie-args "$(MIE_ARGS)" src morello-tests.json "native" musl.custom.morello.static
+test-native: test-static-native test-dynamic-native
 
-test-dynamic-native: $(EXE_DYNAMIC) $(CURDIR)/runner.py
-	python3 runner.py --kind dynamic --nproc $(MORELLO_TESTS_PROCS) --mie-args "$(MIE_ARGS)" src morello-tests.json "native" musl.custom.morello.dynamic
+test-static-native: $(EXE_STATIC) runner.py morello-tests.json
+	python3 runner.py static $(MORELLO_TESTS_PROCS) $(CURDIR)/src morello-tests.json \
+	"native" custom morello-custom-static.xml
 
-test-static: $(EXE_STATIC) check_morelloie $(CURDIR)/runner.py
-	python3 runner.py --kind static --nproc $(MORELLO_TESTS_PROCS) --mie-args "$(MIE_ARGS)" src morello-tests.json $(MORELLOIE) musl.custom.morello.static
+test-dynamic-native: $(EXE_DYNAMIC) runner.py morello-tests.json
+	python3 runner.py dynamic $(MORELLO_TESTS_PROCS) $(CURDIR)/src morello-tests.json \
+	"native" custom morello-custom-dynamic.xml
 
-test-dynamic: $(EXE_DYNAMIC) check_morelloie $(CURDIR)/runner.py
-	python3 runner.py --kind dynamic --nproc $(MORELLO_TESTS_PROCS) --mie-args "$(MIE_ARGS)" src morello-tests.json $(MORELLOIE) musl.custom.morello.dynamic
+test-static: $(EXE_STATIC) runner.py morello-tests.json check_morelloie
+	TEST_RUNNER_MIEARGS='$(MIE_ARGS)' python3 runner.py static $(MORELLO_TESTS_PROCS) \
+	$(CURDIR)/src morello-tests.json $(MORELLOIE) custom morello-custom-static.xml
+
+test-dynamic: $(EXE_DYNAMIC) runner.py morello-tests.json check_morelloie
+	TEST_RUNNER_MIEARGS='$(MIE_ARGS)' python3 runner.py dynamic $(MORELLO_TESTS_PROCS) \
+	$(CURDIR)/src morello-tests.json $(MORELLOIE) custom morello-custom-dynamic.xml
 
 build: $(EXE_STATIC) $(EXE_DYNAMIC)
 
@@ -74,7 +80,7 @@ run-%: src/%.exe
 	$< $(TEST_ARGS)
 
 clean:
-	@rm -vf suite-morello-results.xml $(EXE_STATIC) $(EXE_DYNAMIC) $(OBJS) $(LOBJS)
+	@rm -vf *-results.xml $(EXE_STATIC) $(EXE_DYNAMIC) $(OBJS) $(LOBJS)
 	@rm -vrf /tmp/morello-musl-tests-*
 
-.PHONY: clean check_morelloie test build
+.PHONY: clean check_morelloie test build test-native test-static-native test-dynamic-native test-static test-dynamic

@@ -115,3 +115,5 @@ memset:
 	stp	q0, q0, [dstend, -64]
 	stp	q0, q0, [dstend, -32]
 	ret
+
+.size memset,.-memset

@@ -57,4 +57,10 @@ extern hidden const char __libc_version[];
 hidden void __synccall(void (*)(void *), void *);
 hidden int __setxid(int, int, int, int);
 
+#ifndef __CHERI_PURE_CAPABILITY__
+#define AUX_CNT 38
+#else
+#define AUX_CNT 84
+#endif
+
 #endif

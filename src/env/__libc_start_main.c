@@ -15,8 +15,6 @@ extern weak hidden void (*const __init_array_start)(void), (*const __init_array_
 static void dummy1(void *p) {}
 weak_alias(dummy1, __init_ssp);
 
-#define AUX_CNT 38
-
 #ifdef __GNUC__
 __attribute__((__noinline__))
 #endif

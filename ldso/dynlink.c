@@ -67,6 +67,7 @@ struct dso {
 	struct fdpic_loadmap *loadmap;
 #else
 	unsigned char *base;
+	unsigned char *base_rw;
 #endif
 	char *name;
 	size_t *dynv;
@@ -364,7 +365,7 @@ static struct symdef find_sym(struct dso *dso, const char *s, int need_def)
 
 static void do_relocs(struct dso *dso, size_t *rel, size_t rel_size, size_t stride)
 {
-	unsigned char *base = dso->base;
+	unsigned char *base_rx = dso->base, *base_rw = dso->base_rw;
 	Sym *syms = dso->syms;
 	char *strings = dso->strings;
 	Sym *sym;
@@ -374,7 +375,7 @@ static void do_relocs(struct dso *dso, size_t *rel, size_t rel_size, size_t stri
 	int sym_index;
 	struct symdef def;
 	char **reloc_addr;
-	char *sym_val;
+	char *sym_val, *sym_val_rw;
 	char *tls_val;
 	size_t addend;
 	int skip_relative = 0, reuse_addends = 0, save_slot = 0;
@@ -390,8 +391,11 @@ static void do_relocs(struct dso *dso, size_t *rel, size_t rel_size, size_t stri
 		if (skip_relative && IS_RELATIVE(rel[1], dso->syms)) continue;
 		type = R_TYPE(rel[1]);
 		if (type == REL_NONE) continue;
+#ifdef __CHERI_PURE_CAPABILITY__
+		reloc_addr = dso->base_rw + rel[0];
+#else
 		reloc_addr = laddr(dso, rel[0]);
-
+#endif
 		if (stride > 2) {
 			addend = rel[2];
 		} else if (type==REL_GOT || type==REL_PLT|| type==REL_COPY) {
@@ -436,6 +440,7 @@ static void do_relocs(struct dso *dso, size_t *rel, size_t rel_size, size_t stri
 		}
 
 		sym_val = def.sym ? laddr(def.dso, def.sym->st_value) : NULL;
+		sym_val_rw = def.sym ? (def.dso->base_rw + def.sym->st_value) : NULL;
 		tls_val = def.sym ? def.sym->st_value : NULL;
 
 		if ((type == REL_TPOFF || type == REL_TPOFF_NEG)
@@ -456,17 +461,22 @@ static void do_relocs(struct dso *dso, size_t *rel, size_t rel_size, size_t stri
 			*reloc_addr = sym_val + addend;
 #else
 			{
-				char *cap = sym_val + addend;
-				if (dso != &ldso) {
-					if (def.sym && ELF64_ST_TYPE(def.sym->st_info) == STT_FUNC) {
-						cap = __builtin_cheri_perms_and(cap, EXEC_CAP_PERMS | READ_CAP_PERMS);
-						if (type == REL_GOT)
-							cap = __builtin_cheri_seal_entry(cap);
-					} else if (def.dso->phdr->p_flags & PF_W) {
-						cap = __builtin_cheri_perms_and(cap, READ_CAP_PERMS | WRITE_CAP_PERMS);
-					} else {
-						cap = __builtin_cheri_perms_and(cap, READ_CAP_PERMS);
-					}
+				char *cap_rx = sym_val + addend;
+				char *cap_rw = sym_val_rw + addend;
+				char *cap;
+				if (!def.sym && !def.dso) {
+					cap = __builtin_cheri_perms_and(cap_rx, 0);
+				} else if (def.sym && ELF64_ST_TYPE(def.sym->st_info) == STT_FUNC) {
+					cap = __builtin_cheri_perms_and(cap_rx,
+						__CHERI_CAP_PERMISSION_GLOBAL__ | EXEC_CAP_PERMS | READ_CAP_PERMS);
+					if (type == REL_GOT)
+						cap = __builtin_cheri_seal_entry(cap);
+				} else if ((def.dso && def.dso->phdr->p_flags & PF_W) || dso == &ldso) {
+					cap = __builtin_cheri_perms_and(cap_rw,
+						__CHERI_CAP_PERMISSION_GLOBAL__ | READ_CAP_PERMS | WRITE_CAP_PERMS);
+				} else {
+					cap = __builtin_cheri_perms_and(cap_rx,
+						__CHERI_CAP_PERMISSION_GLOBAL__ | READ_CAP_PERMS);
 				}
 				*reloc_addr = cap;
 			}
@@ -479,27 +489,33 @@ static void do_relocs(struct dso *dso, size_t *rel, size_t rel_size, size_t stri
 		}
 		case REL_RELATIVE: {
 #ifndef __CHERI_PURE_CAPABILITY__
-			*reloc_addr = base + addend;
+			*reloc_addr = base_rx + addend;
 #else
 			/* aaelf64-morello reference on Elf64_Rela encoding:
 			https://github.com/ARM-software/abi-aa/blob/main/aaelf64-morello/aaelf64-morello.rst#445dynamic-linking-with-morello
 			*/
-			char *addr = base + ((morello_reloc_cap_t *)reloc_addr)->address;
+			size_t addr = ((morello_reloc_cap_t *)reloc_addr)->address;
 			size_t len = ((morello_reloc_cap_t *)reloc_addr)->length;
 			size_t perms = ((morello_reloc_cap_t *)reloc_addr)->perms;
-			char *cap = __builtin_cheri_bounds_set_exact(addr, len);
+			char *cap;
+			char *cap_rx = __builtin_cheri_bounds_set_exact(base_rx + addr, len);
+			char *cap_rw = __builtin_cheri_bounds_set_exact(base_rw + addr, len);
+
 			switch (perms) {
 				case MORELLO_RELA_PERM_R:
-					cap = __builtin_cheri_perms_and(cap, READ_CAP_PERMS);
+					cap = __builtin_cheri_perms_and(cap_rx,
+						__CHERI_CAP_PERMISSION_GLOBAL__ | READ_CAP_PERMS);
 					break;
 				case MORELLO_RELA_PERM_RW:
-					cap = __builtin_cheri_perms_and(cap, READ_CAP_PERMS | WRITE_CAP_PERMS);
+					cap = __builtin_cheri_perms_and(cap_rw,
+						__CHERI_CAP_PERMISSION_GLOBAL__ | READ_CAP_PERMS | WRITE_CAP_PERMS);
 					break;
 				case MORELLO_RELA_PERM_RX:
-					cap = __builtin_cheri_perms_and(cap, READ_CAP_PERMS | EXEC_CAP_PERMS);
+					cap = __builtin_cheri_perms_and(cap_rx,
+						__CHERI_CAP_PERMISSION_GLOBAL__ | READ_CAP_PERMS | EXEC_CAP_PERMS);
 					break;
 				default:
-					cap = __builtin_cheri_perms_and(cap, 0);
+					cap = __builtin_cheri_perms_and(cap_rx, 0);
 			}
 			cap += addend;
 			*reloc_addr = cap;
@@ -508,7 +524,7 @@ static void do_relocs(struct dso *dso, size_t *rel, size_t rel_size, size_t stri
 		}
 		case REL_SYM_OR_REL:
 			if (sym) *reloc_addr = sym_val + addend;
-			else *reloc_addr = base + addend;
+			else *reloc_addr = base_rx + addend;
 			break;
 		case REL_COPY:
 			memcpy(reloc_addr, sym_val, sym->st_size);
@@ -617,7 +633,11 @@ static void reclaim(struct dso *dso, size_t start, size_t end)
 	if (start >= dso->relro_start && start < dso->relro_end) start = dso->relro_end;
 	if (end   >= dso->relro_start && end   < dso->relro_end) end = dso->relro_start;
 	if (start >= end) return;
+#ifdef __CHERI_PURE_CAPABILITY__
+	char *base = dso->base_rw + start;
+#else
 	char *base = laddr_pg(dso, start);
+#endif
 	__malloc_donate(base, base+(end-start));
 }
 
@@ -1451,7 +1471,11 @@ static void kernel_mapped_dso(struct dso *p)
 	Phdr *ph = p->phdr;
 	for (cnt = p->phnum; cnt--; ph = (void *)((char *)ph + p->phentsize)) {
 		if (ph->p_type == PT_DYNAMIC) {
+#ifdef __CHERI_PURE_CAPABILITY__
+			p->dynv = p->base_rw + ph->p_vaddr;
+#else
 			p->dynv = laddr(p, ph->p_vaddr);
+#endif
 		} else if (ph->p_type == PT_GNU_RELRO) {
 			p->relro_start = ph->p_vaddr & -PAGE_SIZE;
 			p->relro_end = (ph->p_vaddr + ph->p_memsz) & -PAGE_SIZE;
@@ -1717,7 +1741,7 @@ static void install_new_tls(void)
  * linker itself, but some of the relocations performed may need to be
  * replaced later due to copy relocations in the main program. */
 
-hidden void __dls2(unsigned char *base, uintptr_t *sp)
+hidden void __dls2(unsigned char *base, unsigned char *base_rw, uintptr_t *sp)
 {
 	uintptr_t *auxv;
 	size_t argc = *sp;
@@ -1737,6 +1761,7 @@ hidden void __dls2(unsigned char *base, uintptr_t *sp)
 		ldso.base = laddr(&ldso, 0);
 	} else {
 		ldso.base = base;
+		ldso.base_rw = base_rw;
 	}
 	Ehdr *ehdr = (void *)ldso.base;
 	ldso.name = ldso.shortname = "libc.so";
@@ -1816,6 +1841,7 @@ void __dls3(uintptr_t *sp, size_t *auxv)
 	char *env_preload=0;
 	char *replace_argv0=0;
 	char *vdso_base;
+	char *phdr_rw;
 	int argc = *sp;
 	char **argv = (void *)(sp+1);
 	char **argv_orig = argv;
@@ -1825,7 +1851,7 @@ void __dls3(uintptr_t *sp, size_t *auxv)
 	 * global data that may be needed before we can make syscalls. */
 	__environ = envp;
 	decode_aux_vec(auxv, aux, AUX_CNT, &aux_null);
-	if (search_aux_vec(auxv, &a, AT_SYSINFO)) __sysinfo = AUX_VAL(a);
+	if (aux[AT_SYSINFO] != &aux_null) __sysinfo = AUX_VAL(aux[AT_SYSINFO]);
 	__pthread_self()->sysinfo = __sysinfo;
 	libc.page_size = AUX_VAL(aux[AT_PAGESZ]);
 	libc.secure = (!aux[3] || !aux[4] || !aux[5] || !aux[6] || !aux[9] || !aux[10]
@@ -1845,12 +1871,28 @@ void __dls3(uintptr_t *sp, size_t *auxv)
 		size_t interp_off = 0;
 		size_t tls_image = 0;
 		/* Find load address of the main program, via AT_PHDR vs PT_PHDR. */
-		Phdr *phdr = app.phdr = AUX_PTR(aux[AT_PHDR]);
+#ifndef __CHERI_PURE_CAPABILITY__
+		Phdr *phdr = app.phdr = phdr_rw = AUX_PTR(aux[AT_PHDR]);
+#else
+#ifdef LIBSHIM
+		char *exec_rx = AUX_PTR(aux[AT_CHERI_EXEC_RX_CAP]);
+		char *exec_rw = AUX_PTR(aux[AT_CHERI_EXEC_RW_CAP]);
+#else
+		char *exec_rx = __builtin_cheri_perms_and(AUX_PTR(aux[AT_PHDR]),
+			__CHERI_CAP_PERMISSION_GLOBAL__ | READ_CAP_PERMS | EXEC_CAP_PERMS);
+		char *exec_rw = __builtin_cheri_perms_and(AUX_PTR(aux[AT_PHDR]),
+			__CHERI_CAP_PERMISSION_GLOBAL__ | READ_CAP_PERMS | WRITE_CAP_PERMS);
+#endif
+		Phdr *phdr = app.phdr = __builtin_cheri_address_set(exec_rx, AUX_VAL(aux[AT_PHDR]));
+		phdr_rw = __builtin_cheri_address_set(exec_rw, AUX_VAL(aux[AT_PHDR]));
+#endif
 		app.phnum = AUX_VAL(aux[AT_PHNUM]);
 		app.phentsize = AUX_VAL(aux[AT_PHENT]);
 		for (i=AUX_VAL(aux[AT_PHNUM]); i; i--, phdr=(void *)((char *)phdr + AUX_VAL(aux[AT_PHENT]))) {
-			if (phdr->p_type == PT_PHDR)
-				app.base = AUX_PTR(aux[AT_PHDR]) - phdr->p_vaddr;
+			if (phdr->p_type == PT_PHDR) {
+				app.base = (char *)app.phdr - phdr->p_vaddr;
+				app.base_rw = phdr_rw - phdr->p_vaddr;
+			}
 			else if (phdr->p_type == PT_INTERP)
 				interp_off = (size_t)phdr->p_vaddr;
 			else if (phdr->p_type == PT_TLS) {
@@ -1978,8 +2020,8 @@ void __dls3(uintptr_t *sp, size_t *auxv)
 
 	/* Attach to vdso, if provided by the kernel, last so that it does
 	 * not become part of the global namespace.  */
-	if (search_aux_vec(auxv, &a, AT_SYSINFO_EHDR) && AUX_PTR(a)) {
-		vdso_base = AUX_PTR(a);
+	if (aux[AT_SYSINFO_EHDR] != &aux_null && AUX_PTR(aux[AT_SYSINFO_EHDR])) {
+		vdso_base = AUX_PTR(aux[AT_SYSINFO_EHDR]);
 		Ehdr *ehdr = (void *)vdso_base;
 		Phdr *phdr = vdso.phdr = (void *)((char *)vdso_base + ehdr->e_phoff);
 		vdso.phnum = ehdr->e_phnum;

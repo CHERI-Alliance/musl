@@ -2,8 +2,6 @@
 #include <link.h>
 #include "libc.h"
 
-#define AUX_CNT 38
-
 extern weak hidden const size_t _DYNAMIC[];
 
 static int static_dl_iterate_phdr(int(*callback)(struct dl_phdr_info *info, size_t size, void *data), void *data)

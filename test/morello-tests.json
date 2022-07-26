@@ -1045,6 +1045,12 @@
         "xrc": [-11]
     },
     {
+        "app": "${build}/malloc-${kind}.exe",
+        "name": "malloc_enomem",
+        "args": ["6"],
+        "xrc": [0]
+    },
+    {
         "app": "${build}/pthread-${kind}.exe",
         "name": "pthread-basic",
         "args": ["0"],

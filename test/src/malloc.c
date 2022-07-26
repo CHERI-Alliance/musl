@@ -1,3 +1,5 @@
+#include <errno.h>
+#include <stdint.h>
 #include <stdlib.h>
 #include <stdio.h>
 
@@ -104,6 +106,18 @@ int main(int argc, char **argv) {
         //TODO needs some tests on the narrow bounds of malloc. Ideally, we want the user to only be able to access the slot they requested,
         //and not be able to mess with the metadata, not with other adjacent slots. Currently this narrow bound mechanism is not implemented
         //because free need the wide capability to work. Some mechanism have to be added to find the wide capability from the narrowed one.
+    case '6':// check malloc(SIZE_MAX) fails with ENOMEM
+        all_ptr[0] = malloc(SIZE_MAX);
+        if (all_ptr[0]) {
+            printf("malloc(SIZE_MAX) succeeded unexpectedly\n");
+            return UNEXPECTED_VALUE;
+        }
+
+        if (errno != ENOMEM) {
+            printf("malloc(SIZE_MAX) failed with an unexpected errno: %d\n", errno);
+            return UNEXPECTED_VALUE;
+        }
+        break;
     default:
         return BAD_TEST_NUMBER;
     }

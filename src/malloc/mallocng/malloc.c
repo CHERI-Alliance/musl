@@ -438,7 +438,9 @@ success:
 
 void *malloc(size_t n) {
 #ifdef __CHERI_PURE_CAPABILITY__
-	n = __builtin_cheri_round_representable_length(n);
+	size_t cap_n = __builtin_cheri_round_representable_length(n);
+	// Never decrease the size
+	if (cap_n > n) n = cap_n;
 	size_t align = ~__builtin_cheri_representable_alignment_mask(n) + 1;
 	if (align < UNIT) align = UNIT;
 #else

@@ -105,6 +105,11 @@ static int test_getcwd()
 	if (__builtin_cheri_tag_get(res) == 1) {
 		return 1;
 	}
+	res = getcwd(NULL, (size_t)-1);
+	printf("res = %s\n", res);
+	if (__builtin_cheri_tag_get(res) == 1) {
+		return 1;
+	}
 	return 0;
 }
 

@@ -1,7 +1,7 @@
 #include <string.h>
 #include <libgen.h>
 #include <limits.h>
-#include "morello_helpers.h"
+#include "cheri_helpers.h"
 
 char *dirname(char *s)
 {
@@ -16,5 +16,5 @@ char *dirname(char *s)
 
 	strncpy(d, s, ++i);
 	d[i] = 0;
-	return RESTRICT_BNDS_IF_MORELLO(d, i+1);
+	return RESTRICT_BNDS_IF_CHERI(d, i+1);
 }

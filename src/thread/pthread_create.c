@@ -329,9 +329,6 @@ int __pthread_create(pthread_t *restrict res, const pthread_attr_t *restrict att
 	new->robust_list.head = &new->robust_list.head;
 	new->canary = self->canary;
 	new->sysinfo = self->sysinfo;
-#ifdef LIBSHIM
-	new->in_syscall_cp = 0;
-#endif
 
 	/* Setup argument structure for the new thread on its stack.
 	 * It's safe to access from the caller only until the thread

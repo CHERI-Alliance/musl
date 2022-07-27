@@ -31,13 +31,13 @@
 #include "atomic.h"
 #define ntz(x) a_ctz_l((x))
 
-#include "morello_helpers.h"
+#include "cheri_helpers.h"
 
 typedef int (*cmpfun)(const void *, const void *);
 
 inline int cmpwrapper(cmpfun cmp, const void *a, const void *b, size_t width) {
-  return (*cmp)(RESTRICT_BNDS_IF_MORELLO(a, width),
-                RESTRICT_BNDS_IF_MORELLO(b, width));
+  return (*cmp)(RESTRICT_BNDS_IF_CHERI(a, width),
+                RESTRICT_BNDS_IF_CHERI(b, width));
 }
 
 static inline int pntz(size_t p[2]) {

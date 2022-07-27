@@ -3,7 +3,7 @@
 
 hidden intptr_t __syscall_cp_c();
 
-static intptr_t sccp(syscall_arg_t nr,
+static intptr_t sccp(long nr,
                  syscall_arg_t u, syscall_arg_t v, syscall_arg_t w,
                  syscall_arg_t x, syscall_arg_t y, syscall_arg_t z)
 {
@@ -12,7 +12,7 @@ static intptr_t sccp(syscall_arg_t nr,
 
 weak_alias(sccp, __syscall_cp_c);
 
-intptr_t (__syscall_cp)(syscall_arg_t nr,
+intptr_t (__syscall_cp)(long nr,
                     syscall_arg_t u, syscall_arg_t v, syscall_arg_t w,
                     syscall_arg_t x, syscall_arg_t y, syscall_arg_t z)
 {

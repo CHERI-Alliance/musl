@@ -1,6 +1,34 @@
 #include <string.h>
 #include <stdint.h>
 
+#if defined(__CHERI_PURE_CAPABILITY__) && defined(__SANITIZE_CHERISEED__)
+
+// FIXME: please update to support tags
+void *memmove(void *dest, const void *src, size_t n)
+{
+	if (dest == src) return dest;
+
+	char *d = dest;
+	const char *s = src;
+	if (d < s) {
+		// s:    |...|
+		// d:  |...|
+		for (size_t i = 0; i < n; ++i)
+			d[i] = s[i];
+	} else {
+		// s:  |...|
+		// d:   |...|
+		// Avoiding underflow of size_t.
+		while (n > 0) {
+			--n;
+			d[n] = s[n];
+		}
+	}
+	return dest;
+}
+
+#else  // __CHERI_PURE_CAPABILITY__ && __SANITIZE_CHERISEED__
+
 #ifdef __GNUC__
 typedef __attribute__((__may_alias__)) void* WT;
 #define WS (sizeof(WT))
@@ -40,3 +68,5 @@ void *memmove(void *dest, const void *src, size_t n)
 
 	return dest;
 }
+
+#endif  // __CHERI_PURE_CAPABILITY__ && __SANITIZE_CHERISEED__

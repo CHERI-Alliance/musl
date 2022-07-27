@@ -7,7 +7,9 @@ int do_strpbrk_test(const char *s, const char *c, char *exp) {
     if (__builtin_cheri_length_get(res) != __builtin_cheri_length_get(s)) return 2;
     if (strcmp(res, exp)) return 3;
   } else {
+#ifndef __SANITIZE_CHERISEED__
     if (__builtin_cheri_tag_get(res) != 0) return 4;
+#endif
     if (res) return 5;
   }
   return 0;

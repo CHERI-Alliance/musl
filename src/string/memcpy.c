@@ -2,6 +2,20 @@
 #include <stdint.h>
 #include <endian.h>
 
+#if defined(__CHERI_PURE_CAPABILITY__) && defined(__SANITIZE_CHERISEED__)
+
+// FIXME: please update to support tags
+void *memcpy(void *restrict dest, const void *restrict src, size_t n)
+{
+	unsigned char *d = dest;
+	const unsigned char *s = src;
+	for (size_t i = 0; i < n; ++i)
+		d[i] = s[i];
+	return dest;
+}
+
+#else  // __CHERI_PURE_CAPABILITY__ && __SANITIZE_CHERISEED__
+
 void *memcpy(void *restrict dest, const void *restrict src, size_t n)
 {
 	unsigned char *d = dest;
@@ -122,3 +136,5 @@ void *memcpy(void *restrict dest, const void *restrict src, size_t n)
 	for (; n; n--) *d++ = *s++;
 	return dest;
 }
+
+#endif  // __CHERI_PURE_CAPABILITY__ && __SANITIZE_CHERISEED__

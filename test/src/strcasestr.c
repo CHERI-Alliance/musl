@@ -11,7 +11,9 @@ int do_strcasestr_test(const char *h, const char *n, char *expected, size_t expe
     if (res - h != expected_offset) return 3;
     if (strcmp(res, expected)) return 4;
   } else {
+#ifndef __SANITIZE_CHERISEED__
     if (__builtin_cheri_tag_get(res) != 0) return 1;
+#endif
     if (res) return 2;
   }
 

@@ -1981,14 +1981,14 @@ void __dls3(uintptr_t *sp, size_t *auxv)
 	if (search_aux_vec(auxv, &a, AT_SYSINFO_EHDR) && AUX_PTR(a)) {
 		vdso_base = AUX_PTR(a);
 		Ehdr *ehdr = (void *)vdso_base;
-		Phdr *phdr = vdso.phdr = (void *)(vdso_base + ehdr->e_phoff);
+		Phdr *phdr = vdso.phdr = (void *)((char *)vdso_base + ehdr->e_phoff);
 		vdso.phnum = ehdr->e_phnum;
 		vdso.phentsize = ehdr->e_phentsize;
 		for (i=ehdr->e_phnum; i; i--, phdr=(void *)((char *)phdr + ehdr->e_phentsize)) {
 			if (phdr->p_type == PT_DYNAMIC)
-				vdso.dynv = (void *)(vdso_base + phdr->p_offset);
+				vdso.dynv = (void *)((char *)vdso_base + phdr->p_offset);
 			if (phdr->p_type == PT_LOAD)
-				vdso.base = (void *)(vdso_base - phdr->p_vaddr + phdr->p_offset);
+				vdso.base = (void *)((char *)vdso_base - phdr->p_vaddr + phdr->p_offset);
 		}
 		vdso.name = "";
 		vdso.shortname = "linux-gate.so.1";

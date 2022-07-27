@@ -1,3 +1,5 @@
+#if !defined(MUSL_USE_COMPILER_BUILTINS)
+
 #define a_cas a_cas
 static inline int a_cas(volatile int *p, int t, int s)
 {
@@ -90,24 +92,6 @@ static inline void a_store(volatile int *p, int x)
 		: "=m"(*p) : "r"(x) : "memory" );
 }
 
-#define a_barrier a_barrier
-static inline void a_barrier()
-{
-	__asm__ __volatile__( "" : : : "memory" );
-}
-
-#define a_spin a_spin
-static inline void a_spin()
-{
-	__asm__ __volatile__( "pause" : : : "memory" );
-}
-
-#define a_crash a_crash
-static inline void a_crash()
-{
-	__asm__ __volatile__( "hlt" : : : "memory" );
-}
-
 #define a_ctz_64 a_ctz_64
 static inline int a_ctz_64(uint64_t x)
 {
@@ -120,4 +104,26 @@ static inline int a_clz_64(uint64_t x)
 {
 	__asm__( "bsr %1,%0 ; xor $63,%0" : "=r"(x) : "r"(x) );
 	return x;
+}
+
+#define a_barrier a_barrier
+static inline void a_barrier()
+{
+	__asm__ __volatile__( "" : : : "memory" );
+}
+
+#endif  // !defined(MUSL_USE_COMPILER_BUILTINS)
+
+// The functions below have no compiler-builtin equivalents.
+
+#define a_spin a_spin
+static inline void a_spin()
+{
+	__asm__ __volatile__( "pause" : : : "memory" );
+}
+
+#define a_crash a_crash
+static inline void a_crash()
+{
+	__asm__ __volatile__( "hlt" : : : "memory" );
 }

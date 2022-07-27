@@ -1,3 +1,5 @@
+#define _GNU_SOURCE
+
 #include <signal.h>
 #include <unistd.h>
 #include <stdio.h>
@@ -8,31 +10,37 @@
  * This test should pass on a real Morello system
  **/
 
-extern const char __jump_to[1];
-
-static void jump_to_c() {
-	__asm__ volatile(
-		".global __jump_to\n" \
-		".hidden __jump_to\n" \
-		".size __jump_to, 1\n" \
-		"__jump_to:");
-
+static void jump_to_c(void) {
 	printf("reached jump_to!\n");
-
 	exit(0);
 }
+
+#if defined(__aarch64__)
+#define UC_MCONTEXT_NREGS 32
+#define UC_MCONTEXT_REGS(__ctx) (__ctx.regs)
+#define UC_MCONTEXT_PC(__ctx) (__ctx.pc)
+#define UC_MCONTEXT_SP(__ctx) (__ctx.sp)
+#elif defined(__x86_64__)
+#define UC_MCONTEXT_NREGS 23
+#define UC_MCONTEXT_REGS(__ctx) (__ctx.gregs)
+#define UC_MCONTEXT_PC(__ctx) (UC_MCONTEXT_REGS(__ctx)[REG_RIP])
+#define UC_MCONTEXT_SP(__ctx) (UC_MCONTEXT_REGS(__ctx)[REG_RSP])
+#else
+#error "Please add support for this architecture"
+#endif
 
 static void catcher(int sig, siginfo_t *si, void *ctx) {
 	printf("inside catcher() function\n");
 
 	ucontext_t *uc = ctx;
 
-	for (int k = 0; k < 31; k++) {
-		printf("r%02d = %016lx\n", k, uc->uc_mcontext.regs[k]);
+	for (int k = 0; k < UC_MCONTEXT_NREGS; k++) {
+		printf("r%02d = %016lx\n", k, UC_MCONTEXT_REGS(uc->uc_mcontext)[k]);
 	}
-	printf("xsp = %016lx\n", uc->uc_mcontext.sp);
-	printf(" pc = %016lx\n", uc->uc_mcontext.pc);
+	printf("xsp = %016lx\n", UC_MCONTEXT_SP(uc->uc_mcontext));
+	printf(" pc = %016lx\n", UC_MCONTEXT_PC(uc->uc_mcontext));
 
+#if defined(__aarch64__) && !defined(__SANITIZE_CHERISEED__)
 	unsigned long *data = (unsigned long *)uc->uc_mcontext.__reserved;
 	for (int k = 0; k < 256; k+=2) {
 		printf("reserved %03d = %016lx %016lx\n", k, data[k + 1], data[k]);
@@ -52,8 +60,9 @@ static void catcher(int sig, siginfo_t *si, void *ctx) {
 //		printf("PCC tag in morello context not set (pcc=%#p)\n", (void *) morello_ctx->pcc);
 //		exit(2);
 //	}
+#endif
 
-	uc->uc_mcontext.pc = (unsigned long) __builtin_cheri_address_get(__jump_to);
+	UC_MCONTEXT_PC(uc->uc_mcontext) = (unsigned long) __builtin_cheri_address_get(jump_to_c);
 }
 
 int main() {

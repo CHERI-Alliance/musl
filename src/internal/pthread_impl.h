@@ -13,6 +13,13 @@
 
 #include "pthread_arch.h"
 
+#if defined(MUSL_USE_COMPILER_BUILTINS)
+static inline uintptr_t __get_tp()
+{
+	return __builtin_thread_pointer();
+}
+#endif
+
 #define pthread __pthread
 
 struct pthread {
@@ -58,10 +65,6 @@ struct pthread {
 	volatile int killlock[1];
 	char *dlerror_buf;
 	void *stdio_locks;
-
-#ifdef LIBSHIM
-	volatile unsigned char in_syscall_cp;
-#endif
 
 	/* Part 3 -- the positions of these fields relative to
 	 * the end of the structure is external and internal ABI. */
@@ -203,6 +206,11 @@ extern hidden volatile size_t __pthread_tsd_size;
 extern hidden void *__pthread_tsd_main[];
 extern hidden volatile int __eintr_valid_flag;
 
+#ifdef __SANITIZE_CHERISEED__
+// __clone is in assembly for all architectures, therefore it is easier to wrap
+// the original functions and leave the hand-rolled assembly snippets intact.
+#define __clone __clone_cheriseed
+#endif
 hidden int __clone(int (*)(void *), void *, int, void *, ...);
 hidden int __set_thread_area(void *);
 hidden int __libc_sigaction(int, const struct sigaction *, struct sigaction *);

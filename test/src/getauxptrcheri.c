@@ -1,7 +1,7 @@
 #include <sys/auxv.h>
 #include <stdio.h>
 
-#include "cheri_helpers.h"
+#include "cheri_test_helpers.h"
 
 #define RW_PERMS    (READ_CAP_PERMS | WRITE_CAP_PERMS | ROOT_CAP_PERMS)
 #define RX_PERMS    (READ_CAP_PERMS | EXEC_CAP_PERMS | ROOT_CAP_PERMS)

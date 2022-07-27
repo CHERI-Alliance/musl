@@ -3,7 +3,7 @@
 #include <limits.h>
 #include <stdbool.h>
 
-#include "morello_helpers.h"
+#include "cheri_helpers.h"
 
 #define SS (sizeof(size_t))
 #define ALIGN (sizeof(size_t)-1)
@@ -27,7 +27,7 @@ void *memchr(const void *src, int c, size_t n)
 		size_t k = ONES * c;
 		for (w = (const void *)s;
 		     n >= SS &&
-		     LT_IF_MORELLO_ELSE(i + sizeof(word) - 1, max_i, true)
+		     LT_IF_CHERI_ELSE(i + sizeof(word) - 1, max_i, true)
 		     && !HASZERO(*w ^ k);
 		     w++, n -= SS, i += sizeof(word))
 		  ;

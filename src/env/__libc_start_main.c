@@ -61,9 +61,20 @@ void __init_libc(char **envp, char *pn)
 static void libc_start_init(void)
 {
 	_init();
+#ifdef __SANITIZE_CHERISEED__
+	// CHERIseed puts raw function pointers into init_array.
+	ptraddr_t *init_addr = (ptraddr_t*)&__init_array_start;
+	ptraddr_t *init_addr_end = (ptraddr_t*)&__init_array_end;
+	void *const pcc = __builtin_cheri_program_counter_get();
+	for (; init_addr < init_addr_end; ++init_addr) {
+		void *init = __builtin_cheri_address_set(pcc, *init_addr);
+		((void (*)(void))init)();
+	}
+#else
 	uintptr_t a = (uintptr_t)&__init_array_start;
 	for (; a<(uintptr_t)&__init_array_end; a+=sizeof(void(*)()))
 		(*(void (**)(void))a)();
+#endif
 }
 
 weak_alias(libc_start_init, __libc_start_init);
@@ -83,9 +94,23 @@ int __libc_start_main(int (*main)(int,char **,char **), int argc, char **argv)
 	/* Barrier against hoisting application code or anything using ssp
 	 * or thread pointer prior to its initialization above. */
 	lsm2_fn *stage2 = libc_start_main_stage2;
+#ifndef __SANITIZE_CHERISEED__
+	// FIXME: CHERIseed: This is broken, the pass can't handle inline asm
+	// which gets a capability. Fix is to be developed.
 	__asm__ ( "" : "+r"(stage2) : : "memory" );
+#else
+	a_barrier();
+#endif
 	return stage2(main, argc, argv);
 }
+
+#ifdef __CHERI_PURE_CAPABILITY__
+static void cheri_set_bounds_on_cap_array(void ***array) {
+	int n = 0;
+	for (; (*array)[n]; ++n);
+	*array = __builtin_cheri_bounds_set(*array, (n + 1) * sizeof(uintptr_t));
+}
+#endif
 
 static int libc_start_main_stage2(int (*main)(int,char **,char **), int argc, char **argv)
 {
@@ -93,8 +118,8 @@ static int libc_start_main_stage2(int (*main)(int,char **,char **), int argc, ch
 	__libc_start_init();
 
 #ifdef __CHERI_PURE_CAPABILITY__
-	morello_set_bounds_on_cap_array(&argv);
-	morello_set_bounds_on_cap_array(&envp);
+	cheri_set_bounds_on_cap_array(&argv);
+	cheri_set_bounds_on_cap_array(&envp);
 #endif
 
 	/* Pass control to the application */

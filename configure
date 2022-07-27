@@ -39,6 +39,7 @@ Optional features:
   --disable-morello       inhibit using Morello features (only for AArch64 targets) [enabled]
   --disable-libshim       inhibit building with syscall libshim [auto]
   --libshim-path=<path>   path to libshim [libshim]
+  --enable-cheriseed      build with CHERIseed Sanitizer [disabled]
 
 Optional packages:
   --with-malloc=...       choose malloc implementation [mallocng]
@@ -141,6 +142,7 @@ CFLAGS_MEMOPS=
 CFLAGS_NOSSP=
 CFLAGS_TRY=
 CFLAGS_MORELLO=
+CFLAGS_CHERISEED=
 LDFLAGS_MORELLO=
 LDFLAGS_AUTO=
 LDFLAGS_TRY=
@@ -160,6 +162,8 @@ target=
 optimize=auto
 debug=no
 morello=yes
+cheriseed=no
+cheriseed_excluded_objects=
 libshim=auto
 libshim_path=auto
 warnings=yes
@@ -193,6 +197,8 @@ case "$arg" in
 --disable-debug|--enable-debug=no) debug=no ;;
 --enable-morello|--enable-morello=yes) morello=yes ;;
 --disable-morello|--enable-morello=no) morello=no ;;
+--enable-cheriseed|--enable-cheriseed=yes) cheriseed=yes ; cheriseed_excluded_objects="\$(shell cat cheriseed_excluded.objects | tr '\n' ' ')" ;;
+--disable-cheriseed|--enable-cheriseed=no) cheriseed=no ; cheriseed_excluded_objects="" ;;
 --enable-libshim|--enable-libshim=yes) libshim=yes ;;
 --disable-libshim|--enable-libshim=no) libshim=no ;;
 --libshim-path=*) libshim_path=${arg#*=} ;;
@@ -504,15 +510,41 @@ if test "$morello" = yes ; then
     fi
 fi
 
-if test "$libshim" = auto && test "$morello" = yes ; then
-    libshim=yes
+#
+# Enable CHERIseed Sanitizer if requested.
+#
+if test "$cheriseed" = yes ; then
+    if test "$morello" = yes ; then
+      fail "$0: CHERIseed Sanitizer and Morello cannot be both enabled."
+    fi
+
+    tryflag CFLAGS_CHERISEED "-fsanitize=cheriseed -mabi=purecap"
+    if fnmatch '*-fsanitize=cheriseed*' "$CFLAGS_CHERISEED" ; then
+        CFLAGS_CHERISEED="$CFLAGS_CHERISEED -fsanitize-blacklist=cheriseed_excludes.txt"
+        CFLAGS_CHERISEED="$CFLAGS_CHERISEED -D__SANITIZE_CHERISEED__"
+        # Always enable use of compiler builtins. CHERIseed does not support
+        # inline assembly.
+        enable_builtins=yes
+    else
+        fail "$0: CHERIseed Sanitizer is not supported by $CC"
+    fi
+fi
+
+if test "$libshim" = auto; then
+    if test "$morello" = yes || test "$cheriseed" = yes ; then
+        libshim=yes
+    fi
 fi
 
 if test "$libshim" = yes ; then
     if test "$ARCH" = "morello" && test "$morello" = yes ; then
         tryflag CFLAGS_MORELLO "-DLIBSHIM"
+        LIBSHIM_FLAGS="$LIBSHIM_FLAGS -DMORELLO"
+    elif test "$cheriseed" = yes ; then
+        CFLAGS_CHERISEED="$CFLAGS_CHERISEED -DLIBSHIM"
+        LIBSHIM_FLAGS="$LIBSHIM_FLAGS -fsanitize=cheriseed -mabi=purecap"
     else
-        fail "$0: Libshim is only applicable for Morello targets"
+        fail "$0: Libshim is only applicable for Morello targets or with CHERIseed"
     fi
     test "$debug" = yes && LIBSHIM_FLAGS="-g ${LIBSHIM_FLAGS}"
     if test "$libshim_path" = auto ; then
@@ -533,7 +565,7 @@ fi
 #
 if test "$enable_builtins" = yes ; then
   case "$ARCH" in
-    aarch64|morello) ;;
+    aarch64|morello|x86_64) ;;
     *) fail "$0: $ARCH is not checked for compiler builtins yet";;
   esac
   CFLAGS_AUTO="$CFLAGS_AUTO -DMUSL_USE_COMPILER_BUILTINS"
@@ -944,6 +976,8 @@ LDFLAGS_MORELLO = $LDFLAGS_MORELLO
 LIBSHIM = $libshim
 LIBSHIM_FLAGS = $LIBSHIM_FLAGS
 LIBSHIM_PATH = $LIBSHIM_PATH
+CHERISEED_EXCLUDED_OBJECTS = $cheriseed_excluded_objects
+CFLAGS_CHERISEED = $CFLAGS_CHERISEED
 EOF
 test "x$static" = xno && echo "STATIC_LIBS ="
 test "x$shared" = xno && echo "SHARED_LIBS ="

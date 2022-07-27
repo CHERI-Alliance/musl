@@ -2,7 +2,7 @@
 #include <stdint.h>
 #include <limits.h>
 
-#include "morello_helpers.h"
+#include "cheri_helpers.h"
 
 #define ALIGN (sizeof(size_t)-1)
 #define ONES ((size_t)-1/UCHAR_MAX)

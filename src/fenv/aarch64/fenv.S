@@ -47,6 +47,13 @@ feraiseexcept:
 .global fegetenv
 .type fegetenv,%function
 fegetenv:
+#ifdef __SANITIZE_CHERISEED__
+	// Convert capability to raw pointer
+	stp x29, x30, [sp, #-16]!
+	mov x29, sp
+	bl __cheriseed_address_get
+	ldp x29, x30, [sp], #16
+#endif
 	mrs x1, fpcr
 	mrs x2, fpsr
 	stp w1, w2, [x0]
@@ -57,6 +64,13 @@ fegetenv:
 .global fesetenv
 .type fesetenv,%function
 fesetenv:
+#ifdef __SANITIZE_CHERISEED__
+	// Convert capability to raw pointer
+	stp x29, x30, [sp, #-16]!
+	mov x29, sp
+	bl __cheriseed_address_get
+	ldp x29, x30, [sp], #16
+#endif
 	mov x1, #0
 	mov x2, #0
 	cmn x0, #1

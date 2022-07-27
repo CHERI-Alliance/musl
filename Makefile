@@ -79,6 +79,10 @@ LDSO_PATHNAME = $(syslibdir)/ld-musl-$(ARCH)$(SUBARCH).so.1
 export CONFIG = $(CURDIR)/config.mak
 
 -include $(CONFIG)
+# Only affect build if --enable-cheriseed was specified during configuration.
+ifneq ($(CFLAGS_CHERISEED),)
+-include cheriseed.mak
+endif
 -include $(srcdir)/arch/$(ARCH)/arch.mak
 
 ifeq ($(ARCH),morello)
@@ -177,11 +181,11 @@ override LIBSHIM_OBJECTS := $$(find $(LIBSHIM_BUILD) -type f -name \*.o)
 # subst: libshim's generator expects 'aarch64' to be named 'arm64'.
 LIBSHIM_JSON_PATH ?= $(LIBSHIM_PATH)/musl_$(subst aarch64,arm64,$(ARCH)).json
 
-$(LIBSHIM_LIB): $(LIBSHIM_LIBC_PATH) $(LIBSHIM_PATH)
-	$(MAKE) -C $(LIBSHIM_PATH) LIBC=musl ARCH=morello LIBC_PATH=$(LIBSHIM_LIBC_PATH) \
-	CC=$(CC) CXX=$(CC)++ AR=$(AR) RANLIB=$(RANLIB) CFLAGS="$(LIBSHIM_FLAGS)" CXXFLAGS="-DMORELLO $(LIBSHIM_FLAGS)" \
+$(LIBSHIM_LIB): $(LIBSHIM_LIBC_PATH) $(LIBSHIM_PATH) FORCE
+	$(MAKE) -C $(LIBSHIM_PATH) LIBC=musl ARCH=$(ARCH) LIBC_PATH=$(LIBSHIM_LIBC_PATH) \
+	CC=$(CC) CXX=$(CC)++ AR=$(AR) RANLIB=$(RANLIB) CFLAGS="$(LIBSHIM_FLAGS)" CXXFLAGS="$(LIBSHIM_FLAGS)" \
 	LIBSHIM_JSON_PATH=$(shell realpath $(LIBSHIM_JSON_PATH)) \
-	DEFINES="-DLIBSHIM_LIBRARY_BUILD=1 -DLIBSHIM_ZERO_DDC=1"
+	DEFINES="-DLIBSHIM_LIBRARY_BUILD=1 -DLIBSHIM_ZERO_DDC=1 -DLIBSHIM_CANCELLATION_POINTS=1"
 
 # install libc headers for libshim build
 $(LIBSHIM_LIBC_PATH)/include/bits/%: $(srcdir)/arch/$(ARCH)/bits/%
@@ -316,3 +320,5 @@ endif
 .SUFFIXES:
 
 .PHONY: all clean install install-libs install-headers install-tools test
+
+FORCE:

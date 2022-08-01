@@ -18,15 +18,21 @@ weak_alias(dummy1, __init_ssp);
 #ifdef __GNUC__
 __attribute__((__noinline__))
 #endif
-void __init_libc(char **envp, char *pn)
+void __init_libc(char **envp, auxv_entry *auxv, char *pn)
 {
 	size_t i = 0;
-	uintptr_t *auxv, aux[AUX_CNT] = { 0 };
+	uintptr_t aux[AUX_CNT] = { 0 };
 	__environ = envp;
-	for (i=0; envp[i]; i++);
-	auxv = (void *)(envp+i+1);
-	libc.auxv = (auxv_entry *) auxv;
-	for (i=0; auxv[i]; i+=2) if (auxv[i]<AUX_CNT) aux[auxv[i]] = auxv[i+1];
+	libc.auxv = auxv;
+	for (i=0; auxv[i].a_type != AT_NULL; i++) {
+		if (auxv[i].a_type<AUX_CNT) {
+#ifdef __CHERI_PURE_CAPABILITY__
+			aux[auxv[i].a_type] = auxv[i].a_un.a_ptr;
+#else
+			aux[auxv[i].a_type] = auxv[i].a_un.a_val;
+#endif
+		}
+	}
 	__hwcap = aux[AT_HWCAP];
 	if (aux[AT_SYSINFO]) __sysinfo = aux[AT_SYSINFO];
 	libc.page_size = aux[AT_PAGESZ];
@@ -77,17 +83,17 @@ static void libc_start_init(void)
 
 weak_alias(libc_start_init, __libc_start_init);
 
-typedef int lsm2_fn(int (*)(int,char **,char **), int, char **);
+typedef int lsm2_fn(int (*)(int,char **,char **), int, char **, char **);
 static lsm2_fn libc_start_main_stage2;
 
-int __libc_start_main(int (*main)(int,char **,char **), int argc, char **argv)
+int __libc_start_main(int (*main)(int,char **,char **, char**),
+						int argc, char **argv, char **envp,
+						auxv_entry *auxv)
 {
-	char **envp = argv+argc+1;
-
 	/* External linkage, and explicit noinline attribute if available,
 	 * are used to prevent the stack frame used during init from
 	 * persisting for the entire process lifetime. */
-	__init_libc(envp, argv[0]);
+	__init_libc(envp, auxv, argv[0]);
 
 	/* Barrier against hoisting application code or anything using ssp
 	 * or thread pointer prior to its initialization above. */
@@ -99,7 +105,7 @@ int __libc_start_main(int (*main)(int,char **,char **), int argc, char **argv)
 #else
 	a_barrier();
 #endif
-	return stage2(main, argc, argv);
+	return stage2(main, argc, argv, envp);
 }
 
 #ifdef __CHERI_PURE_CAPABILITY__
@@ -110,9 +116,9 @@ static void cheri_set_bounds_on_cap_array(void ***array) {
 }
 #endif
 
-static int libc_start_main_stage2(int (*main)(int,char **,char **), int argc, char **argv)
+
+static int libc_start_main_stage2(int (*main)(int,char **,char **), int argc, char **argv, char **envp)
 {
-	char **envp = argv+argc+1;
 	__libc_start_init();
 
 #ifdef __CHERI_PURE_CAPABILITY__

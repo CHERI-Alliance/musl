@@ -1745,8 +1745,12 @@ hidden void __dls2(unsigned char *base, unsigned char *base_rw, uintptr_t *sp)
 {
 	uintptr_t *auxv;
 	size_t argc = *sp;
+#if defined(__CHERI_PURE_CAPABILITY__) && defined(LIBSHIM)
+	IF_CHERI_GET_AUXV(sp, auxv);
+#else
 	for (auxv=sp+1+argc+1; *auxv; auxv++);
 	auxv++;
+#endif
 	if (DL_FDPIC) {
 		void *p1 = (void *)sp[-2];
 		void *p2 = (void *)sp[-1];
@@ -1844,8 +1848,10 @@ void __dls3(uintptr_t *sp, size_t *auxv)
 	char *phdr_rw;
 	int argc = *sp;
 	char **argv = (void *)(sp+1);
+	IF_CHERI_GET_ARGV(sp, argv);
 	char **argv_orig = argv;
 	char **envp = argv+argc+1;
+	IF_CHERI_GET_ENVP(sp, envp);
 
 	/* Find aux vector just past environ[] and use it to initialize
 	 * global data that may be needed before we can make syscalls. */
@@ -2122,7 +2128,7 @@ void __dls3(uintptr_t *sp, size_t *auxv)
 
 	errno = 0;
 
-	CRTJMP(AUX_PTR(aux[AT_ENTRY]), argv-1);
+	CRTJMP(AUX_PTR(aux[AT_ENTRY]), sp);
 	for(;;);
 }
 

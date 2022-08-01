@@ -11,6 +11,8 @@
 #include "cap_perms.h"
 #endif
 
+#include "cap_aux.h"
+
 #if UINTPTR_MAX == 0xffffffff
 typedef Elf32_Ehdr Ehdr;
 typedef Elf32_Phdr Phdr;

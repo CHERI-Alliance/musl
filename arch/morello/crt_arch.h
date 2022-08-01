@@ -9,13 +9,14 @@ START ":\n"
 "	chktgd csp\n"
 "	b.cs .L1\n"
 "	mov x0, sp\n"
-"	cvtd c0, x0\n"
-"	bl do_raw_args_marshalling\n"
-"	mov csp, c0\n"
-"	b .L2\n"
+"	bl __shim_marshal_program_arguments\n"
+// Not needed, but shown here for reference
+// "	ldr c0, [csp, #0]\n" // ARGC
+// "	ldr c1, [csp, #16]\n" // ARGV
+// "	ldr c2, [csp, #32]\n" // ENVP
+// "	ldr c3, [csp, #48]\n" // AUXV
 ".L1:\n"
-"	mov c0, csp\n"
-".L2:\n"
+"	ldr c0, [csp, #48]\n"
 #else
 "	mov c0, csp\n"
 #endif
@@ -34,12 +35,14 @@ __asm__ (".text \n"
 ".global __morello_init_static\n"
 ".type __morello_init_static,%function\n"
 "__morello_init_static:\n"
+#ifndef LIBSHIM
 "	ldr     x10, [c0], #32\n" //Increment argc/NULL
 "	add     c0, c0, x10, lsl #4\n"
 ".Lloop_get_auxv:\n"
 "	ldr     c9, [c0], #16\n"
 "	cmp     c9, czr\n"
 "	b.ne    .Lloop_get_auxv\n"
+#endif
 ".Lloop_auxv:\n"
 "	ldp     x9, xzr, [c0], #16\n"
 "	cmp     x9, xzr\n"

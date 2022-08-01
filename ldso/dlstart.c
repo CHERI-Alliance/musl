@@ -41,12 +41,17 @@ hidden void _dlstart_c(uintptr_t *sp, size_t *dynv_raw)
 	Rel_t *rel_ptr;
 	Rela_t *rela_ptr;
 	char *base_rx, *base_rw;
+	auxv_entry *auxv;
 
 	int argc = *sp;
 	char **argv = (void *)(sp+1);
+	IF_CHERI_GET_ARGV(sp, argv);
 
-	for (i=argc+1; argv[i]; i++);
-	auxv_entry *auxv = (void *)(argv+i+1);
+	char **envp = argv+argc+1;
+	IF_CHERI_GET_ENVP(sp, envp);
+	for (i=0; envp[i]; i++);
+	auxv = (void *)(envp+i+1);
+	IF_CHERI_GET_AUXV(sp,auxv);
 	dynv_entry *dynv = (void *)dynv_raw;
 
 	for (i=0; i<AUX_CNT; i++) aux[i] = &aux_null;

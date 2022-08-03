@@ -81,16 +81,20 @@ extern weak hidden const size_t _DYNAMIC[];
 
 static void static_init_tls(uintptr_t *aux)
 {
-	unsigned char *p;
+	unsigned char *p, *aux_at_phdr;
 	size_t n;
 	Phdr *phdr, *tls_phdr=0;
 	uintptr_t base = 0;
 	void *mem;
-
-	for (p=(void *)aux[AT_PHDR],n=aux[AT_PHNUM]; n; n--,p+=aux[AT_PHENT]) {
+#if defined(__CHERI_PURE_CAPABILITY__) && defined(LIBSHIM)
+	aux_at_phdr = p = __builtin_cheri_address_set(aux[AT_CHERI_EXEC_RX_CAP], (size_t) aux[AT_PHDR]);
+#else
+	aux_at_phdr = p = (void *)aux[AT_PHDR];
+#endif
+	for (n=aux[AT_PHNUM]; n; n--,p+=aux[AT_PHENT]) {
 		phdr = (void *)p;
 		if (phdr->p_type == PT_PHDR)
-			base = aux[AT_PHDR] - phdr->p_vaddr;
+			base = aux_at_phdr - phdr->p_vaddr;
 		if (phdr->p_type == PT_DYNAMIC && _DYNAMIC)
 			base = (size_t)_DYNAMIC - phdr->p_vaddr;
 		if (phdr->p_type == PT_TLS)

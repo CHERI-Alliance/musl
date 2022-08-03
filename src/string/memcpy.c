@@ -4,13 +4,40 @@
 
 #if defined(__CHERI_PURE_CAPABILITY__) && defined(__SANITIZE_CHERISEED__)
 
-// FIXME: please update to support tags
 void *memcpy(void *restrict dest, const void *restrict src, size_t n)
 {
 	unsigned char *d = dest;
 	const unsigned char *s = src;
-	for (size_t i = 0; i < n; ++i)
-		d[i] = s[i];
+
+	// Preserve tags if size is at least the size of a capability and the
+	// alignment of dest and src, with respect to capability size, are the same.
+	if ((n >= sizeof(void*))
+	    && (((ptraddr_t)d % sizeof(void*)) == ((ptraddr_t)s % sizeof(void*)))) {
+		// There can be some head to copy without preserving tags.
+		while (((ptraddr_t)s % sizeof(void*)) != 0) {
+			*d++ = *s++;
+			--n;
+		}
+
+		// Calculate the number of capabilities to copy.
+		size_t cap_count = n / sizeof(void*);
+		n -= cap_count * sizeof(void*);
+
+		uintcap_t *d_cap = (uintcap_t*)d;
+		const uintcap_t *s_cap = (uintcap_t*)s;
+		while (cap_count-- > 0)
+			*d_cap++ = *s_cap++;
+
+		d = (unsigned char *)d_cap;
+		s = (const unsigned char *)s_cap;
+
+		// Copy the tail, if any, without preserving tags.
+	}
+
+	// Copy without preserving tags.
+	while (n-- > 0)
+		*d++ = *s++;
+
 	return dest;
 }
 

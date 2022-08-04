@@ -7,18 +7,21 @@ START ":\n"
 "	mov x30, #0\n"
 #ifdef LIBSHIM
 "	chktgd csp\n"
-"	b.cs .L1\n"
+"	b.cs 1f\n"
 "	mov x0, sp\n"
 "	bl __shim_marshal_program_arguments\n"
-// Not needed, but shown here for reference
-// "	ldr c0, [csp, #0]\n" // ARGC
-// "	ldr c1, [csp, #16]\n" // ARGV
-// "	ldr c2, [csp, #32]\n" // ENVP
-// "	ldr c3, [csp, #48]\n" // AUXV
-".L1:\n"
-"	ldr c0, [csp, #48]\n"
+"	ldp c0, c1, [csp, #0]\n"    // ARGC, ARGV
+"	ldp c2, c3, [csp, #32]\n"   // ENVP, AUXV
+"1:\n"
 #else
-"	mov c0, csp\n"
+"	mov c0, csp\n" // temporary work-around for transitional kernel
+"	ldr x10, [c0], #32\n" // increment argc / NULL
+"	add c0, c0, x10, lsl #4\n"
+".L_loop_get_auxv:\n"
+"	ldr c9, [c0], #16\n"
+"	cmp c9, czr\n"
+"	b.ne .L_loop_get_auxv\n"
+"	mov c3, c0\n" // initialise c3 with auxv
 #endif
 "	bl __morello_init_static\n"
 "	mov c0, csp\n"
@@ -31,70 +34,68 @@ START ":\n"
 ".size " START ", .-" START "\n"
 );
 
-__asm__ (".text \n"
-".global __morello_init_static\n"
-".type __morello_init_static,%function\n"
-"__morello_init_static:\n"
-#ifndef LIBSHIM
-"	ldr     x10, [c0], #32\n" //Increment argc/NULL
-"	add     c0, c0, x10, lsl #4\n"
-".Lloop_get_auxv:\n"
-"	ldr     c9, [c0], #16\n"
-"	cmp     c9, czr\n"
-"	b.ne    .Lloop_get_auxv\n"
-#endif
-".Lloop_auxv:\n"
-"	ldp     x9, xzr, [c0], #16\n"
-"	cmp     x9, xzr\n"
-"	b.eq    .Lfallback_ddc\n"
-"	cmp     x9, #60\n" //AT_CHERI_EXEC_RW_CAP
-"	b.eq    .Lload_cap_rw\n"
-"	add     c0, c0, #16\n"
-"	b       .Lloop_auxv\n"
-// if we didn't find AT_CHERI_EXEC_RW_CAP (e.g. on transitional ABI),
-//  try using DDC instead
-".Lfallback_ddc:\n"
-"	mrs     c11, ddc\n"
-"	b       .Lreloc_start\n"
-".Lload_cap_rw:\n"
-"	ldr     c11, [c0], #16\n"
-".Lreloc_start:\n"
-"	adrp    c0, __cap_relocs_start\n"
-"	add     c0, c0, :lo12:__cap_relocs_start\n"
-"	adrp    c1, __cap_relocs_end\n"
-"	add     c1, c1, :lo12:__cap_relocs_end\n"
-"1:\n"
-"	cmp     c0, c1\n"
-"	b.eq    2f\n"
-"	ldr     x2, [c0, #0]\n"
-"	cvt     c2, c11, x2\n" //Use RW cap for location
-"	ldp     x3, x4, [c0, #8]\n"
-"	ldp     x5, x6, [c0, #24]\n"
-"	ands    x7, x6, #0x8000000000000000\n"
-"	b.ne    .Lcap_pcc\n"
-".Lcap_rw:\n"
-"	cvt     c3, c11, x3\n"
-"	mov     w12, #0\n" // don't seal non-function capability
-"	b       .Lpcap\n"
-".Lcap_pcc:\n"
-"	cvtp    c3, x3\n"
-"	mov     w12, #1\n" // this is function: seal with RB
-".Lpcap:\n"
-"	scbndse c3, c3, x5\n"
-"	add     c3, c3, x4\n"
-"	orr     x6, x6, #~(0b111111111111111111)\n"
-"	clrperm c3, c3, x6\n"
-"	cmp     w12, #0\n"
-"	b.eq    .Lstore_cap\n"
-"	gcseal  x12, c3\n"
-"	cmp     x12, #1\n" // if already sealed
-"	b.eq    .Lstore_cap\n"
-"	seal    c3, c3, rb\n"
-".Lstore_cap:\n"
-"	str     c3, [c2]\n"
-"	add     c0, c0, #40\n"
-"	b       1b\n"
-"2:\n"
-"	ret\n"
-".size __morello_init_static, .-__morello_init_static\n"
-"\n");
+typedef struct {
+	uint64_t location;	/* Capability location */
+	uint64_t base;		/* Object referred to by the capability */
+	size_t offset;		/* Offset in the object */
+	size_t size;		/* Size */
+	size_t permissions;	/* Inverted permissions mask */
+} cap_relocs_entry;
+
+__attribute__((used))
+inline static void
+__morello_init_static(int, char **, char **, auxv_entry *auxv)
+{
+	cap_relocs_entry *__cap_relocs_start = NULL;
+	cap_relocs_entry *__cap_relocs_end = NULL;
+	__asm__ (
+		".weak __cap_relocs_start\n"
+		"adrp 	%0, __cap_relocs_start\n"
+		"add	%0, %0, :lo12:__cap_relocs_start" : "=C"(__cap_relocs_start));
+	__asm__ (
+		".weak __cap_relocs_end\n"
+		"adrp 	%0, __cap_relocs_end\n"
+		"add	%0, %0, :lo12:__cap_relocs_end" : "=C"(__cap_relocs_end));
+	size_t n = __cap_relocs_end - __cap_relocs_start; /* number of cap_relocs entries */
+	if (n == 0 || __cap_relocs_start == NULL || __cap_relocs_end == NULL) {
+		return;
+	}
+	cap_relocs_entry *r = __cap_relocs_start;
+	// TODO: replace this with NULL -- workaround for transitional kernel
+	void *rw = __builtin_cheri_global_data_get();
+	void *rx = __builtin_cheri_global_data_get();
+	for (; auxv->a_type; auxv++) {
+		if (auxv->a_type == AT_CHERI_EXEC_RW_CAP) {
+			rw = auxv->a_un.a_ptr; // used to derive read-only and rw objects
+		} else if (auxv->a_type == AT_CHERI_EXEC_RX_CAP) {
+			rx = auxv->a_un.a_ptr; // used to derive function pointers
+		}
+		if (rw && rx) {
+			break;
+		}
+	}
+	for(size_t k = 0; k < n; k++) {
+		if (r[k].base) { // if capability is not null
+			void *cap = NULL;
+			size_t perm = ~r[k].permissions;
+			_Bool is_fun_ptr = perm & __CHERI_CAP_PERMISSION_PERMIT_EXECUTE__;
+			_Bool is_writable = perm & __CHERI_CAP_PERMISSION_PERMIT_STORE__;
+			if (is_writable) {
+				cap = __builtin_cheri_address_set(rw, r[k].base);
+			} else {
+				cap = __builtin_cheri_address_set(rx, r[k].base);
+			}
+			cap = __builtin_cheri_perms_and(cap, perm);
+			cap = __builtin_cheri_bounds_set_exact(cap, r[k].size);
+			cap = __builtin_cheri_offset_set(cap, r[k].offset);
+			if (is_fun_ptr) {
+				// RB-seal function pointer
+				cap = __builtin_cheri_seal_entry(cap);
+			}
+			// store capability
+			void **loc = __builtin_cheri_address_set(rw, r[k].location);
+			loc = __builtin_cheri_bounds_set_exact(loc, sizeof(void *));
+			*loc = cap;
+		}
+	}
+}

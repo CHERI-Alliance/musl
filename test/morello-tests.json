@@ -1836,7 +1836,10 @@
         "app": "${build}/unistd-${kind}.exe",
         "args": ["0"],
         "name": "test_getlogin",
-        "xrc": [0]
+        "xrc": [0],
+        "env": {
+            "LOGNAME": "morello"
+        }
     },
     {
         "app": "${build}/unistd-${kind}.exe",

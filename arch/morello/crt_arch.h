@@ -15,14 +15,21 @@ START ":\n"
 "1:\n"
 #else
 "	mov c0, csp\n" // temporary work-around for transitional kernel
+"	add c1, c0, #16\n" // argv
 "	ldr x10, [c0], #32\n" // increment argc / NULL
 "	add c0, c0, x10, lsl #4\n"
+"	mov c2, c0\n" // envp
 ".L_loop_get_auxv:\n"
 "	ldr c9, [c0], #16\n"
 "	cmp c9, czr\n"
 "	b.ne .L_loop_get_auxv\n"
 "	mov c3, c0\n" // initialise c3 with auxv
+"	mov x0, x10\n" // argc
 #endif
+"	mov c20, c0\n"
+"	mov c21, c1\n"
+"	mov c22, c2\n"
+"	mov c23, c3\n"
 "	bl __morello_init_static\n"
 "	mov c0, csp\n"
 ".weak _DYNAMIC\n"
@@ -30,6 +37,10 @@ START ":\n"
 "	adrp c1, _DYNAMIC\n"
 "	add c1, c1, #:lo12:_DYNAMIC\n"
 "	alignd csp, csp, #4\n"
+"	mov c2, c20\n"
+"	mov c3, c21\n"
+"	mov c4, c22\n"
+"	mov c5, c23\n"
 "	b " START "_c\n"
 ".size " START ", .-" START "\n"
 );

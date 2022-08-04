@@ -32,7 +32,11 @@
 #define DYN_VAL(p) ((p).d_un.d_val)
 #define DYN_PTR(p) ((p).d_un.d_ptr)
 
+#if defined(__CHERI_PURE_CAPABILITY__)
+hidden void _dlstart_c(uintptr_t *sp, size_t *dynv_raw, int argc, char *argv[], char *envp[], auxv_entry *auxv)
+#else
 hidden void _dlstart_c(uintptr_t *sp, size_t *dynv_raw)
+#endif
 {
 	size_t i;
 	auxv_entry aux_null = {0}, *aux[AUX_CNT];
@@ -41,17 +45,14 @@ hidden void _dlstart_c(uintptr_t *sp, size_t *dynv_raw)
 	Rel_t *rel_ptr;
 	Rela_t *rela_ptr;
 	char *base_rx, *base_rw;
+#if !defined(__CHERI_PURE_CAPABILITY__)
 	auxv_entry *auxv;
-
 	int argc = *sp;
 	char **argv = (void *)(sp+1);
-	IF_CHERI_GET_ARGV(sp, argv);
-
 	char **envp = argv+argc+1;
-	IF_CHERI_GET_ENVP(sp, envp);
 	for (i=0; envp[i]; i++);
 	auxv = (void *)(envp+i+1);
-	IF_CHERI_GET_AUXV(sp,auxv);
+#endif
 	dynv_entry *dynv = (void *)dynv_raw;
 
 	for (i=0; i<AUX_CNT; i++) aux[i] = &aux_null;
@@ -226,5 +227,10 @@ hidden void _dlstart_c(uintptr_t *sp, size_t *dynv_raw)
 
 	stage2_func dls2;
 	GETFUNCSYM(&dls2, __dls2, base_rx+DYN_VAL(dyn[DT_PLTGOT]));
+#if defined(__CHERI_PURE_CAPABILITY__)
+	dls2 = __builtin_cheri_seal_entry(dls2);
+	dls2((void *)base_rx, (void *)base_rw, sp, argc, argv, envp, (uintptr_t *)auxv);
+#else
 	dls2((void *)base_rx, (void *)base_rw, sp);
+#endif
 }

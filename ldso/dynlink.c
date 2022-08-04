@@ -124,7 +124,11 @@ struct symdef {
 	struct dso *dso;
 };
 
+#if defined(__CHERI_PURE_CAPABILITY__)
+typedef void (*stage3_func)(size_t *, int, char **, char**, size_t *);
+#else
 typedef void (*stage3_func)(size_t *, size_t *);
+#endif
 
 static struct builtin_tls {
 	char c;
@@ -1741,13 +1745,15 @@ static void install_new_tls(void)
  * linker itself, but some of the relocations performed may need to be
  * replaced later due to copy relocations in the main program. */
 
+#if defined(__CHERI_PURE_CAPABILITY__)
+hidden void __dls2(unsigned char *base, unsigned char *base_rw, uintptr_t *sp, int argc, char **argv, char **envp, uintptr_t *auxv)
+#else
 hidden void __dls2(unsigned char *base, unsigned char *base_rw, uintptr_t *sp)
+#endif
 {
+#if !defined(__CHERI_PURE_CAPABILITY__)
 	uintptr_t *auxv;
 	size_t argc = *sp;
-#if defined(__CHERI_PURE_CAPABILITY__) && defined(LIBSHIM)
-	IF_CHERI_GET_AUXV(sp, auxv);
-#else
 	for (auxv=sp+1+argc+1; *auxv; auxv++);
 	auxv++;
 #endif
@@ -1817,8 +1823,24 @@ hidden void __dls2(unsigned char *base, unsigned char *base_rw, uintptr_t *sp)
 	 * symbolically as a barrier against moving the address
 	 * load across the above relocation processing. */
 	struct symdef dls2b_def = find_sym(&ldso, "__dls2b", 0);
-	if (DL_FDPIC) ((stage3_func)&ldso.funcdescs[dls2b_def.sym-ldso.syms])(sp, auxv);
-	else ((stage3_func)laddr(&ldso, dls2b_def.sym->st_value))(sp, auxv);
+
+	if (DL_FDPIC) {
+		stage3_func dls2b = ((stage3_func)&ldso.funcdescs[dls2b_def.sym-ldso.syms]);
+#if defined(__CHERI_PURE_CAPABILITY__)
+		dls2b = __builtin_cheri_seal_entry(dls2b);
+		dls2b(sp, argc, argv, envp, auxv);
+#else
+		dls2b(sp, auxv);
+#endif
+	} else {
+		stage3_func dls2b = ((stage3_func)laddr(&ldso, dls2b_def.sym->st_value));
+#if defined(__CHERI_PURE_CAPABILITY__)
+		dls2b = __builtin_cheri_seal_entry(dls2b);
+		dls2b(sp, argc, argv, envp, auxv);
+#else
+		dls2b(sp, auxv);
+#endif
+	}
 }
 
 /* Stage 2b sets up a valid thread pointer, which requires relocations
@@ -1826,8 +1848,11 @@ hidden void __dls2(unsigned char *base, unsigned char *base_rw, uintptr_t *sp)
  * This is done as a separate stage, with symbolic lookup as a barrier,
  * so that loads of the thread pointer and &errno can be pure/const and
  * thereby hoistable. */
-
+#if defined(__CHERI_PURE_CAPABILITY__)
+void __dls2b(uintptr_t *sp, int argc, char **argv, char **envp, size_t *auxv)
+#else
 void __dls2b(uintptr_t *sp, size_t *auxv)
+#endif
 {
 	/* Setup early thread pointer in builtin_tls for ldso/libc itself to
 	 * use during dynamic linking. If possible it will also serve as the
@@ -1843,16 +1868,34 @@ void __dls2b(uintptr_t *sp, size_t *auxv)
 	}
 
 	struct symdef dls3_def = find_sym(&ldso, "__dls3", 0);
-	if (DL_FDPIC) ((stage3_func)&ldso.funcdescs[dls3_def.sym-ldso.syms])(sp, auxv);
-	else ((stage3_func)laddr(&ldso, dls3_def.sym->st_value))(sp, auxv);
+	if (DL_FDPIC) {
+		stage3_func dls3 = ((stage3_func)&ldso.funcdescs[dls3_def.sym-ldso.syms]);
+#if defined(__CHERI_PURE_CAPABILITY__)
+		dls3 = __builtin_cheri_seal_entry(dls3);
+		dls3(sp, argc, argv, envp, auxv);
+#else
+		dls3(sp, auxv);
+#endif
+	} else {
+		stage3_func dls3 = ((stage3_func)laddr(&ldso, dls3_def.sym->st_value));
+#if defined(__CHERI_PURE_CAPABILITY__)
+		dls3 = __builtin_cheri_seal_entry(dls3);
+		dls3(sp, argc, argv, envp, auxv);
+#else
+		dls3(sp, auxv);
+#endif
+	}
 }
 
 /* Stage 3 of the dynamic linker is called with the dynamic linker/libc
  * fully functional. Its job is to load (if not already loaded) and
  * process dependencies and relocations for the main application and
  * transfer control to its entry point. */
-
+#if defined(__CHERI_PURE_CAPABILITY__)
+void __dls3(uintptr_t *sp, int argc, char **argv, char **envp, size_t *auxv)
+#else
 void __dls3(uintptr_t *sp, size_t *auxv)
+#endif
 {
 	static struct dso app, vdso;
 	auxv_entry aux_null = {0}, *a, *aux[AUX_CNT];
@@ -1861,13 +1904,14 @@ void __dls3(uintptr_t *sp, size_t *auxv)
 	char *replace_argv0=0;
 	char *vdso_base;
 	char *phdr_rw;
+#if !defined(__CHERI_PURE_CAPABILITY__)
 	int argc = *sp;
 	char **argv = (void *)(sp+1);
-	IF_CHERI_GET_ARGV(sp, argv);
 	char **argv_orig = argv;
 	char **envp = argv+argc+1;
-	IF_CHERI_GET_ENVP(sp, envp);
-
+#else
+	char **argv_orig = argv;
+#endif
 	/* Find aux vector just past environ[] and use it to initialize
 	 * global data that may be needed before we can make syscalls. */
 	__environ = envp;
@@ -2142,8 +2186,18 @@ void __dls3(uintptr_t *sp, size_t *auxv)
 	if (replace_argv0) argv[0] = replace_argv0;
 
 	errno = 0;
-
+#ifdef __CHERI_PURE_CAPABILITY__
+__asm__ __volatile__ (
+	"mov x0, %0\n"
+	"mov c1, %1\n"
+	"mov c2, %2\n"
+	"mov c3, %3\n"
+	"mov csp,%4 ; br %5\n"
+	: : "r" (argc), "r" (argv), "r" (envp), "r" (auxv), "r"(sp), "r"(AUX_PTR(aux[AT_ENTRY]))
+	: "c0", "c1", "c2", "c3", "memory");
+#else
 	CRTJMP(AUX_PTR(aux[AT_ENTRY]), sp);
+#endif
 	for(;;);
 }
 

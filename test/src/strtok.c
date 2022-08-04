@@ -15,9 +15,7 @@ int main(){
 		if (strcmp(words[i++], token)) return 3;
 	} while ((token = strtok(NULL, " ")));
 
-#ifndef __SANITIZE_CHERISEED__
 	if (__builtin_cheri_tag_get(token) != 0) return 4;
-#endif
 	if (token != NULL) return 5;
   return 0;
 }

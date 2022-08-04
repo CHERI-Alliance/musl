@@ -179,18 +179,12 @@ int main (int argc, char *argv[])
 
         if (__builtin_cheri_address_get(capability) != expected_adress) return 2;
         if (
-#ifndef __SANITIZE_CHERISEED__
             __builtin_cheri_tag_get(capability) != 0 ||
-#endif
             __builtin_cheri_perms_get(capability) != 0 ||
             __builtin_cheri_length_get(capability) != (0xFFFFFFFFFFFFFFFF)) {
             printf("fscanf didn't set the null capability metadata correctly : \n\
 tag : %d\nperms : %lu\nlength : %lu",
-#ifndef __SANITIZE_CHERISEED__
                     __builtin_cheri_tag_get(capability),
-#else
-                    0,
-#endif
                     __builtin_cheri_perms_get(capability),
                     __builtin_cheri_length_get(capability));
             return 3;

@@ -7,9 +7,7 @@ int do_wcspbrk_test(const wchar_t *s, const wchar_t *c, wchar_t *exp) {
     if (__builtin_cheri_length_get(res) != __builtin_cheri_length_get(s)) return 2;
     if (wcscmp(res, exp)) return 3;
   } else {
-#ifndef __SANITIZE_CHERISEED__
     if (__builtin_cheri_tag_get(res) != 0) return 4;
-#endif
     if (res) return 5;
   }
   return 0;

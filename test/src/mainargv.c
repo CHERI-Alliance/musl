@@ -29,12 +29,10 @@ int main (int argc, char *argv[])
 		}
 	}
 	cap = argv[argc];
-#ifndef __SANITIZE_CHERISEED__
 	if ((tag = __builtin_cheri_tag_get(cap))) {
 		printf("argv[argc] has tag %zu\n", tag);
 		return 3;
 	}
-#endif
 	if ((sz = __builtin_cheri_length_get(cap)) != 0xfffffffffffffffful) {
 		printf("argv[argc] has length %zu\n", sz);
 		return 4;

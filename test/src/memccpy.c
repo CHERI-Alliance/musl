@@ -17,9 +17,7 @@ int do_memccpy_test(char *buf, char *src, char c, size_t n, char *expected_buf,
     if (CAP_TAIL_LENGTH(res) != bytes_left) return 5;
     if (*(res - 1) != c) return 6;
   } else {
-#ifndef __SANITIZE_CHERISEED__
     if (__builtin_cheri_tag_get(res) != 0) return 7;
-#endif
   }
 
   return 0;

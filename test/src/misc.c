@@ -88,12 +88,10 @@ static int test_getcwd()
 	free(res);
 	res = getcwd(NULL, 2);
 	printf("res = %s\n", res);
-#ifndef __SANITIZE_CHERISEED__
 	if (__builtin_cheri_tag_get(res) == 1) {
 		free(res);
 		return 1;
 	}
-#endif
 	free(res);
 	char buffer[PATH_MAX];
 	res = getcwd(buffer, sizeof(buffer));
@@ -104,18 +102,14 @@ static int test_getcwd()
 	char buffer1[2];
 	res = getcwd(buffer1, sizeof(buffer1));
 	printf("res = %s\n", res);
-#ifndef __SANITIZE_CHERISEED__
 	if (__builtin_cheri_tag_get(res) == 1) {
 		return 1;
 	}
-#endif
 	res = getcwd(NULL, (size_t)-1);
 	printf("res = %s\n", res);
-#ifndef __SANITIZE_CHERISEED__
 	if (__builtin_cheri_tag_get(res) == 1) {
 		return 1;
 	}
-#endif
 	return 0;
 }
 

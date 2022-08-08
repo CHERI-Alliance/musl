@@ -42,7 +42,8 @@ size_t mbsrtowcs(wchar_t *restrict ws, const char **restrict src, size_t wn, mbs
 #ifdef __GNUC__
 		typedef uint32_t __attribute__((__may_alias__)) w32;
 		if (*s-1u < 0x7f && (uintptr_t)s%4 == 0) {
-			while (!(( *(w32*)s | *(w32*)s-0x01010101) & 0x80808080)) {
+			while (CAP_TAIL_LENGTH(s) >= sizeof(w32) &&
+			       !(( *(w32*)s | *(w32*)s-0x01010101) & 0x80808080)) {
 				s += 4;
 				wn -= 4;
 			}

@@ -764,6 +764,20 @@
         "skip": []
     },
     {
+        "app":  "${build}/mbrtowc-${kind}.exe",
+        "name": "mbsrtowcs-c",
+        "env": { "LC_ALL": "C" },
+        "args": ["3"],
+        "xrc": [0]
+    },
+    {
+        "app":  "${build}/mbrtowc-${kind}.exe",
+        "name": "mbsrtowcs-c-utf8",
+        "env": { "LC_ALL": "C.UTF-8" },
+        "args": ["3"],
+        "xrc": [0]
+    },
+    {
         "app": "${build}/stdout-${kind}.exe",
         "name": "stdout",
         "xrc": [0],

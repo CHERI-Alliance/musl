@@ -112,6 +112,26 @@ int test_mbsnrtowcs(void) {
     return 0;
 }
 
+int test_mbsrtowcs(void) {
+    __attribute__((aligned(16)))
+    static const char str[] = "1234";
+    const char *cs;
+    mbstate_t st = {0};
+
+    // This is a crucial step.
+    if (NULL == setlocale(LC_CTYPE, "")) {
+        printf("setlocale returned NULL\n");
+        return 1;
+    }
+
+    // Used to have an OOB access here.
+    size_t ret = mbsrtowcs(NULL, (cs=&str[0],&cs), 1, &st);
+    if (ret == -1)
+        return 2;
+
+    return 0;
+}
+
 int main(int argc, char *argv[]) {
     setlocale(LC_ALL, "en_GB.utf8");
 
@@ -123,6 +143,8 @@ int main(int argc, char *argv[]) {
         return test_mbtoc16();
     case '2':
         return test_mbsnrtowcs();
+    case '3':
+        return test_mbsrtowcs();
     default:
         return 2;
     }

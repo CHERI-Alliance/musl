@@ -1523,7 +1523,7 @@ void __libc_exit_fini()
 			while (n--) ((void (*)(void))*--fn)();
 		}
 #ifndef NO_LEGACY_INITFINI
-		if ((dyn[DT_FINI] != &dyn_null && DYN_VAL(dyn[DT_FINI]))
+		if (dyn[DT_FINI] != &dyn_null && DYN_VAL(dyn[DT_FINI]))
 			fpaddr(p, DYN_VAL(dyn[DT_FINI]))();
 #endif
 	}

@@ -1,4 +1,5 @@
 #include <fcntl.h>
+#include <stdbool.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <sys/mman.h>
@@ -9,6 +10,7 @@
 
 int test_mmap();
 int test_mmap_offset();
+int test_mmap_tags(bool do_munmap);
 
 int main(int argc, char **argv) {
 	if (argc < 2) return -1;
@@ -18,6 +20,10 @@ int main(int argc, char **argv) {
 			return test_mmap();
 		case '1':
 			return test_mmap_offset();
+		case '2':
+			return test_mmap_tags(/* do_munmap */true);
+		case '3':
+			return test_mmap_tags(/* do_munmap */false);
 	}
 
 	return -1;
@@ -66,4 +72,47 @@ int test_mmap_offset() {
 	munmap(p, len);
 	if (close(fd)) return -3;
 	return z;
+}
+
+int test_mmap_tags(bool do_munmap) {
+	size_t len = getpagesize();
+	void *mem = mmap(NULL, len, MEM_PROT, MEM_FLAGS, -1, 0);
+	if (mem == MAP_FAILED) {
+		perror("first mmap");
+		return 1;
+	}
+	// Here '4' corresponds to the granularity of capability in memory.
+	size_t cap_count = len >> 4;
+	int **ptr = mem;
+	int var;
+	for(int idx = 0; idx < cap_count; ++idx) {
+		// Sets first, middle and last tags for test.
+		if ((idx == 0) || (idx == (cap_count/2)) || (idx == (cap_count - 1))) {
+			ptr[idx] = &var;
+			if (__builtin_cheri_tag_get(ptr[idx]) != 1ul)
+				return 2;
+		} else {
+			if (__builtin_cheri_tag_get(ptr[idx]) != 0ul)
+				return 3;
+		}
+	}
+	if (do_munmap) {
+		if (munmap(mem, len) == -1) {
+			perror("munmap");
+			return 4;
+		}
+	}
+	mem = mmap(mem, len, MEM_PROT, MAP_FIXED | MEM_FLAGS, -1, 0);
+	if (mem == MAP_FAILED) {
+		perror("second mmap");
+		return 5;
+	}
+	// Check if all tags are cleared.
+	for(int idx = 0; idx < cap_count; ++idx) {
+		if (__builtin_cheri_tag_get(ptr[idx]) != 0ul) {
+			printf("Failed at %d\n.", idx);
+			return 6;
+		}
+	}
+	return 0;
 }

@@ -1035,6 +1035,18 @@
         "skip": ["dynamic"]
     },
     {
+        "app": "${build}/mmap-${kind}.exe",
+        "name": "mmap-tags-with-munmap",
+        "args": ["2"],
+        "xrc": [0]
+    },
+    {
+        "app": "${build}/mmap-${kind}.exe",
+        "name": "mmap-tags-without-munmap",
+        "args": ["3"],
+        "xrc": [0]
+    },
+    {
         "app": "${build}/temp-${kind}.exe",
         "name": "temp-mktemp",
         "args": ["0"],
@@ -1350,17 +1362,35 @@
     },
     {
         "app": "${build}/mremap-${kind}.exe",
-        "name": "mremap-extend",
+        "name": "mremap-shrink",
         "args": ["0"],
         "xrc": [0],
         "skip": ["dynamic"]
     },
     {
         "app": "${build}/mremap-${kind}.exe",
-        "name": "mremap-move",
+        "name": "mremap-extend",
         "args": ["1"],
         "xrc": [0],
         "skip": ["dynamic"]
+    },
+    {
+        "app": "${build}/mremap-${kind}.exe",
+        "name": "mremap-move-fixed",
+        "args": ["2"],
+        "xrc": [0]
+    },
+    {
+        "app": "${build}/mremap-${kind}.exe",
+        "name": "mremap-move-dontunmap",
+        "args": ["3"],
+        "xrc": [0]
+    },
+    {
+        "app": "${build}/mremap-${kind}.exe",
+        "name": "mremap-should-segfault",
+        "args": ["4"],
+        "xrc": [-11]
     },
     {
         "app": "${build}/shm_open-${kind}.exe",

@@ -1,7 +1,7 @@
 #define _GNU_SOURCE
 #include <sys/mman.h>
-#undef _GNU_SOURCE
 
+#include <errno.h>
 #include <stdlib.h>
 #include <unistd.h>
 #include <stdio.h>
@@ -11,81 +11,156 @@
 
 #include "checkmacros.h"
 
-int getpagesize (void);
-
-#define SIZE 300
-
 #define CHECK_ALIGNED(cap, sz) ({ \
 	((__builtin_cheri_address_get(cap) & (sz - 1)) == 0) && ((__builtin_cheri_length_get(cap) % sz) == 0);\
 })
 
+// These are used in ASSIGN_CAPS
 int x, y, z;
 
-#define ASSIGN_CAPS(dst) ({ \
-	dst[3] = &x;            \
-	dst[4] = NULL;          \
-	dst[5] = &p;            \
-	dst[6] = &q;            \
-	dst[7] = &y;            \
-	dst[8] = &z;            \
+#define ASSIGN_CAPS(__dst) ({ \
+	(__dst)[3] = &x;                   \
+	(__dst)[4] = NULL;                 \
+	(__dst)[5] = &p;                   \
+	(__dst)[6] = &q;                   \
+	(__dst)[7] = &y;                   \
+	(__dst)[(mem_size >> 4) - 1] = &z; \
 })
 
-static int test_remap(bool move)
-{
-	const size_t page_size = getpagesize();
+enum tests {
+	TEST_SHRINK = 0,
+	TEST_EXTEND,
+	TEST_MOVE_FIXED,
+	TEST_MOVE_DONTUNMAP,
+	TEST_SHOULD_SEGFAULT,
+	NUM_OF_TEST
+};
 
+static int test_remap(int test_type)
+{
+	const size_t mem_size = getpagesize() * 2;
+
+	// These are used in ASSIGN_CAPS
 	int p, q;
 
-	void *mem = mmap(NULL, SIZE, PROT_READ | PROT_WRITE, MAP_PRIVATE | MAP_ANON, -1, 0);
+	void *mem = mmap(NULL, mem_size, PROT_READ | PROT_WRITE, MAP_PRIVATE | MAP_ANONYMOUS, -1, 0);
 
 	// check page alignment
-	if (!CHECK_ALIGNED(mem, page_size)) {
+	if (!CHECK_ALIGNED(mem, getpagesize())) {
 		printf("mmap returned address which is not page-aligned: %#p\n", mem);
 		return 1;
 	}
 
-	memset(mem, 0, SIZE);
+	memset(mem, 0, mem_size);
+	ASSIGN_CAPS((int **)mem);
 
-	int **ptr = (int **)mem;
-	ASSIGN_CAPS(ptr);
+	void *new_mem = NULL, *new_addr = NULL, *ref_mem = NULL;
+	size_t new_mem_size = mem_size * 2;
+	size_t check;
 
-	void *new = NULL;
-	if (move) {
-		void *g = mmap(NULL, SIZE * 2, PROT_READ | PROT_WRITE, MAP_PRIVATE | MAP_ANON, -1, 0);
-		memset(g, 0, SIZE * 2);
-		new = mremap(mem, SIZE, SIZE * 2, MREMAP_MAYMOVE | MREMAP_FIXED, g);
-	} else {
-		new = mremap(mem, SIZE, SIZE * 2, MREMAP_MAYMOVE);
+	switch (test_type)
+	{
+	case TEST_SHRINK:
+		new_mem_size = mem_size / 2;
+		new_mem = mremap(mem, mem_size, new_mem_size, MREMAP_MAYMOVE);
+		if (new_mem == MAP_FAILED) {
+			perror("mremap");
+			return 2;
+		}
+		// If moved, check for range from MIN(old_size, new_size).
+		if (new_mem != mem) {
+			mem = malloc(new_mem_size);
+			memset(mem, 0, new_mem_size);
+			ASSIGN_CAPS((int**)mem);
+		}
+		check = CHECK_MEM_TAGS(new_mem, mem, new_mem_size);
+		break;
+	case TEST_EXTEND:
+		new_mem = mremap(mem, mem_size, new_mem_size, MREMAP_MAYMOVE);
+		if (new_mem == MAP_FAILED) {
+			perror("mremap");
+			return 2;
+		}
+		// Check if extended memory is untagged.
+		for (ptraddr_t  ptr = (uintptr_t )new_mem + mem_size;
+		     ptr < (uintptr_t )new_mem + new_mem_size; ptr += 16) {
+			if (get_mem_tag(ptr, new_mem)) {
+				return 3;
+			}
+		}
+		// If moved, check for range from MIN(old_size, new_size).
+		if (new_mem != mem) {
+			mem = malloc(mem_size);
+			memset(mem, 0, mem_size);
+			ASSIGN_CAPS((int**)mem);
+		}
+		check = CHECK_MEM_TAGS(new_mem, mem, mem_size);
+		break;
+	case TEST_MOVE_FIXED:
+		// 'new_addr' should always be different from 'mem'.
+		new_addr = mmap(NULL, new_mem_size, PROT_READ | PROT_WRITE, MAP_PRIVATE | MAP_ANONYMOUS,
+		                -1, 0);
+		ASSIGN_CAPS((int**)new_addr + 2);
+		new_mem = mremap(mem, mem_size, new_mem_size, MREMAP_MAYMOVE | MREMAP_FIXED, new_addr);
+		if (new_mem == MAP_FAILED) {
+			perror("mremap");
+			return 2;
+		}
+		if ((new_mem == mem) || (new_mem != new_addr)) {
+			perror("Should have moved!");
+			return 3;
+		}
+		ref_mem = malloc(new_mem_size);
+		memset(ref_mem, 0, new_mem_size);
+		ASSIGN_CAPS((int**)ref_mem);
+		check = CHECK_MEM_TAGS(new_mem, ref_mem, new_mem_size);
+		break;
+	case TEST_MOVE_DONTUNMAP:
+		// For MREMAP_DONTUNMAP, 'new_size' should be same as 'old_size'.
+		new_mem_size = mem_size;
+		new_mem = mremap(mem, mem_size, new_mem_size, MREMAP_MAYMOVE | MREMAP_DONTUNMAP);
+		if (errno == EINVAL) {
+			perror("mremap (Possible reason - MREMAP_DONTUNMAP not supported for version < 5.7)");
+			return 0;
+		}
+		if (new_mem == MAP_FAILED) {
+			perror("mremap");
+			return 2;
+		}
+		// Here, 'mem' is not suppose to be unmapped.
+		check = CHECK_MEM_TAGS(new_mem, mem, new_mem_size);
+		break;
+	case TEST_SHOULD_SEGFAULT:
+		new_addr = mmap(NULL, new_mem_size, PROT_READ | PROT_WRITE, MAP_PRIVATE | MAP_ANONYMOUS,
+		                -1, 0);
+		(void)((volatile int*)mem)[0]; // Valid
+		new_mem = mremap(mem, mem_size, new_mem_size, MREMAP_MAYMOVE | MREMAP_FIXED, new_addr);
+		if (new_mem == MAP_FAILED) {
+			perror("mremap");
+			return 2;
+		}
+		if (new_mem == mem) {
+			perror("Should have moved!");
+			return 3;
+		}
+		(void)((volatile int*)mem)[0]; // Should SEGFAULT
+		puts("Should SEGFAULT!");
+		return 4;
+		break;
 	}
 
-	size_t f;
-
-	// check if moved
-	if (new != mem) {
-		printf("memory moved: %#p --> %#p\n", mem, new);
-		/* If memory is moved my mremap we won't be able to use old `mem` for tag comparison */
-		int **ref = (int **)malloc(SIZE);
-		memset(ref, 0, SIZE);
-		ASSIGN_CAPS(ref);
-		f = CHECK_MEM_TAGS(new, ref, SIZE);
-	} else {
-		printf("memory extended: %#p --> %#p\n", mem, new);
-		f = CHECK_MEM_TAGS(new, mem, SIZE);
-	}
-
-	if (f) {
-		printf("%s: mem tags are not equal at offset %zu\n", __func__, f - 1);
-		return 2;
+	if (check) {
+		printf("%s: mem tags are not equal at offset %zu\n", __func__, check - 1);
+		return 4;
 	}
 	return 0;
 }
 
 int main (int argc, char *argv[])
 {
-	switch (argv[1][0]) {
-	case '0': return test_remap(false); // extend
-	case '1': return test_remap(true); // move
+	if (atoi(argv[1]) >= NUM_OF_TEST) {
+		printf("unknown test %c\n", argv[1][0]);
+		return -1;
 	}
-	printf("unknown test %c\n", argv[1][0]);
-	return -1;
+	return test_remap(atoi(argv[1]));
 }

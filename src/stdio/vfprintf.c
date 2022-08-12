@@ -424,7 +424,13 @@ static int fmt_fp(FILE *f, long double y, int w, int p, int fl, int t)
 // todo: this won't be necessary after this has been fixed
 // https://github.com/CTSRD-CHERI/llvm-project/issues/566
 typedef long cheri_otype_t;
+#if defined(__SANITIZE_CHERISEED__)
+#define CHERI_OTYPE_SENTRY ((cheri_otype_t)0x3fffe)
+#elif defined(__aarch64__)
 #define CHERI_OTYPE_SENTRY ((cheri_otype_t)1)
+#else
+#define CHERI_OTYPE_SENTRY ((cheri_otype_t)-2)
+#endif
 
 static int fmt_cap(FILE *f, const void *cap) {
 	char buf[CAP_BUFFER_SIZE];
@@ -435,7 +441,8 @@ static int fmt_cap(FILE *f, const void *cap) {
 		goto value;
 	}
 	/* Attributes */
-	size_t type = __builtin_cheri_type_get(cap);
+	const cheri_otype_t type = __builtin_cheri_type_get(cap);
+	const _Bool is_sealed = __builtin_cheri_sealed_get(cap);
 	if (type == CHERI_OTYPE_SENTRY) { // sentry
 		*--z = ')';
 		*--z = 'y';
@@ -444,7 +451,7 @@ static int fmt_cap(FILE *f, const void *cap) {
 		*--z = 'n';
 		*--z = 'e';
 		*--z = 's';
-	} else if (type > 0) { // any other object type
+	} else if (is_sealed) { // any other object type
 		*--z = ')';
 		*--z = 'd';
 		*--z = 'e';
@@ -454,12 +461,12 @@ static int fmt_cap(FILE *f, const void *cap) {
 		*--z = 's';
 	}
 	if (tag) {
-		if (type) {
+		if (is_sealed) {
 			*--z = '(';
 			*--z = ' ';
 		}
 	} else {
-		if (type) {
+		if (is_sealed) {
 			*--z = ',';
 		} else {
 			*--z = ')';

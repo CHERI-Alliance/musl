@@ -1757,8 +1757,23 @@ hidden void __dls2(unsigned char *base, unsigned char *base_rw, uintptr_t *sp)
 		if (!p1) {
 			auxv_entry aux_null = {0}, *aux[AUX_CNT];
 			decode_aux_vec(auxv, aux, AUX_CNT, &aux_null);
-			if (aux[AT_BASE]) ldso.base = AUX_PTR(aux[AT_BASE]);
-			else ldso.base = __builtin_align_down(AUX_PTR(aux[AT_PHDR]), 4096);
+			if (aux[AT_BASE]) {
+#if defined(__CHERI_PURE_CAPABILITY__) && defined(LIBSHIM)
+				unsigned char *interp_rx_cap = AUX_PTR(aux[AT_CHERI_INTERP_RX_CAP]);
+				ldso.base = __builtin_cheri_address_set(interp_rx_cap, AUX_VAL(aux[AT_BASE]));
+#else
+				ldso.base = AUX_PTR(aux[AT_BASE]);
+#endif
+			} else {
+#if defined(__CHERI_PURE_CAPABILITY__) && defined(LIBSHIM)
+				unsigned char *exec_rx_cap = AUX_PTR(aux[AT_CHERI_EXEC_RX_CAP]);
+				exec_rx_cap = __builtin_cheri_address_set(exec_rx_cap, AUX_VAL(aux[AT_PHDR]));
+				ldso.base = __builtin_align_down(exec_rx_cap, 4096);
+#else
+				ldso.base = __builtin_align_down(AUX_PTR(aux[AT_PHDR]), 4096);
+
+#endif
+			}
 		}
 		app_loadmap = p2 ? p1 : 0;
 		ldso.loadmap = p2 ? p2 : p1;

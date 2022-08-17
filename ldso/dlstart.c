@@ -72,8 +72,21 @@ hidden void _dlstart_c(uintptr_t *sp, size_t *dynv_raw)
 		 * displacement ELF loading was performed, but when ldso was
 		 * run as a command, finding the Ehdr is a heursitic: we
 		 * have to assume Phdrs start in the first 4k of the file. */
+#if defined(__CHERI_PURE_CAPABILITY__) && defined(LIBSHIM)
+		base_rx = AUX_PTR(aux[AT_CHERI_INTERP_RX_CAP]);
+		base_rx = __builtin_cheri_address_set(base_rx, AUX_VAL(aux[AT_BASE]));
+#else
 		base_rx = AUX_PTR(aux[AT_BASE]);
-		if (!base_rx) base_rx = __builtin_align_down(AUX_PTR(aux[AT_PHDR]), 4096);
+#endif
+		if (!base_rx) {
+#if defined(__CHERI_PURE_CAPABILITY__) && defined(LIBSHIM)
+			base_rx = AUX_PTR(aux[AT_CHERI_EXEC_RX_CAP]);
+			base_rx = __builtin_cheri_address_set(base_rx, AUX_VAL(aux[AT_PHDR]));
+			base_rx = __builtin_align_down(base_rx, 4096);
+#else
+			base_rx = __builtin_align_down(AUX_PTR(aux[AT_PHDR]), 4096);
+#endif
+		}
 		segs = &fakeseg;
 		segs[0].addr = base_rx;
 		segs[0].p_vaddr = 0;

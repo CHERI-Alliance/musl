@@ -12,8 +12,6 @@ void *__getauxptr(unsigned long item)
 	//  entries.
 	switch (item) {
 		case AT_ENTRY:
-		case AT_PHDR:
-		case AT_BASE:
 		case AT_SYSINFO_EHDR:
 		case AT_EXECFN:
 		case AT_RANDOM:

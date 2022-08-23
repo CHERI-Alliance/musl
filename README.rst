@@ -7,66 +7,51 @@ Work-in-progress port to Morello
 Disclaimer
 ^^^^^^^^^^
 
-This repository contains *work-in-progress* port of Musl libc to
-`Morello <https://developer.arm.com/morello/>`_. It is intended for experimental use
-and does not currently provide complete and accurate implementation of the entire Musl
-libc functionality. Current limitations include:
+This repository contains *work-in-progress* port of Musl libc to `Morello`_ targeting
+purecap ABI. It is intended for experimental use.
 
-* No support for dynamic linking and dynamic loading (only static linking to ``libc.a``
-  is supported).
+.. _Morello: https://www.arm.com/architecture/cpu/morello
 
 Kernel ABI
 ^^^^^^^^^^
 
-Current version relies on the
-`libshim <https://git.morello-project.org/morello/android/platform/external/libshim>`_
-library for implementing system calls to non-Morello kernel. This allows using purecap
-Morello applications on systems with non-Morello kernel subject to common libshim
-limitations.
+It is possible to use `libshim`_ library for implementing system calls to non-Morello
+kernel. This allows using purecap Morello applications on systems with non-Morello kernel
+subject to common libshim limitations. Use the ``--enable-libshim`` parameter of the
+configure script to activate this option. You need to clone libshim separately and place
+it next to Musl's root folder. An arbitrary path to libshim can be used as well via the
+``--libshim-path`` parameter of the configure script.
 
-You need to clone libshim separately and place it next to Musl's root folder:
-
-.. code-block::
-
-   git clone https://git.morello-project.org/morello/android/platform/external/libshim.git
-   git clone https://git.morello-project.org/morello/musl-libc.git musl
+.. _libshim: https://git.morello-project.org/morello/android/platform/external/libshim
 
 Using this library
 ------------------
 
-The following describes how to build this library natively and how to use it to link user
-space applications. For brevity, we use native Morello LLVM toolchain below (see
-`Morello LLVM toolchain`_ for more details).
+To build Morello Musl libc, use Morello toolchain, for example, Morello LLVM (see below).
+This toolchain will cross-compile Musl libc. This works in the same way on both AArch64
+and x86 hosts.
 
-Building Musl libc
-^^^^^^^^^^^^^^^^^^
+Building consists of two stages: configure and build.
 
-To configure the build, run
+To configure without libshim, run
 
 .. code-block::
 
-   # where Morello toolchain is installed
-   export MORELLO_HOME=/path/to/morello/llvm
-   # where Musl will be installed
-   export MUSL_HOME=/path/to/install/musl
-   # configure command
-   CC=${MORELLO_HOME}/bin/clang ./configure \
-       --disable-shared --enable-morello --enable-libshim --prefix=${MUSL_HOME}
+   CC=${MORELLO}/bin/clang ./configure --enable-morello --prefix=${PREFIX} \
+        --target=aarch64-linux-musl_purecap
 
-We use ``--disable-shared`` because dynamic linking and dynamic loading is currently not
-supported. We use ``--enable-morello`` to build the Morello version of the library. This
-option also implies ``--target=aarch64-linux-musl_purecap``. When this is disabled,
-an AArch64 version of the library will be built. Finally, using ``--enable-libshim`` is
-required to produce build which uses the ``libshim`` library for system calls. This option
-only works when Morello is enabled. To build this library targeting system with Morello
-kernel, use ``--disable-libshim`` in the command above.
+To configure with libshim, run
 
-Make sure that ``libshim`` folder contain sources and is located next to the
-source root of Musl. Alternatively, use ``--libshim-path=<path>`` configure
-option.
+.. code-block::
 
-Currently, by default, Morello and use of libshim is enabled and building shared library
-is disabled.
+   CC=${MORELLO}/bin/clang ./configure --enable-morello --prefix=${PREFIX} \
+        --target=aarch64-linux-musl_purecap \
+        --enable-libshim --libshim-path=${LIBSHIM}
+
+Here, ``${MORELLO}`` is directory where Morello LLVM is installed and ``${PREFIX}`` is
+where Musl will be installed. You may use this folder as sysroot for compiling and
+linking purecap Morello applications based on. Optionally use path ``${LIBSHIM}`` to the
+libshim sources.
 
 To build and install, just run
 
@@ -75,16 +60,11 @@ To build and install, just run
    make
    make install
 
-When ``--enable-libshim`` is used, source code for
-`libshim <https://git.morello-project.org/morello/android/platform/external/libshim>`_
-is downloaded (from ``mainline`` branch) and built. The ``libshim`` objects are then added
-to the ``libc.a`` archive which can then be used in a usual way.
-
 When libshim is compiled, it needs access to kernel headers that should correspond to the
 kernel on the target system. The makefile of libshim tries to locate these headers, but,
 if that is unsuccessful, the following message may appear: ``Cross compilation on <OS>
-is not supported``. Should this happen, you may install kernel header manually. To do this,
-download kernel sources of the required version and run the following command:
+is not supported``. Should this happen, you may install kernel header manually. To do
+this, download kernel sources of the required version and run the following command:
 
 .. code-block::
 
@@ -96,23 +76,6 @@ To use those headers while building Musl, use:
 
    KERNEL_HEADER_INCLUDES="-isystem /path/to/kernel/headers/include" make
 
-Building Musl libc without libshim
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-
-To produce build without libshim, use the following configure command:
-
-.. code-block::
-
-   # configure command
-   CC=${MORELLO_HOME}/bin/clang ./configure \
-       --disable-shared --enable-morello --disable-libshim --prefix=${MUSL_HOME}
-
-The rest of the build process is the same. Please note that this configuration is
-experimental and is not currently covered by tests described below.
-
-Building applications with this library
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-
 The following example demonstrates how to build a purecap Morello application and link
 it to this C library. We presume the code of the application is in the ``hello.c`` file.
 
@@ -120,244 +83,121 @@ Compile and link application:
 
 .. code-block::
 
-   ${MORELLO_HOME}/bin/clang -march=morello+c64 --target=aarch64-linux-musl_purecap \
-       --sysroot ${MUSL_HOME} hello.c -o hello
+   ${MORELLO_HOME}/bin/clang \
+        -march=morello+c64 --target=aarch64-linux-musl_purecap \
+        --sysroot ${PREFIX} hello.c -o hello -static
 
-Note that you need to use version of the toolchain that supports target triple
-``aarch64-linux-musl_purecap`` and has correctly built CRT objects and compiler-rt
-for this target.
+Running unit tests
+------------------
 
-Cross-compiling
-^^^^^^^^^^^^^^^
-Both steps above can be cross-compiled from an x86 host to Morello target. To do so,
-append ``--target=aarch64-linux-musl_purecap`` to the ``configure`` script command and
-clang invocations (for both compiling and linking). Clang is a cross-compiler by default
-so it can output code for any architecture on demand. The configure script will also try
-to use LLVM's binutils instead of gcc's. They can be overridden in the same way as ``CC``.
-It might also be necessary to run ``configure`` with
-``CFLAGS=--target=aarch64-linux-musl_purecap``.
+Unit tests can be built and executed on `Morello IE`_ using the commands below:
+
+.. code-block::
+
+   export MORELLOIE=/path/to/bin/morelloie
+   make -C test test
+
+.. _Morello IE: https://developer.arm.com/downloads/-/morello-instruction-emulator
+
+Alternatively, you can build the tests and then run them elsewhere:
+
+.. code-block::
+
+   export MORELLOIE=/path/to/bin/morelloie
+   make -C test build
+
+Note that you will need to use libshim to run tests on Morello IE and *not* use libshim
+if you aim to run or a Morello board with PCuABI kernel.
 
 Morello LLVM toolchain
 ----------------------
 
-Building Morello toolchain for Linux
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+To build Morello LLVM toolchain, you can use script ``tools/build-morello.sh``. This
+script will work on AArch64 and x86 hosts, but different parameters should be supplied
+to the sub-commands depending on the host platform. Note, that some sub-commands use
+environment variables.
 
-This describes how to build Morello LLVM toolchain natively from
-`source <https://git.morello-project.org/morello/llvm-project>`_. This relies on existing
-LLVM toolchain of version 9.0.x or newer (the "host LLVM") and can be used on an AArch64
-Linux system.
+The following input is required:
 
-The essential differences of cross-compiling the toolchain on x86 hosts are explained below.
+* ``${LLVM_PROJECT}`` -- absolute path to folder with `LLVM sources`_.
+* ``${MUSL}`` -- absolute path to folder with Musl sources.
+* ``${LLVM}`` -- where host LLVM is installed (LLVM 11.0 or newer is required).
 
-Setup:
+.. _LLVM sources: https://git.morello-project.org/morello/llvm-project
 
-.. code-block::
+The following folders will be needed (should be different directories):
 
-   # where host LLVM is installed
-   export HOST_LLVM_BIN=/path/to/host/llvm/bin
-   # path to sources of the Morello toolchain
-   export LLVM_PROJECT="$(pwd)/llvm-project"
-   # target installation path for the Morello toolchain
-   export MORELLO_HOME="${HOME}/morello"
+* ``${BUILD_LLVM}`` -- build folder for clang.
+* ``${BUILD_RT}`` -- build folder for compiler-rt.
+* ``${MORELLO}`` -- where toolchain will be installed.
+* ``${SYSROOT}`` -- where Musl headers will be installed.
 
-Get sources:
+Building Clang
+^^^^^^^^^^^^^^
 
-.. code-block::
-
-   git clone https://git.morello-project.org/morello/llvm-project.git
-
-Configure:
+On AArch64 host use this command to build Clang:
 
 .. code-block::
 
-   mkdir -p build && cd build
-   cmake \
-      -DCMAKE_C_COMPILER=${HOST_LLVM_BIN}/clang \
-      -DCMAKE_C_COMPILER_WORKS=YES \
-      -DCMAKE_CXX_COMPILER=${HOST_LLVM_BIN}/clang++ \
-      -DCMAKE_CXX_COMPILER_WORKS=YES \
-      -DCMAKE_AR=${HOST_LLVM_BIN}/llvm-ar \
-      -DCMAKE_RANLIB=${HOST_LLVM_BIN}/llvm-ranlib \
-      -DCMAKE_NM=${HOST_LLVM_BIN}/llvm-nm \
-      -DCMAKE_LINKER=${HOST_LLVM_BIN}/ld.lld \
-      -DCMAKE_OBJDUMP=${HOST_LLVM_BIN}/llvm-objdump \
-      -DCMAKE_OBJCOPY=${HOST_LLVM_BIN}/llvm-objcopy \
-      -DCMAKE_EXE_LINKER_FLAGS="-fuse-ld=lld" \
-      -DCMAKE_SHARED_LINKER_FLAGS="-fuse-ld=lld" \
-      -DCMAKE_BUILD_TYPE=Release \
-      -DCMAKE_INSTALL_PREFIX=${MORELLO_HOME} \
-      -DCMAKE_EXPORT_COMPILE_COMMANDS=ON \
-      -DCMAKE_SKIP_BUILD_RPATH=OFF \
-      -DCMAKE_INSTALL_RPATH=\$ORIGIN/../lib \
-      -DCMAKE_BUILD_WITH_INSTALL_RPATH=ON \
-      -DLLVM_ENABLE_PROJECTS="clang;lld;lldb;libcxx;libcxxabi;compiler-rt;libunwind" \
-      -DLLVM_TARGETS_TO_BUILD="AArch64" \
-      -DLLVM_ENABLE_ASSERTIONS=OFF \
-      -DLLVM_ENABLE_LIBCXX=ON \
-      -DLLVM_ENABLE_LLD=ON \
-      -DLLVM_ENABLE_EH=ON \
-      -DLLVM_ENABLE_RTTI=ON \
-      -DBUILD_SHARED_LIBS=ON \
-      -DCOMPILER_RT_BUILD_BUILTINS=ON \
-      -DCOMPILER_RT_BUILD_XRAY=OFF \
-      -DCOMPILER_RT_BUILD_LIBFUZZER=OFF \
-      -DCOMPILER_RT_BUILD_PROFILE=OFF \
-      -DLIBCXX_CXX_ABI=libcxxabi \
-      -DLIBCXX_CXX_ABI_INCLUDE_PATHS="${LLVM_PROJECT}/libcxxabi/include" \
-      -DLIBCXX_USE_COMPILER_RT=ON \
-      -DLIBCXX_ENABLE_THREADS=ON \
-      -DLIBCXXABI_ENABLE_THREADS=ON \
-      -DLIBCXXABI_USE_LLVM_UNWINDER=ON \
-      -DLIBCXXABI_USE_COMPILER_RT=ON \
-      -DLIBCXXABI_USE_LLVM_UNWINDER=ON \
-      -DLIBUNWIND_ENABLE_THREADS=ON \
-      -DCLANG_DEFAULT_RTLIB="compiler-rt" \
-      -DCLANG_DEFAULT_CXX_STDLIB="libc++" \
-      -DCLANG_DEFAULT_LINKER="lld" \
-      -DCLANG_DEFAULT_OBJCOPY="llvm-objcopy" \
-      ${LLVM_PROJECT}/llvm
+   # clang
+   LLVM_TARGETS='AArch64' ./tools/build-morello.sh clang \
+        ${LLVM_PROJECT} ${LLVM} ${MORELLO} ${BUILD_LLVM}
 
-Build:
+On x86 host use this command to build Clang:
 
 .. code-block::
 
-   make -j16
-   make install
+   # clang
+   LLVM_TARGETS='AArch64' ./tools/build-morello.sh clang \
+        ${LLVM_PROJECT} ${LLVM} ${MORELLO} ${BUILD_LLVM}
 
-This step is the same for native and cross compilation except that you need to extend
-targets to build in ``LLVM_TARGETS_TO_BUILD`` with your host target.
+Building Runtime
+^^^^^^^^^^^^^^^^
 
-Compiling crtbegin and crtend objects
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-
-To build purecap Morello applications, startup code needs to be built in purecap mode too.
-This includes the ``crtbegin`` and ``crtend`` objects which are provided by the toolchain.
+The following commands will build remaining components of the toolchain:
 
 .. code-block::
 
-   ${MORELLO_HOME}/bin/clang -march=morello+c64 -mabi=purecap \
-       -nostdinc -isystem ${MUSL_HOME}/include \
-       -c ${LLVM_PROJECT}/compiler-rt/lib/crt/crtbegin.c \
-       -o $(${MORELLO_HOME}/bin/clang -print-resource-dir)/lib/aarch64-linux-musl_purecap/clang_rt.crtbegin.o
+   # musl-headers
+   CC=${MORELLO}/bin/clang ./tools/build-morello.sh musl-headers \
+        ${MUSL} ${SYSROOT} aarch64-unknown-linux-musl_purecap
 
-   ${MORELLO_HOME}/bin/clang -march=morello+c64 -mabi=purecap \
-       -nostdinc -isystem ${MUSL_HOME}/include \
-       -c ${LLVM_PROJECT}/compiler-rt/lib/crt/crtend.c \
-       -o $(${MORELLO_HOME}/bin/clang -print-resource-dir)/lib/aarch64-linux-musl_purecap/clang_rt.crtend.o
+   # CRT
+   CC=${MORELLO}/bin/clang ./tools/build-morello.sh crt \
+        ${LLVM_PROJECT} ${SYSROOT} aarch64-unknown-linux-musl_purecap
 
-Compiling libclang_rt.builtins-morello.a
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-
-The ``libclang_rt.builtins-morello.a`` binary is required for building purecap applications.
-This step requires Musl library built and installed (``libclang_rt.builtins-morello.a``
-depends in C library headers).
-
-When cross-compiling, before proceeding to the step of building Morello version of the
-``libclang_rt.builtins-morello.a``, you will need to cross-compile AArch64 (non-Morello)
-version of this static library ``libclang_rt.builtins-aarch64.a``. This operation is
-identical to build Morello version with the following differences:
-
-* The ``CMAKE_C_COMPILER_TARGET`` value should be replaced with only ``aarch64-linux-gnu``
-  (Morello-specific flags should be removed).
-* The ``MUSL_HOME`` variable will refer to the installation path of the AArch64 (non-Morello)
-  version of Musl. It can bui built by using the procedure described above with running
-  the ``configure`` script with ``--disable-morello --disable-libshim`` options.
-* The destination file name of the ``mv`` command must be ``libclang_rt.builtins-aarch64.a``.
-
-When AArch64 versions of ``libclang_rt.builtins-aarch64.a``, ``clang_rt.crtbegin-aarch64.o``
-and ``clang_rt.crtend-aarch64.o`` are installed, you can successfully cross-compile Morello
-version of ``libclang_rt.builtins-morello.a`` by following steps described above.
-
-If you compile toolchain on AArch64-based device, you can proceed to the next step straight
-away.
-
-Create ``toolchain.cmake`` file with the following contents (note the use of environment
-variable ``MORELLO_HOME``, it is supposed to point to the Morello toolchain installation
-directory):
-
-.. code-block::
-
-   set(CMAKE_SYSTEM_NAME Linux)
-   set(CMAKE_SYSTEM_PROCESSOR aarch64)
-   set(CMAKE_C_COMPILER_TARGET "aarch64-linux-gnu -march=morello+c64 -mabi=purecap")
-
-   set(CMAKE_C_COMPILER_WORKS 1 CACHE INTERNAL "")
-   set(CMAKE_CXX_COMPILER_WORKS 1 CACHE INTERNAL "")
-
-   set(CMAKE_C_COMPILER "${MORELLO_HOME}/bin/clang" CACHE FILEPATH "" FORCE)
-   set(CMAKE_CXX_COMPILER "${MORELLO_HOME}/bin/clang++" CACHE FILEPATH "" FORCE)
-   set(CMAKE_AR "${MORELLO_HOME}/bin/llvm-ar" CACHE FILEPATH "" FORCE)
-   set(CMAKE_RANLIB "${MORELLO_HOME}/bin/llvm-ranlib" CACHE FILEPATH "" FORCE)
-   set(CMAKE_NM "${MORELLO_HOME}/bin/llvm-nm" CACHE FILEPATH "" FORCE)
-   set(CMAKE_LINKER "${MORELLO_HOME}/bin/ld.lld" CACHE FILEPATH "" FORCE)
-   set(CMAKE_OBJDUMP "${MORELLO_HOME}/bin/llvm-objdump" CACHE FILEPATH "" FORCE)
-   set(CMAKE_OBJCOPY "${MORELLO_HOME}/bin/llvm-objcopy" CACHE FILEPATH "" FORCE)
-
-   set(LLVM_CONFIG_PATH "${MORELLO_HOME}/bin/llvm-config" CACHE FILEPATH "" FORCE)
-   set(CMAKE_EXE_LINKER_FLAGS "-fuse-ld=lld" CACHE FILEPATH "" FORCE)
-   set(CMAKE_SHARED_LINKER_FLAGS "-fuse-ld=lld" CACHE FILEPATH "" FORCE)
-
-This file is used in the following configure command for compiler-rt (note that the
-``MORELLO_HOME`` environment variable must be exported):
-
-.. code-block::
-
-   mkdir p build-rt && cd build-rt
-   rm -rf *
-
-   perl -pe 's/\$\{([_A-Z]+)\}/$ENV{$1}/g' < /path/to/toolchain.cmake > toolchain.cmake
-
-   cmake -Wno-dev \
-      -DCMAKE_TOOLCHAIN_FILE=toolchain.cmake \
-      -DCMAKE_BUILD_TYPE=Release \
-      -DCMAKE_C_FLAGS="-nostdinc -isystem ${MUSL_HOME}/include" \
-      -DCMAKE_EXPORT_COMPILE_COMMANDS=ON \
-      -DCMAKE_SKIP_BUILD_RPATH=OFF \
-      -DCMAKE_INSTALL_RPATH=\$ORIGIN/../lib \
-      -DCMAKE_BUILD_WITH_INSTALL_RPATH=ON \
-      -DLLVM_TARGETS_TO_BUILD="AArch64" \
-      -DLLVM_ENABLE_ASSERTIONS=OFF \
-      -DBUILD_SHARED_LIBS=ON \
-      -DCOMPILER_RT_DEFAULT_TARGET_TRIPLE=aarch64-linux-gnu \
-      -DCOMPILER_RT_BUILD_BUILTINS=ON \
-      -DCOMPILER_RT_BUILD_SANITIZERS=OFF \
-      -DCOMPILER_RT_BUILD_XRAY=OFF \
-      -DCOMPILER_RT_BUILD_LIBFUZZER=OFF \
-      -DCOMPILER_RT_BUILD_PROFILE=OFF \
-      ${LLVM_PROJECT}/compiler-rt
-
-   make clang_rt.builtins-aarch64
-
-   mv lib/linux/libclang_rt.builtins-aarch64.a \
-       $(${MORELLO_HOME}/bin/clang -print-resource-dir)/lib/aarch64-linux-musl_purecap/libclang_rt.builtins.a
+   ## Compiler-RT
+   CC=${MORELLO}/bin/clang ./tools/build-morello.sh compiler-rt \
+        ${LLVM_PROJECT} ${MORELLO} ${BUILD_RT} ${SYSROOT} aarch64-unknown-linux-musl_purecap
 
 CHERIseed
 ---------
 
 This version of Musl also includes changes to enable CHERIseed, a software-only implementation of
-`CHERI <https://www.cl.cam.ac.uk/research/security/ctsrd/cheri/>` semantics.
+`CHERI`_ semantics.
 
-The aim of CHERIseed is to facilitate the porting effort of existing code to CHERI hardware
-platforms, by providing some of the functionality while running on a host machine that is not
-capability aware. This functionality includes:
+.. _CHERI: https://www.cl.cam.ac.uk/research/security/ctsrd/cheri/
 
- - 128-bit pointers for a 64-bit address space (64 bits of “metadata”).
- - Bounds checking on pointer dereferences.
- - Permissions checking for pointers where permissions are restricted.
+The aim of CHERIseed is to facilitate the porting effort of existing code to CHERI
+hardware platforms, by providing some of the functionality while running on a host
+machine that is not capability aware. This functionality includes:
 
-By compiling and running code with CHERIseed a user can experiment with CHERI programming (see the
-`CHERI C/C++ Programming Guide <https://www.cl.cam.ac.uk/techreports/UCAM-CL-TR-947.pdf>),
-and identify potentially unsafe code that would fault on real CHERI hardware.
+* 128-bit pointers for a 64-bit address space (64 bits of “metadata”).
+* Bounds checking on pointer dereferences.
+* Permissions checking for pointers where permissions are restricted.
 
-The CHERIseed LLVM Project can be found
-`here <https://git.morello-project.org/morello/llvm-project/-/tree/cheriseed>`
-See:`CHERIseed.rst <https://git.morello-project.org/morello/llvm-project/-/blob/cheriseed/clang/docs/CHERIseed.rst>``
-for how to build CHERIseed enabled clang.
+By compiling and running code with CHERIseed a user can experiment with CHERI programming
+(see the `CHERI C/C++ Programming Guide`_), and identify potentially unsafe code that
+would fault on real CHERI hardware.
 
-CHERIseed-enabled
-`libshim <https://git.morello-project.org/morello/android/platform/external/libshim/-/tree/cheriseed>`
-is also required.
+.. _CHERI C/C++ Programming Guide: https://www.cl.cam.ac.uk/techreports/UCAM-CL-TR-947.pdf
+
+The CHERIseed LLVM Project can be found `here`_. See: `CHERIseed.rst`_ for how to build
+CHERIseed-enabled Clang. `CHERIseed-enabled libshim`_ is also required.
+
+.. _here: https://git.morello-project.org/morello/llvm-project/-/tree/cheriseed
+.. _CHERIseed.rst: https://git.morello-project.org/morello/llvm-project/-/blob/cheriseed/clang/docs/CHERIseed.rst
+.. _CHERIseed-enabled libshim: https://git.morello-project.org/morello/android/platform/external/libshim/-/tree/cheriseed
 
 To build Musl with CHERIseed enabled, Musl should be configured with:
 
@@ -370,19 +210,6 @@ To build Musl with CHERIseed enabled, Musl should be configured with:
        --enable-cheriseed \
        --libshim-path=${CHERISEED_LIBSHIM}  \
        --prefix=${MUSL_HOME}
-
-Contributing
-------------
-
-Running unit tests
-^^^^^^^^^^^^^^^^^^
-
-Prerequisites: Python 3.6+, `Morello IE <https://developer.arm.com/architectures/cpu-architecture/a-profile/morello/development-tools#instruction-emulator>`_.
-
-.. code-block::
-
-   export MORELLOIE=/path/to/morelloie/bin/morelloie
-   make -C test test
 
 Original README
 ---------------

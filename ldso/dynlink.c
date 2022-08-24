@@ -473,8 +473,7 @@ static void do_relocs(struct dso *dso, size_t *rel, size_t rel_size, size_t stri
 				} else if (def.sym && ELF64_ST_TYPE(def.sym->st_info) == STT_FUNC) {
 					cap = __builtin_cheri_perms_and(cap_rx,
 						__CHERI_CAP_PERMISSION_GLOBAL__ | EXEC_CAP_PERMS | READ_CAP_PERMS);
-					if (type == REL_GOT)
-						cap = __builtin_cheri_seal_entry(cap);
+					cap = __builtin_cheri_seal_entry(cap);
 				} else if ((def.dso && def.dso->phdr->p_flags & PF_W) || dso == &ldso) {
 					cap = __builtin_cheri_perms_and(cap_rw,
 						__CHERI_CAP_PERMISSION_GLOBAL__ | READ_CAP_PERMS | WRITE_CAP_PERMS);

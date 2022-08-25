@@ -1097,7 +1097,8 @@
         "app": "${build}/pthread_cancel-${kind}.exe",
         "name": "pthread-cancel-deferred-disabled",
         "args": ["6"],
-        "xrc": [0]
+        "xrc": [0],
+        "skip": ["flaky"]
     },
     {
         "app": "${build}/pthread_cancel-${kind}.exe",

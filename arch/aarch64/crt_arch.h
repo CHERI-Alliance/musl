@@ -10,6 +10,17 @@ START ":\n"
 "	bl __cheriseed_static_init \n"
 "	mov x0, sp\n"
 "	bl __shim_marshal_program_arguments \n"
+// [sp] 1st parameter is in x0
+// [_DYNAMIC] 2nd parameter is in x1, see below
+// [argv] 3rd parameter
+// [argc] 4th parameter
+// [envp] 5th parameter
+// [auxv] 6th parameter
+"	ldr x2, [x0, #0] \n"
+"	add x3, x2, #16 \n"
+"	add x4, x2, #32 \n"
+"	add x5, x2, #48 \n"
+"	ldr x2, [x2, #0] \n"
 #endif
 ".weak _DYNAMIC\n"
 ".hidden _DYNAMIC\n"

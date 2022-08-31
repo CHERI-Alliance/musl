@@ -2,667 +2,786 @@
     {
         "app": "${build}/hello-${kind}.exe",
         "name": "hello",
-        "xrc": [32]
+        "xrc": [32],
+        "skip": ["dynamic"]
     },
     {
         "app": "${build}/hello-${kind}.exe",
         "name": "hello-one-arg",
         "args": ["test"],
-        "xrc": [48]
+        "xrc": [48],
+        "skip": ["dynamic"]
     },
     {
         "app": "${build}/hello-${kind}.exe",
         "name": "hello-two-args",
         "args": ["morello", "test"],
-        "xrc": [64]
+        "xrc": [64],
+        "skip": ["dynamic"]
     },
     {
         "app": "${build}/strerror_r-${kind}.exe",
         "name": "strerror_r",
-        "xrc": [0]
+        "xrc": [0],
+        "skip": ["dynamic"]
     },
     {
         "app": "${build}/strerror-${kind}.exe",
         "name": "strerror",
-        "xrc": [0]
+        "xrc": [0],
+        "skip": ["dynamic"]
     },
     {
         "app": "${build}/bsearch-${kind}.exe",
         "args": ["0"],
         "name": "bsearch-basic",
-        "xrc": [0]
+        "xrc": [0],
+        "skip": ["dynamic"]
     },
     {
         "app": "${build}/bsearch-${kind}.exe",
         "args": ["1"],
         "name": "bsearch-duplicate",
-        "xrc": [0]
+        "xrc": [0],
+        "skip": ["dynamic"]
     },
     {
         "app": "${build}/bsearch-${kind}.exe",
         "args": ["2"],
         "name": "bsearch-not-found",
-        "xrc": [0]
+        "xrc": [0],
+        "skip": ["dynamic"]
     },
     {
         "app": "${build}/memccpy-${kind}.exe",
         "name": "memccpy-c",
         "args": ["0"],
-        "xrc": [0]
+        "xrc": [0],
+        "skip": ["dynamic"]
     },
     {
         "app": "${build}/memccpy-${kind}.exe",
         "name": "memccpy-n",
         "args": ["1"],
-        "xrc": [0]
+        "xrc": [0],
+        "skip": ["dynamic"]
     },
     {
         "app": "${build}/memccpy-${kind}.exe",
         "name": "memccpy-whole-string",
         "args": ["2"],
-        "xrc": [0]
+        "xrc": [0],
+        "skip": ["dynamic"]
     },
     {
         "app": "${build}/memchr-${kind}.exe",
         "name": "memchr-found",
         "args": ["0"],
-        "xrc": [0]
+        "xrc": [0],
+        "skip": ["dynamic"]
     },
     {
         "app": "${build}/memchr-${kind}.exe",
         "name": "memchr-not-found",
         "args": ["1"],
-        "xrc": [0]
+        "xrc": [0],
+        "skip": ["dynamic"]
     },
     {
         "app": "${build}/memchr-${kind}.exe",
         "name": "memchr-not-within-n",
         "args": ["2"],
-        "xrc": [0]
+        "xrc": [0],
+        "skip": ["dynamic"]
     },
     {
         "app": "${build}/stpcpy-${kind}.exe",
         "name": "stpcpy",
-        "xrc": [0]
+        "xrc": [0],
+        "skip": ["dynamic"]
     },
     {
         "app": "${build}/stpncpy-${kind}.exe",
         "name": "stpncpy",
-        "xrc": [0]
+        "xrc": [0],
+        "skip": ["dynamic"]
     },
     {
         "app": "${build}/strlen-${kind}.exe",
         "name": "strlen-basic",
         "args": ["0"],
-        "xrc": [0]
+        "xrc": [0],
+        "skip": ["dynamic"]
     },
     {
         "app": "${build}/strlen-${kind}.exe",
         "name": "strlen-empty",
         "args": ["1"],
-        "xrc": [0]
+        "xrc": [0],
+        "skip": ["dynamic"]
     },
     {
         "app": "${build}/strlen-${kind}.exe",
         "name": "strlen-many",
         "args": ["2"],
-        "xrc": [0]
+        "xrc": [0],
+        "skip": ["dynamic"]
     },
     {
         "app": "${build}/strcasestr-${kind}.exe",
         "name": "strcasestr-found",
         "xrc": [0],
-        "args": ["0"]
+        "args": ["0"],
+        "skip": ["dynamic"]
     },
     {
         "app": "${build}/strcasestr-${kind}.exe",
         "name": "strcasestr-not-found",
         "xrc": [0],
-        "args": ["1"]
+        "args": ["1"],
+        "skip": ["dynamic"]
     },
     {
         "app": "${build}/strcasestr-${kind}.exe",
         "name": "strcasestr-empty-haystack",
         "xrc": [0],
-        "args": ["2"]
+        "args": ["2"],
+        "skip": ["dynamic"]
     },
     {
         "app": "${build}/mempcpy-${kind}.exe",
         "name": "mempcpy",
-        "xrc": [0]
+        "xrc": [0],
+        "skip": ["dynamic"]
     },
     {
         "app": "${build}/memrchr-${kind}.exe",
         "name": "memrchr-found",
         "args": ["0"],
-        "xrc": [0]
+        "xrc": [0],
+        "skip": ["dynamic"]
     },
     {
         "app": "${build}/memrchr-${kind}.exe",
         "name": "memrchr-not-found",
         "args": ["1"],
-        "xrc": [0]
+        "xrc": [0],
+        "skip": ["dynamic"]
     },
     {
         "app": "${build}/memrchr-${kind}.exe",
         "name": "memrchr-not-within-n",
         "args": ["2"],
-        "xrc": [0]
+        "xrc": [0],
+        "skip": ["dynamic"]
     },
     {
         "app": "${build}/strcasecmp-${kind}.exe",
         "name": "strcasecmp",
-        "xrc": [0]
+        "xrc": [0],
+        "skip": ["dynamic"]
     },
     {
         "app": "${build}/strcat-${kind}.exe",
         "name": "strcat",
-        "xrc": [0]
+        "xrc": [0],
+        "skip": ["dynamic"]
     },
     {
         "app": "${build}/memmove-${kind}.exe",
         "name": "memmove-high-to-low",
         "args": ["0"],
-        "xrc": [0]
+        "xrc": [0],
+        "skip": ["dynamic"]
     },
     {
         "app": "${build}/memmove-${kind}.exe",
         "name": "memmove-low-to-high",
         "args": ["1"],
-        "xrc": [0]
+        "xrc": [0],
+        "skip": ["dynamic"]
     },
     {
         "app": "${build}/strchr-${kind}.exe",
         "name": "strchr-found",
         "args": ["0"],
-        "xrc": [0]
+        "xrc": [0],
+        "skip": ["dynamic"]
     },
     {
         "app": "${build}/strchr-${kind}.exe",
         "name": "strchr-not-found",
         "args": ["1"],
-        "xrc": [0]
+        "xrc": [0],
+        "skip": ["dynamic"]
     },
     {
         "app": "${build}/strchrnul-${kind}.exe",
         "name": "strchrnul-found",
         "args": ["0"],
-        "xrc": [0]
+        "xrc": [0],
+        "skip": ["dynamic"]
     },
     {
         "app": "${build}/strchrnul-${kind}.exe",
         "name": "strchrnul-not-found",
         "args": ["1"],
-        "xrc": [0]
+        "xrc": [0],
+        "skip": ["dynamic"]
     },
     {
         "app": "${build}/strlcpy-${kind}.exe",
         "name": "strlcpy",
-        "xrc": [0]
+        "xrc": [0],
+        "skip": ["dynamic"]
     },
     {
         "app": "${build}/strcmp-${kind}.exe",
         "name": "strcmp",
-        "xrc": [0]
+        "xrc": [0],
+        "skip": ["dynamic"]
     },
     {
         "app": "${build}/strcpy-${kind}.exe",
         "name": "strcpy",
-        "xrc": [0]
+        "xrc": [0],
+        "skip": ["dynamic"]
     },
     {
         "app": "${build}/strcspn-${kind}.exe",
         "name": "strcspn-empty",
         "args": ["0"],
-        "xrc": [0]
+        "xrc": [0],
+        "skip": ["dynamic"]
     },
     {
         "app": "${build}/strcspn-${kind}.exe",
         "name": "strcspn-found",
         "args": ["1"],
-        "xrc": [0]
+        "xrc": [0],
+        "skip": ["dynamic"]
     },
     {
         "app": "${build}/strcspn-${kind}.exe",
         "name": "strcspn-not-found",
-        "args": ["2"]
+        "args": ["2"],
+        "skip": ["dynamic"]
     },
     {
         "app": "${build}/strlcat-${kind}.exe",
         "name": "strlcat-shorter-than-n",
-        "args": ["0"]
+        "args": ["0"],
+        "skip": ["dynamic"]
     },
     {
         "app": "${build}/strlcat-${kind}.exe",
         "name": "strlcat-longer-than-n",
-        "args": ["1"]
+        "args": ["1"],
+        "skip": ["dynamic"]
     },
     {
         "app": "${build}/strncasecmp-${kind}.exe",
         "name": "strncasecmp",
-        "xrc": [0]
+        "xrc": [0],
+        "skip": ["dynamic"]
     },
     {
         "app": "${build}/strncat-${kind}.exe",
         "name": "strncat",
-        "xrc": [0]
+        "xrc": [0],
+        "skip": ["dynamic"]
     },
     {
         "app": "${build}/strncmp-${kind}.exe",
         "name": "strncmp",
-        "xrc": [0]
+        "xrc": [0],
+        "skip": ["dynamic"]
     },
     {
         "app": "${build}/strncpy-${kind}.exe",
         "name": "strncpy",
-        "xrc": [0]
+        "xrc": [0],
+        "skip": ["dynamic"]
     },
     {
         "app": "${build}/strnlen-${kind}.exe",
         "name": "strnlen-basic",
         "args": ["0"],
-        "xrc": [0]
+        "xrc": [0],
+        "skip": ["dynamic"]
     },
     {
         "app": "${build}/strnlen-${kind}.exe",
         "name": "strnlen-empty",
         "args": ["1"],
-        "xrc": [0]
+        "xrc": [0],
+        "skip": ["dynamic"]
     },
     {
         "app": "${build}/strnlen-${kind}.exe",
         "name": "strnlen-many",
         "args": ["2"],
-        "xrc": [0]
+        "xrc": [0],
+        "skip": ["dynamic"]
     },
     {
         "app": "${build}/strpbrk-${kind}.exe",
         "name": "strpbrk-not-found",
         "args": ["0"],
-        "xrc": [0]
+        "xrc": [0],
+        "skip": ["dynamic"]
     },
     {
         "app": "${build}/strpbrk-${kind}.exe",
         "name": "strpbrk-found",
         "args": ["1"],
-        "xrc": [0]
+        "xrc": [0],
+        "skip": ["dynamic"]
     },
     {
         "app": "${build}/strrchr-${kind}.exe",
         "name": "strrchr-found",
         "args": ["0"],
-        "xrc": [0]
+        "xrc": [0],
+        "skip": ["dynamic"]
     },
     {
         "app": "${build}/strrchr-${kind}.exe",
         "name": "strrchr-not-found",
         "args": ["1"],
-        "xrc": [0]
+        "xrc": [0],
+        "skip": ["dynamic"]
     },
     {
         "app": "${build}/swab-${kind}.exe",
         "name": "swab",
-        "xrc": [0]
+        "xrc": [0],
+        "skip": ["dynamic"]
     },
     {
         "app": "${build}/strsignal-${kind}.exe",
         "name": "strsignal",
-        "xrc": [0]
+        "xrc": [0],
+        "skip": ["dynamic"]
     },
     {
         "app": "${build}/strsep-${kind}.exe",
         "name": "strsep",
-        "xrc": [0]
+        "xrc": [0],
+        "skip": ["dynamic"]
     },
     {
         "app": "${build}/wcslen-${kind}.exe",
         "name": "wcslen-basic",
         "args": ["0"],
-        "xrc": [0]
+        "xrc": [0],
+        "skip": ["dynamic"]
     },
     {
         "app": "${build}/wcslen-${kind}.exe",
         "name": "wcslen-empty",
         "args": ["1"],
-        "xrc": [0]
+        "xrc": [0],
+        "skip": ["dynamic"]
     },
     {
         "app": "${build}/wcslen-${kind}.exe",
         "name": "wcslen-many",
         "args": ["2"],
-        "xrc": [0]
+        "xrc": [0],
+        "skip": ["dynamic"]
     },
     {
         "app": "${build}/wmemset-${kind}.exe",
         "name": "wmemset",
-        "xrc": [0]
+        "xrc": [0],
+        "skip": ["dynamic"]
     },
     {
         "app": "${build}/wcscpy-${kind}.exe",
         "name": "wcscpy",
-        "xrc": [0]
+        "xrc": [0],
+        "skip": ["dynamic"]
     },
     {
         "app": "${build}/wcscmp-${kind}.exe",
         "name": "wcscmp",
-        "xrc": [0]
+        "xrc": [0],
+        "skip": ["dynamic"]
     },
     {
         "app": "${build}/wcsncasecmp-${kind}.exe",
         "name": "wcsncasecmp",
-        "xrc": [0]
+        "xrc": [0],
+        "skip": ["dynamic"]
     },
     {
         "app": "${build}/wmemcpy-${kind}.exe",
         "name": "wmemcpy",
-        "xrc": [0]
+        "xrc": [0],
+        "skip": ["dynamic"]
     },
     {
         "app": "${build}/wmemmove-${kind}.exe",
         "name": "wmemmove-high-to-low",
         "args": ["0"],
-        "xrc": [0]
+        "xrc": [0],
+        "skip": ["dynamic"]
     },
     {
         "app": "${build}/wmemmove-${kind}.exe",
         "name": "wmemmove-low-to-high",
         "args": ["1"],
-        "xrc": [0]
+        "xrc": [0],
+        "skip": ["dynamic"]
     },
     {
         "app": "${build}/wcscasecmp-${kind}.exe",
         "name": "wcscasecmp",
-        "xrc": [0]
+        "xrc": [0],
+        "skip": ["dynamic"]
     },
     {
         "app": "${build}/wcscspn-${kind}.exe",
         "name": "wcscspn-empty",
         "args": ["0"],
-        "xrc": [0]
+        "xrc": [0],
+        "skip": ["dynamic"]
     },
     {
         "app": "${build}/wcscspn-${kind}.exe",
         "name": "wcscspn-found",
         "args": ["1"],
-        "xrc": [0]
+        "xrc": [0],
+        "skip": ["dynamic"]
     },
     {
         "app": "${build}/wcscspn-${kind}.exe",
         "name": "wcscspn-not-found",
-        "args": ["2"]
+        "args": ["2"],
+        "skip": ["dynamic"]
     },
     {
         "app": "${build}/wmemcmp-${kind}.exe",
-        "name": "wmemcmp"
+        "name": "wmemcmp",
+        "skip": ["dynamic"]
     },
     {
         "app": "${build}/wcsncat-${kind}.exe",
         "name": "wcsncat",
-        "xrc": [0]
+        "xrc": [0],
+        "skip": ["dynamic"]
     },
     {
         "app": "${build}/wcsspn-${kind}.exe",
         "name": "wcsspn-empty",
         "args": ["0"],
-        "xrc": [0]
+        "xrc": [0],
+        "skip": ["dynamic"]
     },
     {
         "app": "${build}/wcsspn-${kind}.exe",
         "name": "wcsspn-found",
         "args": ["1"],
-        "xrc": [0]
+        "xrc": [0],
+        "skip": ["dynamic"]
     },
     {
         "app": "${build}/wcsspn-${kind}.exe",
         "name": "wcsspn-not-found",
-        "args": ["2"]
+        "args": ["2"],
+        "skip": ["dynamic"]
     },
     {
         "app": "${build}/wcsnlen-${kind}.exe",
         "name": "wcsnlen-basic",
         "args": ["0"],
-        "xrc": [0]
+        "xrc": [0],
+        "skip": ["dynamic"]
     },
     {
         "app": "${build}/wcsnlen-${kind}.exe",
         "name": "wcsnlen-empty",
         "args": ["1"],
-        "xrc": [0]
+        "xrc": [0],
+        "skip": ["dynamic"]
     },
     {
         "app": "${build}/wcsnlen-${kind}.exe",
         "name": "wcsnlen-many",
         "args": ["2"],
-        "xrc": [0]
+        "xrc": [0],
+        "skip": ["dynamic"]
     },
     {
         "app": "${build}/wcschr-${kind}.exe",
         "name": "wcschr-found",
         "args": ["0"],
-        "xrc": [0]
+        "xrc": [0],
+        "skip": ["dynamic"]
     },
     {
         "app": "${build}/wcschr-${kind}.exe",
         "name": "wcschr-not-found",
         "args": ["1"],
-        "xrc": [0]
+        "xrc": [0],
+        "skip": ["dynamic"]
     },
     {
         "app": "${build}/wcspbrk-${kind}.exe",
         "name": "wcspbrk-not-found",
         "args": ["0"],
-        "xrc": [0]
+        "xrc": [0],
+        "skip": ["dynamic"]
     },
     {
         "app": "${build}/wcspbrk-${kind}.exe",
         "name": "wcspbrk-found",
         "args": ["1"],
-        "xrc": [0]
+        "xrc": [0],
+        "skip": ["dynamic"]
     },
     {
         "app": "${build}/wmemchr-${kind}.exe",
         "name": "wmemchr-found",
         "args": ["0"],
-        "xrc": [0]
+        "xrc": [0],
+        "skip": ["dynamic"]
     },
     {
         "app": "${build}/wmemchr-${kind}.exe",
         "name": "wmemchr-not-found",
         "args": ["1"],
-        "xrc": [0]
+        "xrc": [0],
+        "skip": ["dynamic"]
     },
     {
         "app": "${build}/wmemchr-${kind}.exe",
         "name": "wmemchr-not-within-n",
         "args": ["2"],
-        "xrc": [0]
+        "xrc": [0],
+        "skip": ["dynamic"]
     },
     {
         "app": "${build}/wcpcpy-${kind}.exe",
         "name": "wcpcpy",
-        "xrc": [0]
+        "xrc": [0],
+        "skip": ["dynamic"]
     },
     {
         "app": "${build}/wcpncpy-${kind}.exe",
         "name": "wcpncpy",
-        "xrc": [0]
+        "xrc": [0],
+        "skip": ["dynamic"]
     },
     {
         "app": "${build}/wcsrchr-${kind}.exe",
         "name": "wcsrchr-found",
         "args": ["0"],
-        "xrc": [0]
+        "xrc": [0],
+        "skip": ["dynamic"]
     },
     {
         "app": "${build}/wcsrchr-${kind}.exe",
         "name": "wcsrchr-not-found",
         "args": ["1"],
-        "xrc": [0]
+        "xrc": [0],
+        "skip": ["dynamic"]
     },
     {
         "app": "${build}/wcsncmp-${kind}.exe",
         "name": "wcsncmp",
-        "xrc": [0]
+        "xrc": [0],
+        "skip": ["dynamic"]
     },
     {
         "app": "${build}/wcsncpy-${kind}.exe",
         "name": "wcsncpy",
-        "xrc": [0]
+        "xrc": [0],
+        "skip": ["dynamic"]
     },
     {
         "app": "${build}/wcscat-${kind}.exe",
         "name": "wcscat",
-        "xrc": [0]
+        "xrc": [0],
+        "skip": ["dynamic"]
     },
     {
         "app": "${build}/wcsstr-${kind}.exe",
         "name": "wcsstr",
-        "xrc": [0]
+        "xrc": [0],
+        "skip": ["dynamic"]
     },
     {
         "app": "${build}/wcstok-${kind}.exe",
         "name": "wcstok",
-        "xrc": [0]
+        "xrc": [0],
+        "skip": ["dynamic"]
     },
     {
         "app": "${build}/strtok-${kind}.exe",
         "name": "strtok",
-        "xrc": [0]
+        "xrc": [0],
+        "skip": ["dynamic"]
     },
     {
         "app": "${build}/strtok_r-${kind}.exe",
         "name": "strtok_r",
-        "xrc": [0]
+        "xrc": [0],
+        "skip": ["dynamic"]
     },
     {
         "app": "${build}/assert-${kind}.exe",
         "name": "assert",
-        "xrc": [-6]
+        "xrc": [-6],
+        "skip": ["dynamic"]
     },
     {
         "app": "${build}/assert_noop-${kind}.exe",
         "name": "assert_noop",
-        "xrc": [0]
+        "xrc": [0],
+        "skip": ["dynamic"]
     },
     {
         "app": "${build}/gettimeofday-${kind}.exe",
         "name": "gettimeofday",
-        "xrc": [0]
+        "xrc": [0],
+        "skip": ["dynamic"]
     },
     {
         "app": "${build}/clock_getres-${kind}.exe",
         "name": "clock_getres",
-        "xrc": [0]
+        "xrc": [0],
+        "skip": ["dynamic"]
     },
     {
         "app": "${build}/timer-${kind}.exe",
         "name": "timer_funcs",
-        "xrc": [0]
+        "xrc": [0],
+        "skip": ["dynamic"]
     },
     {
         "app": "${build}/timegm-${kind}.exe",
         "name": "timegm",
         "xrc": [0],
+        "skip": ["dynamic"],
         "stdout": ["0"]
     },
     {
         "app": "${build}/clock_getcpuclockid-${kind}.exe",
         "name": "clock_getcpuclockid",
-        "xrc": [0]
+        "xrc": [0],
+        "skip": ["dynamic"]
     },
     {
         "app": "${build}/nanosleep-${kind}.exe",
         "name": "nanosleep",
         "args": ["0"],
-        "xrc": [0]
+        "xrc": [0],
+        "skip": ["dynamic"]
     },
     {
         "app": "${build}/nanosleep-${kind}.exe",
         "name": "clock_nanosleep",
         "args": ["1"],
-        "xrc": [0]
+        "xrc": [0],
+        "skip": ["dynamic"]
     },
     {
         "app":  "${build}/strxfrm-${kind}.exe",
         "name": "strxfrm-get-length",
         "args": ["0"],
-        "xrc": [0]
+        "xrc": [0],
+        "skip": ["dynamic"]
     },
     {
         "app":  "${build}/strxfrm-${kind}.exe",
         "name": "strxfrm-convert",
         "args": ["1"],
-        "xrc": [0]
+        "xrc": [0],
+        "skip": ["dynamic"]
     },
     {
         "app":  "${build}/strcoll-${kind}.exe",
         "name": "strcoll",
-        "xrc": [0]
+        "xrc": [0],
+        "skip": ["dynamic"]
     },
     {
         "app":  "${build}/localeconv-${kind}.exe",
         "name": "localeconv-check-validity",
         "args": ["0"],
-        "xrc": [0]
+        "xrc": [0],
+        "skip": ["dynamic"]
     },
     {
         "app":  "${build}/localeconv-${kind}.exe",
         "name": "localeconv-read-char",
         "args": ["1"],
-        "xrc": [0]
+        "xrc": [0],
+        "skip": ["dynamic"]
     },
     {
         "app":  "${build}/localeconv-${kind}.exe",
         "name": "localeconv-write-char",
         "args": ["2"],
-        "xrc": [-11]
+        "xrc": [-11],
+        "skip": ["dynamic"]
     },
     {
         "app":  "${build}/localeconv-${kind}.exe",
         "name": "localeconv-read-string",
         "args": ["3"],
-        "xrc": [0]
+        "xrc": [0],
+        "skip": ["dynamic"]
     },
     {
         "app":  "${build}/localeconv-${kind}.exe",
         "name": "localeconv-write-string",
         "args": ["4"],
-        "xrc": [-11]
+        "xrc": [-11],
+        "skip": ["dynamic"]
     },
     {
         "app":  "${build}/mbrtowc-${kind}.exe",
         "name": "mbrtowc",
         "args": ["0"],
-        "xrc": [0]
+        "xrc": [0],
+        "skip": ["dynamic"]
     },
     {
         "app":  "${build}/mbrtowc-${kind}.exe",
         "name": "c16towc",
         "args": ["1"],
-        "xrc": [0]
+        "xrc": [0],
+        "skip": ["dynamic"]
     },
     {
         "app":  "${build}/mbrtowc-${kind}.exe",
         "name": "mbsnrtowcs",
         "args": ["2"],
-        "xrc": [0]
+        "xrc": [0],
+        "skip": ["dynamic"]
     },
     {
         "app": "${build}/stdout-${kind}.exe",
         "name": "stdout",
         "xrc": [0],
+        "skip": ["dynamic"],
         "stdout" : ["Hello stdout"]
     },
     {
         "app": "${build}/stderr-${kind}.exe",
         "name": "stderr",
         "xrc": [0],
+        "skip": ["dynamic"],
         "stderr" : ["Hello stderr"]
     },
     {
         "app": "${build}/echo-${kind}.exe",
         "name": "stdin_echo",
         "xrc": [0],
+        "skip": ["dynamic"],
         "stdin": "Hello stdin",
         "stdout" : ["Hello stdin"]
     },
@@ -670,6 +789,7 @@
         "app": "${build}/getenv-${kind}.exe",
         "name": "getenv",
         "xrc": [0],
+        "skip": ["dynamic"],
         "env": {"HELLO": "world"},
         "stdout": ["world", "6"]
     },
@@ -677,6 +797,7 @@
         "app": "${build}/secure_getenv-${kind}.exe",
         "name": "secure_getenv",
         "xrc": [0],
+        "skip": ["dynamic"],
         "env": {"HELLO": "world"},
         "stdout": ["world", "6"]
     },
@@ -684,103 +805,120 @@
         "app": "${build}/nl_langinfo-${kind}.exe",
         "name": "nl_langinfo",
         "xrc": [0],
+        "skip": ["dynamic"],
         "stdout": ["ASCII", "6", "%m/%d/%y", "9"]
     },
     {
         "app": "${build}/localtime-${kind}.exe",
         "name": "localtime",
         "xrc": [0],
+        "skip": ["dynamic"],
         "stdout": ["0"]
     },
     {
         "app": "${build}/gmtime-${kind}.exe",
         "name": "gmtime",
         "xrc": [0],
+        "skip": ["dynamic"],
         "stdout": ["0"]
     },
     {
         "app": "${build}/asctime-${kind}.exe",
         "name": "asctime",
         "xrc": [0],
+        "skip": ["dynamic"],
         "stdout": ["[A-Z][a-z]{2} [A-Z][a-z]{2} [ \\d]\\d \\d{2}:\\d{2}:\\d{2} \\d{4}", "26"]
     },
     {
         "app": "${build}/strftime-${kind}.exe",
         "name": "strftime",
         "xrc": [0],
+        "skip": ["dynamic"],
         "stdout": ["\\d{2}:\\d{2}, 40"]
     },
     {
         "app":  "${build}/rand-${kind}.exe",
         "name": "prng-seeds",
         "args": ["0"],
-        "xrc": [0]
+        "xrc": [0],
+        "skip": ["dynamic"]
     },
     {
         "app":  "${build}/rand-${kind}.exe",
         "name": "prng-rand",
         "args": ["1"],
-        "xrc": [0]
+        "xrc": [0],
+        "skip": ["dynamic"]
     },
     {
         "app":  "${build}/rand-${kind}.exe",
         "name": "prng-drand48-erand48",
         "args": ["2"],
-        "xrc": [0]
+        "xrc": [0],
+        "skip": ["dynamic"]
     },
     {
         "app":  "${build}/rand-${kind}.exe",
         "name": "prng-lrand48-nrand48",
         "args": ["3"],
-        "xrc": [0]
+        "xrc": [0],
+        "skip": ["dynamic"]
     },
     {
         "app":  "${build}/rand-${kind}.exe",
         "name": "prng-mrand48-jrand48",
         "args": ["4"],
-        "xrc": [0]
+        "xrc": [0],
+        "skip": ["dynamic"]
     },
     {
         "app": "${build}/open-${kind}.exe",
         "name": "open",
         "args": ["0"],
-        "xrc": [0]
+        "xrc": [0],
+        "skip": ["dynamic"]
     },
     {
         "app": "${build}/open-${kind}.exe",
         "name": "openat",
         "args": ["1"],
-        "xrc": [0]
+        "xrc": [0],
+        "skip": ["dynamic"]
     },
     {
         "app": "${build}/open-${kind}.exe",
         "name": "creat",
         "args": ["2"],
-        "xrc": [0]
+        "xrc": [0],
+        "skip": ["dynamic"]
     },
     {
         "app": "${build}/fcntl-${kind}.exe",
         "name": "fcntl-flock",
         "args": ["0"],
-        "xrc": [0]
+        "xrc": [0],
+        "skip": ["dynamic"]
     },
     {
         "app": "${build}/fcntl-${kind}.exe",
         "name": "fcntl-fd",
         "args": ["1"],
-        "xrc": [0]
+        "xrc": [0],
+        "skip": ["dynamic"]
     },
     {
         "app": "${build}/fcntl-${kind}.exe",
         "name": "fcntl-fl",
         "args": ["2"],
-        "xrc": [0]
+        "xrc": [0],
+        "skip": ["dynamic"]
     },
     {
         "app": "${build}/fscanf-${kind}.exe",
         "name": "fscanf-int",
         "args": ["0"],
         "xrc": [0],
+        "skip": ["dynamic"],
         "stdin": "25 -63 101 3d"
     },
     {
@@ -788,6 +926,7 @@
         "name": "fscanf-exact-word",
         "args": ["1"],
         "xrc": [0],
+        "skip": ["dynamic"],
         "stdin": "match-63"
     },
     {
@@ -795,6 +934,7 @@
         "name": "fscanf-float",
         "args": ["2"],
         "xrc": [0],
+        "skip": ["dynamic"],
         "stdin": "-2.365 6.805646e+39"
     },
     {
@@ -802,6 +942,7 @@
         "name": "fscanf-char",
         "args": ["3"],
         "xrc": [0],
+        "skip": ["dynamic"],
         "stdin": "match"
     },
     {
@@ -809,6 +950,7 @@
         "name": "fscanf-string",
         "args": ["4"],
         "xrc": [0],
+        "skip": ["dynamic"],
         "stdin": "match those words exactly"
     },
     {
@@ -816,6 +958,7 @@
         "name": "fscanf-set",
         "args": ["5"],
         "xrc": [0],
+        "skip": ["dynamic"],
         "stdin": "startend"
     },
     {
@@ -823,6 +966,7 @@
         "name": "fscanf-discard",
         "args": ["6"],
         "xrc": [0],
+        "skip": ["dynamic"],
         "stdin": "25 -63"
     },
     {
@@ -830,6 +974,7 @@
         "name": "fscanf-positional",
         "args": ["7"],
         "xrc": [0],
+        "skip": ["dynamic"],
         "stdin": "25 -63"
     },
     {
@@ -837,6 +982,7 @@
         "name": "fscanf-capabilities",
         "args": ["8"],
         "xrc": [0],
+        "skip": ["dynamic"],
         "stdin": "F0E32F0E32F0E32A"
     },
     {
@@ -844,142 +990,166 @@
         "name": "fscanf-alloc",
         "args": ["9"],
         "xrc": [0],
+        "skip": ["dynamic"],
         "stdin": "match"
     },
     {
         "app":  "${build}/sscanf-${kind}.exe",
         "name": "sscanf",
-        "xrc": [0]
+        "xrc": [0],
+        "skip": ["dynamic"]
     },
     {
         "app": "${build}/syscall-${kind}.exe",
         "name": "syscall-write",
         "args": ["0"],
-        "xrc": [0]
+        "xrc": [0],
+        "skip": ["dynamic"]
     },
     {
         "app": "${build}/syscall-${kind}.exe",
         "name": "syscall-getcpu",
         "args": ["1"],
-        "xrc": [0]
+        "xrc": [0],
+        "skip": ["dynamic"]
     },
     {
         "app": "${build}/syscall-${kind}.exe",
         "name": "syscall-mmap",
         "args": ["2"],
-        "xrc": [0]
+        "xrc": [0],
+        "skip": ["dynamic"]
     },
     {
         "app": "${build}/mmap-${kind}.exe",
         "name": "mmap",
         "args": ["0"],
-        "xrc": [0]
+        "xrc": [0],
+        "skip": ["dynamic"]
     },
     {
         "app": "${build}/mmap-${kind}.exe",
         "name": "mmap-offset",
         "args": ["1"],
-        "xrc": [0]
+        "xrc": [0],
+        "skip": ["dynamic"]
     },
     {
         "app": "${build}/temp-${kind}.exe",
         "name": "temp-mktemp",
         "args": ["0"],
-        "xrc": [0]
+        "xrc": [0],
+        "skip": ["dynamic"]
     },
     {
         "app": "${build}/temp-${kind}.exe",
         "name": "temp-mkstemp",
         "args": ["1"],
-        "xrc": [0]
+        "xrc": [0],
+        "skip": ["dynamic"]
     },
     {
         "app": "${build}/temp-${kind}.exe",
         "name": "temp-mkostemp",
         "args": ["2"],
-        "xrc": [0]
+        "xrc": [0],
+        "skip": ["dynamic"]
     },
     {
         "app": "${build}/temp-${kind}.exe",
         "name": "temp-mkstemps",
         "args": ["3"],
-        "xrc": [0]
+        "xrc": [0],
+        "skip": ["dynamic"]
     },
     {
         "app": "${build}/temp-${kind}.exe",
         "name": "temp-mkostemps",
         "args": ["4"],
-        "xrc": [0]
+        "xrc": [0],
+        "skip": ["dynamic"]
     },
     {
         "app": "${build}/temp-${kind}.exe",
         "name": "temp-mkdtemp",
         "args": ["5"],
-        "xrc": [0]
+        "xrc": [0],
+        "skip": ["dynamic"]
     },
     {
         "app": "${build}/temp-${kind}.exe",
         "name": "temp-tmpfile",
         "args": ["6"],
-        "xrc": [0]
+        "xrc": [0],
+        "skip": ["dynamic"]
     },
     {
         "app": "${build}/temp-${kind}.exe",
         "name": "temp-tempname",
         "args": ["7"],
-        "xrc": [0]
+        "xrc": [0],
+        "skip": ["dynamic"]
     },
     {
         "app": "${build}/stat-${kind}.exe",
         "name": "stat",
         "args": ["0"],
-        "xrc": [0]
+        "xrc": [0],
+        "skip": ["dynamic"]
     },
     {
         "app": "${build}/stat-${kind}.exe",
         "name": "mkfifo",
         "args": ["1"],
-        "xrc": [0]
+        "xrc": [0],
+        "skip": ["dynamic"]
     },
     {
         "app": "${build}/stat-${kind}.exe",
         "name": "umask",
         "args": ["2"],
-        "xrc": [0]
+        "xrc": [0],
+        "skip": ["dynamic"]
     },
     {
         "app": "${build}/stat-${kind}.exe",
         "name": "utimensat-futimensat",
         "args": ["3"],
-        "xrc": [0]
+        "xrc": [0],
+        "skip": ["dynamic"]
     },
     {
         "app": "${build}/stat-${kind}.exe",
         "name": "chmod",
         "args": ["4"],
-        "xrc": [0]
+        "xrc": [0],
+        "skip": ["dynamic"]
     },
     {
         "app": "${build}/stat-${kind}.exe",
         "name": "statvfs",
         "args": ["5"],
-        "xrc": [0]
+        "xrc": [0],
+        "skip": ["dynamic"]
     },
     {
         "app": "${build}/getauxptr-${kind}.exe",
         "name": "getauxptr",
-        "xrc": [0]
+        "xrc": [0],
+        "skip": ["dynamic"]
     },
     {
         "app": "${build}/getauxptrcheri-${kind}.exe",
         "name": "at-cheri-auxv",
-        "xrc": [0]
+        "xrc": [0],
+        "skip": ["dynamic"]
     },
     {
         "app": "${build}/mainargv-${kind}.exe",
         "name": "mainargv",
         "args": ["1", "12", "123", "1234", "12345", "123456", "1234567", "12345678", "123456789", "1234567890", "12345678901234567890"],
-        "xrc": [0]
+        "xrc": [0],
+        "skip": ["dynamic"]
     },
     {
         "app": "${build}/mainenvp-${kind}.exe",
@@ -989,182 +1159,208 @@
             "HELLO": "world",
             "MORELLO": "cheri"
         },
-        "xrc": [0]
+        "xrc": [0],
+        "skip": ["dynamic"]
     },
     {
         "app": "${build}/sprintf-${kind}.exe",
         "args": ["0"],
         "name": "sprintf",
-        "xrc": [0]
+        "xrc": [0],
+        "skip": ["dynamic"]
     },
     {
         "app": "${build}/sprintf-${kind}.exe",
         "args": ["1"],
         "name": "vsprintf",
-        "xrc": [0]
+        "xrc": [0],
+        "skip": ["dynamic"]
     },
     {
         "app": "${build}/sprintf-${kind}.exe",
         "args": ["2"],
         "name": "asprintf",
-        "xrc": [0]
+        "xrc": [0],
+        "skip": ["dynamic"]
     },
     {
         "app": "${build}/dprintf-${kind}.exe",
         "name": "dprintf",
-        "xrc": [0]
+        "xrc": [0],
+        "skip": ["dynamic"]
     },
     {
         "app": "${build}/malloc-${kind}.exe",
         "name": "malloc_basic",
         "args": ["0"],
-        "xrc": [0]
+        "xrc": [0],
+        "skip": ["dynamic"]
     },
     {
         "app": "${build}/malloc-${kind}.exe",
         "name": "malloc_free",
         "args": ["1"],
-        "xrc": [0]
+        "xrc": [0],
+        "skip": ["dynamic"]
     },
     {
         "app": "${build}/malloc-${kind}.exe",
         "name": "malloc_free_re_malloc",
         "args": ["2"],
-        "xrc": [0]
+        "xrc": [0],
+        "skip": ["dynamic"]
     },
     {
         "app": "${build}/malloc-${kind}.exe",
         "name": "malloc_no_overlap",
         "args": ["3"],
-        "xrc": [0]
+        "xrc": [0],
+        "skip": ["dynamic"]
     },
     {
         "app": "${build}/malloc-${kind}.exe",
         "name": "malloc_double_free",
         "args": ["5"],
-        "xrc": [-11]
+        "xrc": [-11],
+        "skip": ["dynamic"]
     },
     {
         "app": "${build}/malloc-${kind}.exe",
         "name": "malloc_enomem",
         "args": ["6"],
-        "xrc": [0]
+        "xrc": [0],
+        "skip": ["dynamic"]
     },
     {
         "app": "${build}/pthread-${kind}.exe",
         "name": "pthread-basic",
         "args": ["0"],
-        "xrc": [0]
+        "xrc": [0],
+        "skip": ["dynamic"]
     },
     {
         "app": "${build}/pthread-${kind}.exe",
         "name": "pthread-setstack",
         "args": ["1"],
-        "xrc": [0]
+        "xrc": [0],
+        "skip": ["dynamic"]
     },
     {
         "app": "${build}/pthread_cancel-${kind}.exe",
         "name": "pthread-cancel-async-no-cp",
         "args": ["1"],
-        "xrc": [0]
+        "xrc": [0],
+        "skip": ["dynamic"]
     },
     {
         "app": "${build}/pthread_cancel-${kind}.exe",
         "name": "pthread-cancel-async-in-cp",
         "args": ["2"],
-        "xrc": [0]
+        "xrc": [0],
+        "skip": ["dynamic"]
     },
     {
         "app": "${build}/pthread_cancel-${kind}.exe",
         "name": "pthread-cancel-deferred-no-cp",
         "args": ["3"],
         "xrc": [0],
-        "skip": ["flaky"]
+        "skip": ["flaky", "dynamic"]
     },
     {
         "app": "${build}/pthread_cancel-${kind}.exe",
         "name": "pthread-cancel-deferred-in-cp",
         "args": ["4"],
-        "xrc": [0]
+        "xrc": [0],
+        "skip": ["dynamic"]
     },
     {
         "app": "${build}/pthread_cancel-${kind}.exe",
         "name": "pthread-cancel-async-disabled",
         "args": ["5"],
-        "xrc": [0]
+        "xrc": [0],
+        "skip": ["dynamic"]
     },
     {
         "app": "${build}/pthread_cancel-${kind}.exe",
         "name": "pthread-cancel-deferred-disabled",
         "args": ["6"],
         "xrc": [0],
-        "skip": ["flaky"]
+        "skip": ["flaky", "dynamic"]
     },
     {
         "app": "${build}/pthread_cancel-${kind}.exe",
         "name": "pthread-cancel-async-masked",
         "args": ["7"],
-        "xrc": [0]
+        "xrc": [0],
+        "skip": ["dynamic"]
     },
     {
         "app": "${build}/pthread_cancel-${kind}.exe",
         "name": "pthread-cancel-deferred-masked",
         "args": ["8"],
         "xrc": [0],
-        "skip": ["flaky"]
+        "skip": ["flaky", "dynamic"]
     },
     {
         "app": "${build}/pthread_cancel-${kind}.exe",
         "name": "pthread-cancel-deferred-in-cp-custom",
         "args": ["9"],
         "xrc": [0],
-        "skip": "flaky"
+        "skip": ["flaky", "dynamic"]
     },
     {
         "app": "${build}/pthread_cleanup-${kind}.exe",
         "name": "pthread-cleanup",
-        "xrc": [0]
+        "xrc": [0],
+        "skip": ["dynamic"]
     },
     {
         "app": "${build}/printf_plain_text-${kind}.exe",
         "name": "printf_plain_text",
-        "xrc": [0]
+        "xrc": [0],
+        "skip": ["dynamic"]
     },
     {
         "app": "${build}/memcpy-${kind}.exe",
         "name": "memcpy_small_cpy",
         "args": ["0"],
-        "xrc": [0]
+        "xrc": [0],
+        "skip": ["dynamic"]
     },
     {
         "app": "${build}/memcpy-${kind}.exe",
         "name": "memcpy_medium_cpy",
         "args": ["1"],
-        "xrc": [0]
+        "xrc": [0],
+        "skip": ["dynamic"]
     },
     {
         "app": "${build}/memcpy-${kind}.exe",
         "name": "memcpy_large_cpy",
         "args": ["2"],
-        "xrc": [0]
+        "xrc": [0],
+        "skip": ["dynamic"]
     },
     {
         "app": "${build}/memcpy-${kind}.exe",
         "name": "memcpy_nested_capabilities",
         "args": ["3"],
-        "xrc": [0]
+        "xrc": [0],
+        "skip": ["dynamic"]
     },
     {
         "app": "${build}/mremap-${kind}.exe",
         "name": "mremap-extend",
         "args": ["0"],
-        "xrc": [0]
+        "xrc": [0],
+        "skip": ["dynamic"]
     },
     {
         "app": "${build}/mremap-${kind}.exe",
         "name": "mremap-move",
         "args": ["1"],
-        "xrc": [0]
+        "xrc": [0],
+        "skip": ["dynamic"]
     },
     {
         "app": "${build}/shm_open-${kind}.exe",
@@ -1174,7 +1370,7 @@
             "THIS SHOULD BE UPPERCASE"
         ],
         "xrc": [0],
-        "skip": ["flaky"]
+        "skip": ["flaky", "dynamic"]
     },
     {
         "app": "${build}/printcap-${kind}.exe",
@@ -1183,7 +1379,8 @@
         "stdout": [
             "0x0"
         ],
-        "xrc": [0]
+        "xrc": [0],
+        "skip": ["dynamic"]
     },
     {
         "app": "${build}/printcap-${kind}.exe",
@@ -1192,7 +1389,8 @@
         "stdout": [
             "0x[0-9a-f]+\\s\\[[rwxRWE]{1,6},0x[0-9a-f]+\\-0x[0-9a-f]+\\]"
         ],
-        "xrc": [0]
+        "xrc": [0],
+        "skip": ["dynamic"]
     },
     {
         "comment": "This prints capmax with tag = 0",
@@ -1202,7 +1400,8 @@
         "stdout": [
             "0x0 [rwxRWE,0x0-0xffffffffffffffff] (invalid)"
         ],
-        "xrc": [0]
+        "xrc": [0],
+        "skip": ["dynamic"]
     },
     {
         "app": "${build}/printcap-${kind}.exe",
@@ -1211,7 +1410,8 @@
         "stdout": [
             "0x[0-9a-f]+\\s\\[[rwxRWE]{1,6},0x[0-9a-f]+\\-0x[0-9a-f]+\\]\\s\\(sealed\\)"
         ],
-        "xrc": [0]
+        "xrc": [0],
+        "skip": ["dynamic"]
     },
     {
         "app": "${build}/printcap-${kind}.exe",
@@ -1220,7 +1420,8 @@
         "stdout": [
             "0x[0-9a-f]+\\s\\[[rwxRWE]{1,6},0x[0-9a-f]+\\-0x[0-9a-f]+\\]\\s\\(sentry\\)"
         ],
-        "xrc": [0]
+        "xrc": [0],
+        "skip": ["dynamic"]
     },
     {
         "app": "${build}/printcap-${kind}.exe",
@@ -1229,7 +1430,8 @@
         "stdout": [
             "0x[0-9a-f]+\\s\\[[rwxRWE]{1,6},0x[0-9a-f]+\\-0x[0-9a-f]+\\]\\s\\(invalid,sealed\\)"
         ],
-        "xrc": [0]
+        "xrc": [0],
+        "skip": ["dynamic"]
     },
     {
         "app": "${build}/printcap-${kind}.exe",
@@ -1238,155 +1440,184 @@
         "stdout": [
             "^0x[0-9a-f]+$"
         ],
-        "xrc": [0]
+        "xrc": [0],
+        "skip": ["dynamic"]
     },
     {
         "app": "${build}/memcpy2-${kind}.exe",
         "args": ["0"],
-        "xrc": [0]
+        "xrc": [0],
+        "skip": ["dynamic"]
     },
     {
         "app": "${build}/memcpy2-${kind}.exe",
         "args": ["1"],
-        "xrc": [0]
+        "xrc": [0],
+        "skip": ["dynamic"]
     },
     {
         "app": "${build}/memcpy2-${kind}.exe",
         "args": ["2"],
-        "xrc": [0]
+        "xrc": [0],
+        "skip": ["dynamic"]
     },
     {
         "app": "${build}/memcpy2-${kind}.exe",
         "args": ["3"],
-        "xrc": [0]
+        "xrc": [0],
+        "skip": ["dynamic"]
     },
     {
         "app": "${build}/memcpy2-${kind}.exe",
         "args": ["4"],
-        "xrc": [0]
+        "xrc": [0],
+        "skip": ["dynamic"]
     },
     {
         "app": "${build}/memcpy2-${kind}.exe",
         "args": ["5"],
-        "xrc": [0]
+        "xrc": [0],
+        "skip": ["dynamic"]
     },
     {
         "app": "${build}/memcpy2-${kind}.exe",
         "args": ["6"],
-        "xrc": [0]
+        "xrc": [0],
+        "skip": ["dynamic"]
     },
     {
         "app": "${build}/memcpy2-${kind}.exe",
         "args": ["7"],
-        "xrc": [0]
+        "xrc": [0],
+        "skip": ["dynamic"]
     },
     {
         "app": "${build}/memcpy2-${kind}.exe",
         "args": ["8"],
-        "xrc": [0]
+        "xrc": [0],
+        "skip": ["dynamic"]
     },
     {
         "app": "${build}/memcpy2-${kind}.exe",
         "args": ["9"],
-        "xrc": [0]
+        "xrc": [0],
+        "skip": ["dynamic"]
     },
     {
         "app": "${build}/memcpy2-${kind}.exe",
         "args": ["a"],
-        "xrc": [0]
+        "xrc": [0],
+        "skip": ["dynamic"]
     },
     {
         "app": "${build}/memcpy2-${kind}.exe",
         "args": ["b"],
-        "xrc": [0]
+        "xrc": [0],
+        "skip": ["dynamic"]
     },
     {
         "app": "${build}/memcpy2-${kind}.exe",
         "args": ["c"],
-        "xrc": [0]
+        "xrc": [0],
+        "skip": ["dynamic"]
     },
     {
         "app": "${build}/memcpy2-${kind}.exe",
         "args": ["d"],
-        "xrc": [0]
+        "xrc": [0],
+        "skip": ["dynamic"]
     },
     {
         "app": "${build}/memcpy2-${kind}.exe",
         "args": ["e"],
-        "xrc": [0]
+        "xrc": [0],
+        "skip": ["dynamic"]
     },
     {
         "app": "${build}/memcpy2-${kind}.exe",
         "args": ["f"],
-        "xrc": [0]
+        "xrc": [0],
+        "skip": ["dynamic"]
     },{
         "app": "${build}/setenv-${kind}.exe",
         "name": "setenv",
         "xrc": [0],
+        "skip": ["dynamic"],
         "env": {"HELLO": "world"}
     },
     {
         "app": "${build}/unsetenv-${kind}.exe",
         "name": "unsetenv",
         "xrc": [0],
+        "skip": ["dynamic"],
         "env": {"HELLO": "world"}
     },
     {
         "app": "${build}/clearenv-${kind}.exe",
         "name": "clearenv",
-        "xrc": [0]
+        "xrc": [0],
+        "skip": ["dynamic"]
     },
     {
         "app": "${build}/realloc-${kind}.exe",
         "name": "realloc-no-move",
         "args": ["0"],
-        "xrc": [0]
+        "xrc": [0],
+        "skip": ["dynamic"]
     },
     {
         "app": "${build}/realloc-${kind}.exe",
         "name": "realloc-increase",
         "args": ["1"],
-        "xrc": [0]
+        "xrc": [0],
+        "skip": ["dynamic"]
     },
     {
         "app": "${build}/realloc-${kind}.exe",
         "name": "realloc-decrease",
         "args": ["2"],
-        "xrc": [0]
+        "xrc": [0],
+        "skip": ["dynamic"]
     },
     {
         "app": "${build}/realloc-${kind}.exe",
         "name": "realloc-change-regime",
         "args": ["3"],
-        "xrc": [0]
+        "xrc": [0],
+        "skip": ["dynamic"]
     },
     {
         "app": "${build}/realloc-${kind}.exe",
         "name": "realloc-align-increase",
         "args": ["4"],
-        "xrc": [0]
+        "xrc": [0],
+        "skip": ["dynamic"]
     },
     {
         "app": "${build}/realloc-${kind}.exe",
         "name": "realloc-high-mmap-count",
         "args": ["5"],
-        "xrc": [0]
+        "xrc": [0],
+        "skip": ["dynamic"]
     },
     {
         "app": "${build}/realloc-${kind}.exe",
         "name": "realloc-half-page-offset",
         "args": ["6"],
-        "xrc": [0]
+        "xrc": [0],
+        "skip": ["dynamic"]
     },
     {
         "app": "${build}/calloc-${kind}.exe",
         "name": "calloc",
-        "xrc": [0]
+        "xrc": [0],
+        "skip": ["dynamic"]
     },
     {
         "app": "${build}/aligned_alloc-${kind}.exe",
         "name": "aligned_alloc",
-        "xrc": [0]
+        "xrc": [0],
+        "skip": ["dynamic"]
     },
     {
         "app": "${build}/newlocale-${kind}.exe",
@@ -1395,28 +1626,33 @@
             "123456.789",
             "123456.789"
         ],
-        "xrc": [0]
+        "xrc": [0],
+        "skip": ["dynamic"]
     },
     {
         "app": "${build}/valloc-${kind}.exe",
         "name": "valloc",
-        "xrc": [0]
+        "xrc": [0],
+        "skip": ["dynamic"]
     },
     {
         "app": "${build}/reallocarray-${kind}.exe",
         "name": "reallocarray",
-        "xrc": [0]
+        "xrc": [0],
+        "skip": ["dynamic"]
     },
     {
         "app": "${build}/pty-${kind}.exe",
         "name": "pty",
-        "xrc": [0]
+        "xrc": [0],
+        "skip": ["dynamic"]
     },
     {
         "app": "${build}/stdio_misc-${kind}.exe",
         "name": "perror",
         "args": ["0"],
         "xrc": [0],
+        "skip": ["dynamic"],
         "stderr": [
             "Error: No such file or directory"
         ]
@@ -1425,25 +1661,29 @@
         "app": "${build}/stdio_misc-${kind}.exe",
         "name": "ctermid",
         "args": ["1"],
-        "xrc": [0]
+        "xrc": [0],
+        "skip": ["dynamic"]
     },
     {
         "app": "${build}/stdio_misc-${kind}.exe",
         "name": "fopencookie",
         "args": ["2"],
-        "xrc": [0]
+        "xrc": [0],
+        "skip": ["dynamic"]
     },
     {
         "app": "${build}/stdio_misc-${kind}.exe",
         "name": "setvbuf",
         "args": ["3"],
-        "xrc": [0]
+        "xrc": [0],
+        "skip": ["dynamic"]
     },
     {
         "app": "${build}/stdio_misc-${kind}.exe",
         "name": "setvbuf-stdout-full",
         "args": ["4"],
         "xrc": [0],
+        "skip": ["dynamic"],
         "stdout": ["abcdef"]
     },
     {
@@ -1451,292 +1691,338 @@
         "name": "setvbuf-stdout-line",
         "args": ["5"],
         "xrc": [0],
+        "skip": ["dynamic"],
         "stdout": ["abcdef"]
     },
     {
         "app": "${build}/stdio_misc-${kind}.exe",
         "name": "getdelim",
         "args": ["6"],
-        "xrc": [0]
+        "xrc": [0],
+        "skip": ["dynamic"]
     },
     {
         "app": "${build}/stdio_misc-${kind}.exe",
         "name": "freopen-fgetpos",
         "args": ["7"],
-        "xrc": [0]
+        "xrc": [0],
+        "skip": ["dynamic"]
     },
     {
         "app": "${build}/stdio_misc-${kind}.exe",
         "name": "fmemopen_memstream",
         "args": ["8"],
-        "xrc": [0]
+        "xrc": [0],
+        "skip": ["dynamic"]
     },
     {
         "app": "${build}/stdlib_misc-${kind}.exe",
         "name": "setkey_encrypt",
         "args": ["0"],
-        "xrc": [0]
+        "xrc": [0],
+        "skip": ["dynamic"]
     },
     {
         "app": "${build}/stdlib_misc-${kind}.exe",
         "name": "realpath",
         "args": ["1"],
-        "xrc": [0]
+        "xrc": [0],
+        "skip": ["dynamic"]
     },
     {
         "app": "${build}/stdlib_misc-${kind}.exe",
         "name": "system",
         "args": ["2"],
-        "xrc": [0]
+        "xrc": [0],
+        "skip": ["dynamic"]
     },
     {
         "app": "${build}/float_convert-${kind}.exe",
         "name": "atof",
         "args": ["0"],
-        "xrc": [0]
+        "xrc": [0],
+        "skip": ["dynamic"]
     },
     {
         "app": "${build}/float_convert-${kind}.exe",
         "name": "evct_fcvt_gcvt",
         "args": ["1"],
-        "xrc": [0]
+        "xrc": [0],
+        "skip": ["dynamic"]
     },
     {
         "app": "${build}/malloc_bounds-${kind}.exe",
         "name": "malloc_bounds_small",
         "args": ["0"],
-        "xrc": [0]
+        "xrc": [0],
+        "skip": ["dynamic"]
     },
     {
         "app": "${build}/malloc_bounds-${kind}.exe",
         "name": "malloc_bounds_large",
         "args": ["1"],
-        "xrc": [0]
+        "xrc": [0],
+        "skip": ["dynamic"]
     },
     {
         "app": "${build}/malloc_bounds-${kind}.exe",
         "name": "aligned_malloc_bounds_small",
         "args": ["2"],
-        "xrc": [0]
+        "xrc": [0],
+        "skip": ["dynamic"]
     },
     {
         "app": "${build}/malloc_bounds-${kind}.exe",
         "name": "aligned_malloc_bounds_large",
         "args": ["3"],
-        "xrc": [0]
+        "xrc": [0],
+        "skip": ["dynamic"]
     },
     {
         "app": "${build}/malloc_bounds-${kind}.exe",
         "name": "realloc_bounds_small",
         "args": ["4"],
-        "xrc": [0]
+        "xrc": [0],
+        "skip": ["dynamic"]
     },
     {
         "app": "${build}/malloc_bounds-${kind}.exe",
         "name": "realloc_bounds_large",
         "args": ["5"],
-        "xrc": [0]
+        "xrc": [0],
+        "skip": ["dynamic"]
     },
     {
         "app": "${build}/malloc_bounds-${kind}.exe",
         "name": "realloc_bounds_change_regime",
         "args": ["6"],
-        "xrc": [0]
+        "xrc": [0],
+        "skip": ["dynamic"]
     },
     {
         "app": "${build}/malloc_regression-${kind}.exe",
         "name": "malloc_regression_map_key_not_reset",
         "args": ["0"],
-        "xrc": [0]
+        "xrc": [0],
+        "skip": ["dynamic"]
     },
     {
         "app": "${build}/strdup-${kind}.exe",
         "name": "strdup_strndup",
         "args": ["0"],
-        "xrc": [0]
+        "xrc": [0],
+        "skip": ["dynamic"]
     },
     {
         "app": "${build}/strdup-${kind}.exe",
         "name": "wcsdup",
         "args": ["1"],
-        "xrc": [0]
+        "xrc": [0],
+        "skip": ["dynamic"]
     },
     {
         "app": "${build}/dirent-${kind}.exe",
         "name": "scandir",
         "args": ["0"],
-        "xrc": [0]
+        "xrc": [0],
+        "skip": ["dynamic"]
     },
     {
         "app": "${build}/dirent-${kind}.exe",
         "name": "opendir-closedir",
         "args": ["1"],
-        "xrc": [0]
+        "xrc": [0],
+        "skip": ["dynamic"]
     },
     {
         "app": "${build}/dirent-${kind}.exe",
         "name": "fdopendir-dirfd",
         "args": ["2"],
-        "xrc": [0]
+        "xrc": [0],
+        "skip": ["dynamic"]
     },
     {
         "app": "${build}/dirent-${kind}.exe",
         "name": "readdir-readdir_r",
         "args": ["3"],
-        "xrc": [0]
+        "xrc": [0],
+        "skip": ["dynamic"]
     },
     {
         "app": "${build}/dirent-${kind}.exe",
         "name": "rewinddir-seekdir-telldir",
         "args": ["4"],
-        "xrc": [0]
+        "xrc": [0],
+        "skip": ["dynamic"]
     },
     {
         "app": "${build}/malloc_regression-${kind}.exe",
         "name": "malloc_regression_corrupt_nested_group",
         "args": ["1"],
-        "xrc": [0]
+        "xrc": [0],
+        "skip": ["dynamic"]
     },
     {
         "app": "${build}/regex-${kind}.exe",
         "name": "fnmatch",
         "args": ["0"],
-        "xrc": [0]
+        "xrc": [0],
+        "skip": ["dynamic"]
     },
     {
         "app": "${build}/regex-${kind}.exe",
         "name": "glob",
         "args": ["1"],
-        "xrc": [0]
+        "xrc": [0],
+        "skip": ["dynamic"]
     },
     {
         "app": "${build}/regex-${kind}.exe",
         "name": "regcomp",
         "args": ["2"],
-        "xrc": [0]
+        "xrc": [0],
+        "skip": ["dynamic"]
     },
     {
         "app": "${build}/select-${kind}.exe",
         "name": "poll",
         "args": ["0"],
-        "xrc": [0]
+        "xrc": [0],
+        "skip": ["dynamic"]
     },
     {
         "app": "${build}/select-${kind}.exe",
         "name": "select",
         "args": ["1"],
         "stdin": "asdf",
-        "xrc": [0]
+        "xrc": [0],
+        "skip": ["dynamic"]
     },
     {
         "app": "${build}/select-${kind}.exe",
         "name": "pselect",
         "args": ["2"],
         "stdin": "jkl;",
-        "xrc": [0]
+        "xrc": [0],
+        "skip": ["dynamic"]
     },
     {
         "app": "${build}/malloc_stress-${kind}.exe",
         "name": "malloc_stress_test_large_allocation",
         "args": ["0"],
-        "xrc": [0]
+        "xrc": [0],
+        "skip": ["dynamic"]
     },
     {
         "app": "${build}/malloc_stress-${kind}.exe",
         "name": "malloc_stress_test_many_allocations",
         "args": ["1"],
-        "xrc": [0]
+        "xrc": [0],
+        "skip": ["dynamic"]
     },
     {
         "app": "${build}/malloc_stress-${kind}.exe",
         "name": "malloc_stress_test_all_sizeclasses",
         "args": ["2"],
-        "xrc": [0]
+        "xrc": [0],
+        "skip": ["dynamic"]
     },
     {
         "app": "${build}/checksealed-${kind}.exe",
         "name": "check-sealed-funcs",
-        "xrc": [0]
+        "xrc": [0],
+        "skip": ["dynamic"]
     },
     {
         "app": "${build}/ftw-${kind}.exe",
         "args": ["0"],
         "name": "test_ftw",
-        "xrc": [0]
+        "xrc": [0],
+        "skip": ["dynamic"]
     },
     {
         "app": "${build}/legacy-${kind}.exe",
         "args": ["0"],
         "name": "test_cuserid",
         "xrc": [0],
-        "skip": ["flaky"]
+        "skip": ["flaky", "dynamic"]
     },
     {
         "app": "${build}/legacy-${kind}.exe",
         "args": ["1"],
         "name": "test_getusershell",
-        "xrc": [0]
+        "xrc": [0],
+        "skip": ["dynamic"]
     },
     {
         "app": "${build}/locale-${kind}.exe",
         "args": ["0"],
         "name": "test_bind_textdomain_codeset",
-        "xrc": [0]
+        "xrc": [0],
+        "skip": ["dynamic"]
     },
     {
         "app": "${build}/locale-${kind}.exe",
         "args": ["1"],
         "name": "test_textdomain",
-        "xrc": [0]
+        "xrc": [0],
+        "skip": ["dynamic"]
     },
     {
         "app": "${build}/misc-${kind}.exe",
         "args": ["0"],
         "name": "test_a64l",
-        "xrc": [0]
+        "xrc": [0],
+        "skip": ["dynamic"]
     },
     {
         "app": "${build}/misc-${kind}.exe",
         "args": ["1"],
         "name": "test_basename",
-        "xrc": [0]
+        "xrc": [0],
+        "skip": ["dynamic"]
     },
     {
         "app": "${build}/misc-${kind}.exe",
         "args": ["2"],
         "name": "test_dirname",
-        "xrc": [0]
+        "xrc": [0],
+        "skip": ["dynamic"]
     },
     {
         "app": "${build}/misc-${kind}.exe",
         "args": ["3"],
         "name": "test_getcwd",
-        "xrc": [0]
+        "xrc": [0],
+        "skip": ["dynamic"]
     },
     {
         "app": "${build}/misc-${kind}.exe",
         "args": ["5"],
         "name": "test_get_current_dir_name",
-        "xrc": [0]
+        "xrc": [0],
+        "skip": ["dynamic"]
     },
     {
         "app": "${build}/group-${kind}.exe",
         "args": ["0"],
         "name": "test_groupentry",
-        "xrc": [0]
+        "xrc": [0],
+        "skip": ["dynamic"]
     },
     {
         "app": "${build}/passwd-${kind}.exe",
         "args": ["0"],
         "name": "test_fgetpwent",
-        "xrc": [0]
+        "xrc": [0],
+        "skip": ["dynamic"]
     },
     {
         "app": "${build}/getserv-${kind}.exe",
         "args": ["0"],
         "name": "test_getservbyname",
         "xrc": [0],
-        "skip": ["flaky"],
+        "skip": ["flaky", "dynamic"],
         "comment": "may fail in GitLab CI"
     },
     {
@@ -1744,87 +2030,98 @@
         "args": ["1"],
         "name": "test_getservbyport",
         "xrc": [0],
-        "skip": ["flaky"],
+        "skip": ["flaky", "dynamic"],
         "comment": "may fail in GitLab CI"
     },
     {
         "app": "${build}/if_nameindex-${kind}.exe",
         "name": "if_nameindex",
-        "xrc": [0]
+        "xrc": [0],
+        "skip": ["dynamic"]
     },
     {
         "app": "${build}/ns_funcs-${kind}.exe",
         "args": ["0"],
         "name": "ns_putget",
-        "xrc": [0]
+        "xrc": [0],
+        "skip": ["dynamic"]
     },
     {
         "app": "${build}/ns_funcs-${kind}.exe",
         "args": ["1"],
         "name": "ns_parse",
-        "xrc": [0]
+        "xrc": [0],
+        "skip": ["dynamic"]
     },
     {
         "app": "${build}/openpty-${kind}.exe",
         "args": ["0"],
         "name": "openpty",
-        "xrc": [0]
+        "xrc": [0],
+        "skip": ["dynamic"]
     },
     {
         "app": "${build}/openpty-${kind}.exe",
         "args": ["1"],
         "name": "forkpty",
         "xrc": [0],
-        "skip": ["flaky"]
+        "skip": ["flaky", "dynamic"]
     },
     {
         "app": "${build}/sockatmark-${kind}.exe",
         "name": "sockatmark",
-        "xrc": [0]
+        "xrc": [0],
+        "skip": ["dynamic"]
     },
     {
         "app": "${build}/passwd-${kind}.exe",
         "args": ["1"],
         "name": "test_getgrouplist",
         "xrc": [0],
-        "skip": ["flaky"],
+        "skip": ["flaky", "dynamic"],
         "comment": "this test may fail due to system restrictions"
     },
     {
         "app": "${build}/search-${kind}.exe",
         "args": ["0"],
         "name": "lsearch",
-        "xrc": [0]
+        "xrc": [0],
+        "skip": ["dynamic"]
     },
     {
         "app": "${build}/search-${kind}.exe",
         "args": ["1"],
         "name": "tsearch",
-        "xrc": [0]
+        "xrc": [0],
+        "skip": ["dynamic"]
     },
     {
         "app": "${build}/time-${kind}.exe",
         "args": ["0"],
         "name": "test_ctime",
-        "xrc": [0]
+        "xrc": [0],
+        "skip": ["dynamic"]
     },
     {
         "app": "${build}/time-${kind}.exe",
         "args": ["1"],
         "name": "test_ctime_r",
-        "xrc": [0]
+        "xrc": [0],
+        "skip": ["dynamic"]
     },
     {
         "app": "${build}/time-${kind}.exe",
         "args": ["2"],
         "name": "test_getdate_error",
-        "xrc": [1]
+        "xrc": [1],
+        "skip": ["dynamic"]
     },
     {
         "app": "${build}/time-${kind}.exe",
         "args": ["2"],
         "name": "test_getdate_valid",
         "xrc": [0],
+        "skip": ["dynamic"],
         "file": {
             "path": "/tmp/musl-test-getdate-valid",
             "contents": "%Y-%m-%d\n"
@@ -1838,6 +2135,7 @@
         "args": ["0"],
         "name": "test_getlogin",
         "xrc": [0],
+        "skip": ["dynamic"],
         "env": {
             "LOGNAME": "morello"
         }
@@ -1847,6 +2145,7 @@
         "args": ["1"],
         "name": "test_getlogin_r",
         "xrc": [0],
+        "skip": ["dynamic"],
         "env": {
             "LOGNAME": "morello"
         }
@@ -1856,37 +2155,42 @@
         "args": ["2"],
         "name": "test_ttyname",
         "xrc": [0],
-        "skip": ["flaky"]
+        "skip": ["flaky", "dynamic"]
     },
     {
         "app": "${build}/getw-${kind}.exe",
         "name": "getw_eof",
         "args": ["0"],
-        "xrc": [0]
+        "xrc": [0],
+        "skip": ["dynamic"]
     },
     {
         "app": "${build}/getw-${kind}.exe",
         "name": "getw_not_eof",
         "args": ["1"],
-        "xrc": [0]
+        "xrc": [0],
+        "skip": ["dynamic"]
     },
     {
         "app": "${build}/putw-${kind}.exe",
         "name": "putw_read_only",
         "args": ["0"],
-        "xrc": [0]
+        "xrc": [0],
+        "skip": ["dynamic"]
     },
     {
         "app": "${build}/putw-${kind}.exe",
         "name": "putw_write_only",
         "args": ["1"],
-        "xrc": [0]
+        "xrc": [0],
+        "skip": ["dynamic"]
     },
     {
         "app": "${build}/fgetln-${kind}.exe",
         "name": "fgetln_with_newline",
         "args": ["0"],
         "xrc": [0],
+        "skip": ["dynamic"],
         "stdin": "test\n"
     },
     {
@@ -1894,19 +2198,21 @@
         "name": "fgetln_with_eof",
         "args": ["1"],
         "xrc": [0],
+        "skip": ["dynamic"],
         "stdin": "test"
     },
     {
         "app": "${build}/fgetln-${kind}.exe",
         "name": "fgetln_at_eof",
         "args": ["2"],
-        "xrc": [0]
+        "xrc": [0],
+        "skip": ["dynamic"]
     },
     {
         "app": "${build}/signal-${kind}.exe",
         "name": "signal",
         "xrc": [0],
-        "skip": ["flaky"],
+        "skip": ["flaky", "dynamic"],
         "comment": "This test should pass on a real Morello system"
     },
     {
@@ -1914,6 +2220,7 @@
         "name": "exit",
         "args": ["0"],
         "xrc": [1],
+        "skip": ["dynamic"],
         "stdout": ["exit() called"]
     },
     {
@@ -1921,18 +2228,21 @@
         "name": "quick_exit",
         "args": ["1"],
         "xrc": [1],
+        "skip": ["dynamic"],
         "stdout": ["quick_exit() called"]
     },
     {
         "app": "${build}/exit-${kind}.exe",
         "name": "abort",
         "args": ["2"],
-        "xrc": [-6]
+        "xrc": [-6],
+        "skip": ["dynamic"]
     },
     {
         "app": "${build}/ctor_dtor-${kind}.exe",
         "name": "ctor_dtor",
         "xrc": [0],
+        "skip": ["dynamic"],
         "stdout": ["ctor call dtor call"],
         "stderr": ["ctor call2 dtor call2"]
     },
@@ -1941,11 +2251,13 @@
         "name": "bindtextdomain",
         "args": ["0"],
         "xrc": [0],
+        "skip": ["dynamic"],
         "stdout": ["musl"]
     },
     {
         "app": "${build}/malloc_donate-${kind}.exe",
         "name": "malloc_donate",
-        "xrc": [0]
+        "xrc": [0],
+        "skip": ["dynamic"]
     }
 ]

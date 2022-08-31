@@ -281,12 +281,12 @@ def __run(t: Test, a: Args) -> tuple:
             stderr='' if err is None else err)
     else:
         if t.skip:
-            if a.kind in t.skip:
-                skipping = a.kind
-            elif 'jenkins' in t.skip and 'JOB_URL' in os.environ:
+            if 'jenkins' in t.skip and 'JOB_URL' in os.environ:
                 skipping = 'jenkins'
             elif 'flaky' in t.skip or 'always' in t.skip:
                 skipping = 'flaky'
+            elif a.kind in t.skip:
+                skipping = a.kind
         if skipping:
             nskipped = 1
             print(f'{TC.WARN}SKIP{TC.CEND} {t.name}: {msg} [{skipping}] ({dt_str} sec)')

@@ -105,7 +105,7 @@ struct fdpic_dummy_loadmap {
 #if defined(__CHERI_PURE_CAPABILITY__)
 typedef void (*stage2_func)(unsigned char *, unsigned char *, size_t *, int, char **, char **, uintptr_t *);
 #else
-typedef void (*stage2_func)(unsigned char *, unsigned char *, size_t *);
+typedef void (*stage2_func)(unsigned char *, size_t *);
 #endif
 
 hidden void *__dlsym(void *restrict, const char *restrict, void *restrict);

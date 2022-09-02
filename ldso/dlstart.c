@@ -44,7 +44,7 @@ hidden void _dlstart_c(uintptr_t *sp, size_t *dynv_raw)
 	size_t *rel, rel_size, rel_count;
 	Rel_t *rel_ptr;
 	Rela_t *rela_ptr;
-	char *base_rx, *base_rw;
+	char *base_rx, *rw_cap;
 #if !defined(__CHERI_PURE_CAPABILITY__)
 	auxv_entry *auxv;
 	int argc = *sp;
@@ -142,20 +142,18 @@ hidden void _dlstart_c(uintptr_t *sp, size_t *dynv_raw)
 
 #ifndef __CHERI_PURE_CAPABILITY__
 	base_rx = AUX_PTR(aux[AT_BASE]);
-	base_rw = base_rx;
 #else
 #ifdef LIBSHIM
 	base_rx = AUX_PTR(aux[AT_CHERI_INTERP_RX_CAP]);
-	base_rw = AUX_PTR(aux[AT_CHERI_INTERP_RW_CAP]);
+	rw_cap = AUX_PTR(aux[AT_CHERI_INTERP_RW_CAP]);
 #else
-	base_rx = base_rw = AUX_PTR(aux[AT_BASE]);
+	base_rx = rw_cap = AUX_PTR(aux[AT_BASE]);
 	base_rx = __builtin_cheri_perms_and(base_rx,
 		__CHERI_CAP_PERMISSION_GLOBAL__ | READ_CAP_PERMS | EXEC_CAP_PERMS);
-	base_rw = __builtin_cheri_perms_and(base_rw,
+	rw_cap = __builtin_cheri_perms_and(rw_cap,
 		__CHERI_CAP_PERMISSION_GLOBAL__ | READ_CAP_PERMS | WRITE_CAP_PERMS);
 #endif
 	base_rx = __builtin_cheri_address_set(base_rx, AUX_VAL(aux[AT_BASE]));
-	base_rw = __builtin_cheri_address_set(base_rw, AUX_VAL(aux[AT_BASE]));
 #endif
 
 	if (!base_rx) {
@@ -193,16 +191,18 @@ hidden void _dlstart_c(uintptr_t *sp, size_t *dynv_raw)
 	rel_count = DYN_VAL(dyn[DT_RELASZ]) / sizeof(Rela_t);
 	for (; rel_count; rel_count--, rela_ptr++) {
 		if (!IS_RELATIVE(rela_ptr->r_info, 0)) continue;
-		char **rel_addr = base_rw + rela_ptr->r_offset;
+		char **rel_addr = base_rx + rela_ptr->r_offset;
 #ifndef __CHERI_PURE_CAPABILITY__
 		*rel_addr = base_rx + rela_ptr->r_addend;
 #else
-		size_t address = ((morello_reloc_cap_t *)rel_addr)->address;
+		rel_addr = __builtin_cheri_address_set(rw_cap, rel_addr);
+		char *v_address = base_rx + ((morello_reloc_cap_t *)rel_addr)->address;
 		size_t len = ((morello_reloc_cap_t *)rel_addr)->length;
 		size_t perms = ((morello_reloc_cap_t *)rel_addr)->perms;
 		char *cap;
-		char *cap_rx = __builtin_cheri_bounds_set_exact(base_rx + address, len);
-		char *cap_rw = __builtin_cheri_bounds_set_exact(base_rw + address, len);
+		char *cap_rx = __builtin_cheri_bounds_set_exact(v_address, len);
+		char *cap_rw = __builtin_cheri_bounds_set_exact(
+			__builtin_cheri_address_set(rw_cap, v_address), len);
 		switch (perms) {
 		  case MORELLO_RELA_PERM_R:
 		    cap = __builtin_cheri_perms_and(cap_rx,
@@ -229,8 +229,8 @@ hidden void _dlstart_c(uintptr_t *sp, size_t *dynv_raw)
 	GETFUNCSYM(&dls2, __dls2, base_rx+DYN_VAL(dyn[DT_PLTGOT]));
 #if defined(__CHERI_PURE_CAPABILITY__)
 	dls2 = __builtin_cheri_seal_entry(dls2);
-	dls2((void *)base_rx, (void *)base_rw, sp, argc, argv, envp, (uintptr_t *)auxv);
+	dls2((void *)base_rx, (void *)rw_cap, sp, argc, argv, envp, (uintptr_t *)auxv);
 #else
-	dls2((void *)base_rx, (void *)base_rw, sp);
+	dls2((void *)base_rx, sp);
 #endif
 }

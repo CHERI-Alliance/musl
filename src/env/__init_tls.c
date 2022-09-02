@@ -84,10 +84,14 @@ static void static_init_tls(uintptr_t *aux)
 	unsigned char *p, *aux_at_phdr;
 	size_t n;
 	Phdr *phdr, *tls_phdr=0;
-	uintptr_t base = 0;
+	ptraddr_t base = 0;
 	void *mem;
 #if defined(__CHERI_PURE_CAPABILITY__) && defined(LIBSHIM)
-	aux_at_phdr = p = __builtin_cheri_address_set(aux[AT_CHERI_EXEC_RX_CAP], (size_t) aux[AT_PHDR]);
+	uintptr_t exec_rx_cap = aux[AT_CHERI_EXEC_RX_CAP];
+#endif
+
+#if defined(__CHERI_PURE_CAPABILITY__) && defined(LIBSHIM)
+	aux_at_phdr = p = __builtin_cheri_address_set(exec_rx_cap, (size_t) aux[AT_PHDR]);
 #else
 	aux_at_phdr = p = (void *)aux[AT_PHDR];
 #endif
@@ -107,7 +111,16 @@ static void static_init_tls(uintptr_t *aux)
 	}
 
 	if (tls_phdr) {
-		main_tls.image = (void *)(base + tls_phdr->p_vaddr);
+		ptraddr_t tls_addr = base + tls_phdr->p_vaddr;
+		/* TODO: remove #if defined(LIBSHIM) condition part here and above
+		 *       when kernel provides AT_CHERI_* */
+#if defined(__CHERI_PURE_CAPABILITY__) && defined(LIBSHIM)
+		main_tls.image = (void *)__builtin_cheri_address_set(exec_rx_cap, tls_addr);
+#elif defined(__CHERI_PURE_CAPABILITY__)
+		main_tls.image = (void *)__builtin_cheri_address_set(aux[AT_PHDR], tls_addr);
+#else
+		main_tls.image = (void *)tls_addr;
+#endif
 		main_tls.len = tls_phdr->p_filesz;
 		main_tls.size = tls_phdr->p_memsz;
 		main_tls.align = tls_phdr->p_align;

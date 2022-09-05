@@ -510,7 +510,7 @@ static void do_relocs(struct dso *dso, size_t *rel, size_t rel_size, size_t stri
 			break;
 		}
 		case REL_RELATIVE: {
-#ifndef __CHERI_PURE_CAPABILITY__
+#if !defined(__CHERI_PURE_CAPABILITY__) || defined(__SANITIZE_CHERISEED__)
 			*reloc_addr = base_rx + addend;
 #else
 			/* aaelf64-morello reference on Elf64_Rela encoding:
@@ -2210,7 +2210,7 @@ void __dls3(uintptr_t *sp, size_t *auxv)
 	if (replace_argv0) argv[0] = replace_argv0;
 
 	errno = 0;
-#ifdef __CHERI_PURE_CAPABILITY__
+#if defined(__CHERI_PURE_CAPABILITY__) && !defined(__SANITIZE_CHERISEED__)
 __asm__ __volatile__ (
 	"mov x0, %0\n"
 	"mov c1, %1\n"

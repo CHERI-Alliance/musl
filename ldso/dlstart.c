@@ -184,7 +184,7 @@ hidden void _dlstart_c(uintptr_t *sp, size_t *dynv_raw)
 	for (; rel_count; rel_count--, rela_ptr++) {
 		if (!IS_RELATIVE(rela_ptr->r_info, 0)) continue;
 		char **rel_addr = base_rx + rela_ptr->r_offset;
-#ifndef __CHERI_PURE_CAPABILITY__
+#if !defined(__CHERI_PURE_CAPABILITY__) || defined(__SANITIZE_CHERISEED__)
 		*rel_addr = base_rx + rela_ptr->r_addend;
 #else
 		rel_addr = __builtin_cheri_address_set(rw_cap, rel_addr);

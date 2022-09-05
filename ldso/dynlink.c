@@ -922,6 +922,9 @@ static void *map_library(int fd, struct dso *dso)
 		}
 done_mapping:
 	dso->base = base;
+#ifdef __CHERI_PURE_CAPABILITY__
+	dso->rw_capability = __builtin_cheri_perms_and(base, __CHERI_CAP_PERMISSION_GLOBAL__ | READ_CAP_PERMS | WRITE_CAP_PERMS);
+#endif
 	dso->dynv = laddr(dso, dyn);
 	if (dso->tls.size) dso->tls.image = laddr(dso, tls_image);
 	free(allocated_buf);

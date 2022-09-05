@@ -2259,5 +2259,11 @@
         "name": "malloc_donate",
         "xrc": [0],
         "skip": ["dynamic"]
+    },
+    {
+        "app": "${build}/shared-lib-${kind}.exe",
+        "name": "shared-lib-test",
+        "xrc": [0],
+        "skip": ["dynamic"]
     }
 ]

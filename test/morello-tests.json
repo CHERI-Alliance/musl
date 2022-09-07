@@ -2265,5 +2265,13 @@
         "name": "shared-lib-test",
         "xrc": [0],
         "skip": ["dynamic"]
+    },
+    {
+        "app": "${build}/errno-${kind}.exe",
+        "name": "errno",
+        "args": ["0"],
+        "xrc": [0],
+        "skip": ["dynamic"],
+        "stdout": ["Bad memory reservation"]
     }
 ]

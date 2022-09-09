@@ -31,10 +31,6 @@ MKFS := $(patsubst %.c, %.mk, $(SOURCES))
 EXE_STATIC := $(patsubst %.c, %-static.exe, $(SOURCES))
 EXE_DYNAMIC := $(patsubst %.c, %-dynamic.exe, $(SOURCES))
 
-# Third party library tests
-LIBRARY_SOURCES := $(wildcard src/lib/*.c)
-SLOBJS := $(patsubst src/lib/%.c, src/lib/lib%.so, $(LIBRARY_SOURCES))
-
 MIE_ARGS ?=
 
 all: test
@@ -63,8 +59,6 @@ test-dynamic: $(EXE_DYNAMIC) runner.py morello-tests.json check_morelloie
 
 build: $(EXE_STATIC) $(EXE_DYNAMIC)
 
-shared-libraries: $(SLOBJS)
-
 check_morelloie:
 ifndef MORELLOIE
 	$(error MORELLOIE is undefined - please supply path to emulator binary)
@@ -79,15 +73,7 @@ endif
 src/lib/lib%.so: src/lib/%.c
 	$(CC) $(CFLAGS) $(LDFLAGS) -shared $< -o $@
 
-src/shared-lib.lo src/shared-lib.o: CFLAGS += -I src/lib
-
-src/shared-lib-static.exe: LDFLAGS += src/lib/third-party-library.o
-
-src/shared-lib-static.exe: src/lib/third-party-library.o
-
-src/shared-lib-dynamic.exe: LDLIBS += -L./src/lib -lthird-party-library '-Wl,-rpath,$$ORIGIN/lib'
-
-src/shared-lib-dynamic.exe: src/lib/libthird-party-library.so
+include ldso.mk
 
 %-static.exe: %.o $(addprefix $(MUSLLIB)/,$(MUSL_BITS_STATIC))
 	$(CC) $(LDFLAGS) $< -o $@ $(LDLIBS) -static
@@ -99,7 +85,7 @@ run-%: src/%.exe
 	$< $(TEST_ARGS)
 
 clean:
-	@rm -vf *-results.xml $(EXE_STATIC) $(EXE_DYNAMIC) $(OBJS) $(LOBJS) $(SLOBJS)
+	@rm -vf *-results.xml $(EXE_STATIC) $(EXE_DYNAMIC) $(OBJS) $(LOBJS) $(SLOBJS) $(SSLOBJS)
 	@rm -vrf /tmp/morello-musl-tests-*
 
 .PHONY: clean check_morelloie test build test-native test-static-native test-dynamic-native test-static test-dynamic shared-libraries

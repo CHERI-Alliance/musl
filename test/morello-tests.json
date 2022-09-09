@@ -2262,7 +2262,31 @@
     },
     {
         "app": "${build}/shared-lib-${kind}.exe",
-        "name": "shared-lib-test",
+        "name": "shared_third_party_library",
+        "xrc": [0],
+        "skip": ["dynamic"]
+    },
+    {
+        "app": "${build}/multiple-lib-${kind}.exe",
+        "name": "multiple_third_party_libraries",
+        "xrc": [0],
+        "skip": ["dynamic"]
+    },
+    {
+        "app": "${build}/symbol-lib-${kind}.exe",
+        "name": "symbol_third_party_library",
+        "xrc": [0],
+        "skip": ["dynamic"]
+    },
+    {
+        "app": "${build}/dependency-lib-${kind}.exe",
+        "name": "third_party_library_dependency_library",
+        "xrc": [0],
+        "skip": ["dynamic"]
+    },
+    {
+        "app": "${build}/symbol-multi-lib-${kind}.exe",
+        "name": "multiple_symbol_third_party_library",
         "xrc": [0],
         "skip": ["dynamic"]
     },

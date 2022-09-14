@@ -1971,15 +1971,8 @@ void __dls3(uintptr_t *sp, size_t *auxv)
 #ifndef __CHERI_PURE_CAPABILITY__
 		Phdr *phdr = app.phdr = phdr_rw = AUX_PTR(aux[AT_PHDR]);
 #else
-#ifdef LIBSHIM
 		char *exec_rx = AUX_PTR(aux[AT_CHERI_EXEC_RX_CAP]);
 		char *exec_rw = AUX_PTR(aux[AT_CHERI_EXEC_RW_CAP]);
-#else
-		char *exec_rx = __builtin_cheri_perms_and(AUX_PTR(aux[AT_PHDR]),
-			__CHERI_CAP_PERMISSION_GLOBAL__ | READ_CAP_PERMS | EXEC_CAP_PERMS);
-		char *exec_rw = __builtin_cheri_perms_and(AUX_PTR(aux[AT_PHDR]),
-			__CHERI_CAP_PERMISSION_GLOBAL__ | READ_CAP_PERMS | WRITE_CAP_PERMS);
-#endif
 		Phdr *phdr = app.phdr = __builtin_cheri_address_set(exec_rx, AUX_VAL(aux[AT_PHDR]));
 		app.rw_capability = exec_rw;
 #endif

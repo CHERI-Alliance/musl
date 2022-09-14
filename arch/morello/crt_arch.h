@@ -13,18 +13,6 @@ START ":\n"
 "	ldp c0, c1, [csp, #0]\n"    // ARGC, ARGV
 "	ldp c2, c3, [csp, #32]\n"   // ENVP, AUXV
 "1:\n"
-#else
-"	mov c0, csp\n" // temporary work-around for transitional kernel
-"	add c1, c0, #16\n" // argv
-"	ldr x10, [c0], #32\n" // increment argc / NULL
-"	add c0, c0, x10, lsl #4\n"
-"	mov c2, c0\n" // envp
-".L_loop_get_auxv:\n"
-"	ldr c9, [c0], #16\n"
-"	cmp c9, czr\n"
-"	b.ne .L_loop_get_auxv\n"
-"	mov c3, c0\n" // initialise c3 with auxv
-"	mov x0, x10\n" // argc
 #endif
 "	mov c20, c0\n"
 "	mov c21, c1\n"
@@ -72,9 +60,8 @@ __morello_init_static(int, char **, char **, auxv_entry *auxv)
 		return;
 	}
 	cap_relocs_entry *r = __cap_relocs_start;
-	// TODO: replace this with NULL -- workaround for transitional kernel
-	void *rw = __builtin_cheri_global_data_get();
-	void *rx = __builtin_cheri_global_data_get();
+	void *rw = NULL;
+	void *rx = NULL;
 	for (; auxv->a_type; auxv++) {
 		if (auxv->a_type == AT_CHERI_EXEC_RW_CAP) {
 			rw = auxv->a_un.a_ptr; // used to derive read-only and rw objects

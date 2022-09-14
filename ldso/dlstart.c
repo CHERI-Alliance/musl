@@ -143,16 +143,8 @@ hidden void _dlstart_c(uintptr_t *sp, size_t *dynv_raw)
 #ifndef __CHERI_PURE_CAPABILITY__
 	base_rx = AUX_PTR(aux[AT_BASE]);
 #else
-#ifdef LIBSHIM
 	base_rx = AUX_PTR(aux[AT_CHERI_INTERP_RX_CAP]);
 	rw_cap = AUX_PTR(aux[AT_CHERI_INTERP_RW_CAP]);
-#else
-	base_rx = rw_cap = AUX_PTR(aux[AT_BASE]);
-	base_rx = __builtin_cheri_perms_and(base_rx,
-		__CHERI_CAP_PERMISSION_GLOBAL__ | READ_CAP_PERMS | EXEC_CAP_PERMS);
-	rw_cap = __builtin_cheri_perms_and(rw_cap,
-		__CHERI_CAP_PERMISSION_GLOBAL__ | READ_CAP_PERMS | WRITE_CAP_PERMS);
-#endif
 	base_rx = __builtin_cheri_address_set(base_rx, AUX_VAL(aux[AT_BASE]));
 #endif
 

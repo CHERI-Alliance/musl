@@ -427,7 +427,7 @@ function build_musl_test() {
         make -j${MORELLO_NPROC:-8} build \
             TESTS=${TESTS} TESTPKG=${TESTPKG} SYSROOT=${PREFIX_PATH} TRIPLE=${TRIPLE} ARCHFLAGS=${ARCHFLAGS}
         if [[ "${SKIP_TEST_RUN}" == "NO" ]]; then
-            make run
+            make run TESTS=${TESTS} TESTPKG=${TESTPKG} SYSROOT=${PREFIX_PATH} TRIPLE=${TRIPLE} ARCHFLAGS=${ARCHFLAGS}
         fi
         popd
     fi

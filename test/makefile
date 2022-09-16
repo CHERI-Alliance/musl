@@ -37,31 +37,23 @@ all: test
 
 -include $(MKFS)
 
-test: test-static test-dynamic
+test: check-test-driver test-static test-dynamic
 
-test-native: test-static-native test-dynamic-native
-
-test-static-native: $(EXE_STATIC) runner.py morello-tests.json
-	python3 runner.py static $(MORELLO_TESTS_PROCS) $(CURDIR)/src morello-tests.json \
-	$(CURDIR)/native-driver.sh custom morello-custom-static-results.xml
-
-test-dynamic-native: $(EXE_DYNAMIC) runner.py morello-tests.json
-	python3 runner.py dynamic $(MORELLO_TESTS_PROCS) $(CURDIR)/src morello-tests.json \
-	$(CURDIR)/native-driver.sh custom morello-custom-dynamic-results.xml
-
-test-static: $(EXE_STATIC) runner.py morello-tests.json check_morelloie
+test-static: $(TEST_DRIVER) $(EXE_STATIC) runner.py morello-tests.json
 	TEST_RUNNER_MIEARGS='$(MIE_ARGS)' python3 runner.py static $(MORELLO_TESTS_PROCS) \
-	$(CURDIR)/src morello-tests.json $(CURDIR)/mie-driver.sh custom morello-custom-static-results.xml
+	$(CURDIR)/src morello-tests.json $(TEST_DRIVER) custom morello-custom-static-results.xml
 
-test-dynamic: $(EXE_DYNAMIC) runner.py morello-tests.json check_morelloie
+test-dynamic: $(TEST_DRIVER) $(EXE_DYNAMIC) runner.py morello-tests.json
 	TEST_RUNNER_MIEARGS='$(MIE_ARGS)' python3 runner.py dynamic $(MORELLO_TESTS_PROCS) \
-	$(CURDIR)/src morello-tests.json $(CURDIR)/mie-driver.sh custom morello-custom-dynamic-results.xml
+	$(CURDIR)/src morello-tests.json $(TEST_DRIVER) custom morello-custom-dynamic-results.xml
 
 build: $(EXE_STATIC) $(EXE_DYNAMIC)
 
-check_morelloie:
-ifndef MORELLOIE
-	$(error MORELLOIE is undefined - please supply path to emulator binary)
+check-test-driver:
+ifndef TEST_DRIVER
+	$(error TEST_DRIVER is undefined - please supply a path to a valid test driver)
+else ifeq ("$(wildcard $(TEST_DRIVER))", "")
+	$(error TEST_DRIVER file does not exist - please supply a path to a valid test driver)
 endif
 
 %.o: %.c
@@ -88,4 +80,4 @@ clean:
 	@rm -vf *-results.xml $(EXE_STATIC) $(EXE_DYNAMIC) $(OBJS) $(LOBJS) $(SLOBJS) $(SSLOBJS)
 	@rm -vrf /tmp/morello-musl-tests-*
 
-.PHONY: clean check_morelloie test build test-native test-static-native test-dynamic-native test-static test-dynamic shared-libraries
+.PHONY: clean check-test-driver test build test-static test-dynamic shared-libraries

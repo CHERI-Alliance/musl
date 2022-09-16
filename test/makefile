@@ -43,19 +43,19 @@ test-native: test-static-native test-dynamic-native
 
 test-static-native: $(EXE_STATIC) runner.py morello-tests.json
 	python3 runner.py static $(MORELLO_TESTS_PROCS) $(CURDIR)/src morello-tests.json \
-	"native" custom morello-custom-static-results.xml
+	$(CURDIR)/native-driver.sh custom morello-custom-static-results.xml
 
 test-dynamic-native: $(EXE_DYNAMIC) runner.py morello-tests.json
 	python3 runner.py dynamic $(MORELLO_TESTS_PROCS) $(CURDIR)/src morello-tests.json \
-	"native" custom morello-custom-dynamic-results.xml
+	$(CURDIR)/native-driver.sh custom morello-custom-dynamic-results.xml
 
 test-static: $(EXE_STATIC) runner.py morello-tests.json check_morelloie
 	TEST_RUNNER_MIEARGS='$(MIE_ARGS)' python3 runner.py static $(MORELLO_TESTS_PROCS) \
-	$(CURDIR)/src morello-tests.json $(MORELLOIE) custom morello-custom-static-results.xml
+	$(CURDIR)/src morello-tests.json $(CURDIR)/mie-driver.sh custom morello-custom-static-results.xml
 
 test-dynamic: $(EXE_DYNAMIC) runner.py morello-tests.json check_morelloie
 	TEST_RUNNER_MIEARGS='$(MIE_ARGS)' python3 runner.py dynamic $(MORELLO_TESTS_PROCS) \
-	$(CURDIR)/src morello-tests.json $(MORELLOIE) custom morello-custom-dynamic-results.xml
+	$(CURDIR)/src morello-tests.json $(CURDIR)/mie-driver.sh custom morello-custom-dynamic-results.xml
 
 build: $(EXE_STATIC) $(EXE_DYNAMIC)
 

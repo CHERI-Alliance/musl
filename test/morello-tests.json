@@ -633,7 +633,7 @@
     {
         "app": "${build}/assert-${kind}.exe",
         "name": "assert",
-        "xrc": [-6],
+        "xrc": [134],
         "skip": []
     },
     {
@@ -725,7 +725,7 @@
         "app":  "${build}/localeconv-${kind}.exe",
         "name": "localeconv-write-char",
         "args": ["2"],
-        "xrc": [-11],
+        "xrc": [139],
         "skip": []
     },
     {
@@ -739,7 +739,7 @@
         "app":  "${build}/localeconv-${kind}.exe",
         "name": "localeconv-write-string",
         "args": ["4"],
-        "xrc": [-11],
+        "xrc": [139],
         "skip": []
     },
     {
@@ -1233,7 +1233,7 @@
         "app": "${build}/malloc-${kind}.exe",
         "name": "malloc_double_free",
         "args": ["5"],
-        "xrc": [-11],
+        "xrc": [139],
         "skip": []
     },
     {
@@ -1290,7 +1290,7 @@
         "name": "pthread-cancel-async-disabled",
         "args": ["5"],
         "xrc": [0],
-        "skip": []
+        "skip": ["flaky"]
     },
     {
         "app": "${build}/pthread_cancel-${kind}.exe",
@@ -1390,7 +1390,7 @@
         "app": "${build}/mremap-${kind}.exe",
         "name": "mremap-should-segfault",
         "args": ["4"],
-        "xrc": [-11]
+        "xrc": [139]
     },
     {
         "app": "${build}/shm_open-${kind}.exe",
@@ -2265,7 +2265,7 @@
         "app": "${build}/exit-${kind}.exe",
         "name": "abort",
         "args": ["2"],
-        "xrc": [-6],
+        "xrc": [134],
         "skip": []
     },
     {

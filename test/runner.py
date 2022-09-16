@@ -60,7 +60,7 @@ class Args(object):
         self.nproc: int = int(opt[1])  # number of parallel processes
         self.workdir: str = opt[2]  # working directory
         self.testspec: str = opt[3]  # path to the JSON test spec
-        self.morelloie: str = opt[4]  # path to the Morello IE executable
+        self.driver: str = opt[4] # path to test driver
         self.suitename: str = opt[5]  # testsuite name (classname for junit report)
         self.report: str = opt[6]  # path to junit report
         self.classname: str = f'{self.suitename}.{self.kind}'
@@ -70,7 +70,7 @@ class Test(object):
     def __init__(self, t: dict, a: Args):
         self.app: str = Test.replace_variables(a, t.get('app'))   # test app
         self.args: list = [Test.replace_variables(a, v) for v in t.get('args', [])]  # arguments for test app
-        self.params: list = [Test.replace_variables(a, v) for v in t.get('params', [])]  # Morello IE parameters for this test
+        self.params: list = [Test.replace_variables(a, v) for v in t.get('params', {}).get(os.path.basename(a.driver), [])]  # Driver parameters for this test
         self.name: str = t.get('name', self.default_name())  # test name
         self.timeout: int = int(t.get('timeout', 120))  # test timeout in seconds
         self.env: dict = {k: v for k, v in t.get('env', {}).items()}  # extra env vars
@@ -83,19 +83,7 @@ class Test(object):
             'stderr': t.get('stderr', []),  # lines to match in stderr
         }
         self.kind: str = a.kind
-        self.mie: bool = t.get('mie', a.morelloie != 'native')  # whether to use Morello IE
-        if self.mie:
-            if 'TEST_RUNNER_MIEARGS' in os.environ:
-                extra_args = os.environ['TEST_RUNNER_MIEARGS'].strip()
-                if extra_args:
-                    extra = [v.strip() for v in extra_args.split(' ')]
-                else:
-                    extra = []
-            else:
-                extra = []
-            self.cmd: list = [a.morelloie] + extra + self.params + ['--', self.app] + self.args
-        else:
-            self.cmd: list = [self.app] + self.args
+        self.cmd: list = [a.driver] + self.params + ['--'] + [self.app] + self.args
         self.cleanup: list = [Test.replace_variables(a, v) for v in t.get('cleanup', [])]  # clean up command
 
     @staticmethod

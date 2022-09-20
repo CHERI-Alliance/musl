@@ -41,3 +41,17 @@ src/dependency-lib-static.exe: src/lib/dependency-lib1.o src/lib/dependency-lib2
 src/dependency-lib-static.exe: private LDFLAGS += src/lib/dependency-lib1.o src/lib/dependency-lib2.o
 src/dependency-lib-dynamic.exe: src/lib/libdependency-lib2.so
 src/dependency-lib-dynamic.exe: private LDLIBS += -ldependency-lib2 $(LFLAGS)
+
+# Pointer Library
+src/pointer-lib.lo src/pointer-lib.o: CFLAGS += -I src/lib
+src/pointer-lib-static.exe: src/lib/third-party-pointer-lib.o
+src/pointer-lib-static.exe: private LDFLAGS += src/lib/third-party-pointer-lib.o
+src/pointer-lib-dynamic.exe: src/lib/libthird-party-pointer-lib.so
+src/pointer-lib-dynamic.exe: private LDLIBS += -lthird-party-pointer-lib $(LFLAGS)
+
+# Variadic Library
+src/variadic-lib.lo src/variadic-lib.o: CFLAGS += -I src/lib
+src/variadic-lib-static.exe: src/lib/variadic-lib.o
+src/variadic-lib-static.exe: private LDFLAGS += src/lib/variadic-lib.o
+src/variadic-lib-dynamic.exe: src/lib/libvariadic-lib.so
+src/variadic-lib-dynamic.exe: private LDLIBS += -lvariadic-lib $(LFLAGS)

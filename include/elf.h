@@ -1059,6 +1059,11 @@ typedef struct {
 #define AT_CHERI_STACK_CAP      64
 #define AT_CHERI_SEAL_CAP       65
 
+#define AT_ARGC 80
+#define AT_ARGV 81
+#define AT_ENVC 82
+#define AT_ENVP 83
+
 typedef struct {
   Elf32_Word n_namesz;
   Elf32_Word n_descsz;

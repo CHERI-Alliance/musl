@@ -1283,7 +1283,7 @@
         "name": "pthread-cancel-deferred-in-cp",
         "args": ["4"],
         "xrc": [0],
-        "skip": []
+        "skip": ["flaky"]
     },
     {
         "app": "${build}/pthread_cancel-${kind}.exe",
@@ -1324,7 +1324,7 @@
         "app": "${build}/pthread_cleanup-${kind}.exe",
         "name": "pthread-cleanup",
         "xrc": [0],
-        "skip": []
+        "skip": ["flaky"]
     },
     {
         "app": "${build}/printf_plain_text-${kind}.exe",

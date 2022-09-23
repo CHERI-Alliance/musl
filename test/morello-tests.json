@@ -2337,5 +2337,17 @@
         "app": "${build}/variadic-lib-${kind}.exe",
         "name": "variadic_argument_third_party_library",
         "xrc": [0]
+    },
+    {
+        "app": "${build}/getusershell-${kind}.exe",
+        "name": "getusershell_return_value",
+        "xrc": [0],
+        "skip": []
+    },
+    {
+        "app": "${build}/textdomain-${kind}.exe",
+        "name": "textdomain_return_value",
+        "xrc": [0],
+        "skip": []
     }
 ]

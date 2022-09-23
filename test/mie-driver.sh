@@ -21,4 +21,10 @@ TEST=${1}
 shift
 TEST_ARGS=${@}
 
+# Ensure MORELLOIE
+if [[ -z "${MORELLOIE}" ]]; then
+	echo "Error: MORELLOIE is not defined" >&2
+	exit 3
+fi
+
 ${MORELLOIE} ${TEST_RUNNER_MIE_ARGS} ${MIE_ARGS[*]} -- ${TEST} ${TEST_ARGS}

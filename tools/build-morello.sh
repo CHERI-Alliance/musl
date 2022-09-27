@@ -18,7 +18,7 @@
 # -------------------------
 #
 # LLVM_TARGETS="<targets>" LLVM_LIT_ARGS="<args-for-tests>" \
-#   bash build-toolchain.sh clang \
+#   bash build-morello.sh clang \
 #   /path/to/llvm-project \
 #   /path/to/host/llvm \
 #   /path/to/morello/llvm \
@@ -34,7 +34,7 @@
 # This installs Musl headers for Morello:
 #
 # CC=/path/to/morello/llvm/bin/clang \
-#   bash build-toolchain.sh musl-headers \
+#   bash build-morello.sh musl-headers \
 #   /path/to/musl/sources \
 #   /path/to/morello/musl/install \
 #   aarch64-unknown-linux-musl_purecap
@@ -48,7 +48,7 @@
 # This builds CRT objects for Morello:
 #
 # CC=/path/to/morello/llvm/bin/clang \
-#   bash build-toolchain.sh crt \
+#   bash build-morello.sh crt \
 #   /path/to/llvm-project \
 #   /path/to/morello/musl/install \
 #   aarch64-unknown-linux-musl_purecap
@@ -62,7 +62,7 @@
 # This builds Compiler-RT for Morello:
 #
 # CC=/path/to/morello/llvm/bin/clang \
-#   bash build-toolchain.sh compiler-rt \
+#   bash build-morello.sh compiler-rt \
 #   /path/to/llvm-project \
 #   /path/to/morello/llvm \
 #   /path/to/comp-rt/build/directory \
@@ -76,7 +76,7 @@
 # ---------------
 #
 # CC=/path/to/morello/llvm/bin/clang \
-#   bash build-toolchain.sh musl \
+#   bash build-morello.sh musl \
 #   /path/to/musl/sources \
 #   /path/to/musl/install /path/to/libshim/sources \
 #   aarch64-unknown-linux-musl_purecap
@@ -100,7 +100,7 @@ STAGE=${1} # stage to run: clang, clang-test, musl, crt, compiler-rt, musl-test,
 case ${STAGE} in
   -help|--help|help)
       echo "Usage: ${0} STAGE [ARGS]"
-      echo "Stages: clang, clang-test, musl-headers, musl, crt, compiler-rt, musl-test, package"
+      echo "Stages: clang, clang-test, musl-headers, musl, crt, compiler-rt, musl-test, libc-test, package"
       echo ""
       sed -n '/^# How to/,${p;/^# END-OF-HOWTO/q}' ${0}
       echo ""
@@ -362,9 +362,13 @@ function build_musl() {
     pushd ${MUSL_PATH}
     make distclean
     ./configure --prefix=${PREFIX_PATH} --target=${TRIPLE} ${CFGFLAGS}
-    if [[ "${LIBSHIM_PATH}" != "NOSHIM" ]]; then
-        download_kernel_headers ${MUSL_PATH}/lib 5.19
-        KERNEL_HEADER_INCLUDES="-isystem ${MUSL_PATH}/lib/kernel/include" make -j${MORELLO_NPROC:-8}
+    if [[ "${TRIPLE}" == "${MORELLO_TRIPLE}" ]]; then
+        if [[ "${LIBSHIM_PATH}" != "NOSHIM" ]]; then
+            download_kernel_headers ${MUSL_PATH}/lib 5.19
+            KERNEL_HEADER_INCLUDES="-isystem ${MUSL_PATH}/lib/kernel/include" make -j${MORELLO_NPROC:-8}
+        else
+            make -j${MORELLO_NPROC:-8}
+        fi
     else
         make -j${MORELLO_NPROC:-8}
     fi
@@ -387,50 +391,56 @@ EOF
 }
 
 # Environment variables:
-#  - MORELLOIE: path to Morello IE executable or `native` for native run
+#  - TEST_DRIVER: path to the test driver script or Morello IE
 #  - CC: path to Morello clang (when libc-test tests are used)
 #  - MORELLO_NPROC: number of parallel jobs (default: 8)
 function build_musl_test() {
     local MUSL_PATH=${1}            # path to Musl sources
-    local PREFIX_PATH=${2}          # where Musl is installed
-    local LIBSHIM_PATH=${3:-NOSHIM} # path to libshim (omit for non-libshim build)
-    local TRIPLE=${4}               # target triple
-    local LIBC_TEST_PATH=${5:-SKIP} # path to libc-test suite sources
-    local SKIP_TEST_RUN=${6:-NO}    # whether to skip running tests
-    if [[ "${TRIPLE}" == "${MORELLO_TRIPLE}" ]]; then
-        local ARCHFLAGS=${ARCHFLAGS:--march=morello+c64}
-        if [[ "${LIBSHIM_PATH}" == "NOSHIM" ]]; then
-            local CFGFLAGS="--enable-morello --disable-libshim"
-        else
-            local CFGFLAGS="--enable-morello --enable-libshim --libshim-path=${LIBSHIM_PATH}"
-        fi
-    else
-        local ARCHFLAGS=${ARCHFLAGS:--march=armv8-a}
-        local CFGFLAGS="--disable-morello --disable-libshim"
-    fi
-    pushd ${MUSL_PATH}
-    make distclean
-    ./configure --prefix=${PREFIX_PATH} --target=${TRIPLE} ${CFGFLAGS}
+    local PREFIX_PATH=${2}          # where Musl has been installed
+    local TRIPLE=${3}               # target triple
+    local SKIP_TEST_RUN=${4:-NO}    # whether to skip running tests
     if [[ "${TRIPLE}" == "${MORELLO_TRIPLE}" ]]; then  # these test only for Morello
+        local ARCHFLAGS=${ARCHFLAGS:--march=morello+c64}
+        local CFGFLAGS="--enable-morello --disable-libshim"
+        pushd ${MUSL_PATH}
+        make distclean
+        ./configure --prefix=${PREFIX_PATH} --target=${TRIPLE} ${CFGFLAGS}
+
         make -C test clean
         make -C test build -j${MORELLO_NPROC:-8}
         if [[ "${SKIP_TEST_RUN}" == "NO" ]]; then
             make -C test test
         fi
-    fi
-    popd
-    if [[ "${LIBC_TEST_PATH}" != "SKIP" ]]; then
-        local TESTS=${MUSL_PATH}/test/libc-test-enabled-tests.txt
-        local TESTPKG=${TESTPKG:-musl.libc-test.${TRIPLE}}
-        pushd ${LIBC_TEST_PATH}
-        make clean
-        make -j${MORELLO_NPROC:-8} build \
-            TESTS=${TESTS} TESTPKG=${TESTPKG} SYSROOT=${PREFIX_PATH} TRIPLE=${TRIPLE} ARCHFLAGS=${ARCHFLAGS}
-        if [[ "${SKIP_TEST_RUN}" == "NO" ]]; then
-            make run TESTS=${TESTS} TESTPKG=${TESTPKG} SYSROOT=${PREFIX_PATH} TRIPLE=${TRIPLE} ARCHFLAGS=${ARCHFLAGS}
-        fi
         popd
     fi
+}
+
+# Environment variables:
+#  - TEST_DRIVER: path to the test driver script or Morello IE
+#  - CC: path to Morello clang (when libc-test tests are used)
+#  - MORELLO_NPROC: number of parallel jobs (default: 8)
+#  - TESTPKG: base name for test report
+function build_libc_test() {
+    local MUSL_PATH=${1}            # path to Musl sources
+    local PREFIX_PATH=${2}          # where Musl has been installed
+    local TRIPLE=${3}               # target triple
+    local LIBC_TEST_PATH=${4}       # path to libc-test suite sources
+    local SKIP_TEST_RUN=${5:-NO}    # whether to skip running tests
+    if [[ "${TRIPLE}" == "${MORELLO_TRIPLE}" ]]; then
+        local ARCHFLAGS=${ARCHFLAGS:--march=morello+c64}
+    else
+        local ARCHFLAGS=${ARCHFLAGS:--march=armv8-a}
+    fi
+    local TESTS=${MUSL_PATH}/test/libc-test-enabled-tests.txt
+    local TESTPKG=${TESTPKG:-musl.libc-test.${TRIPLE}}
+    pushd ${LIBC_TEST_PATH}
+    make clean
+    make -j${MORELLO_NPROC:-8} build \
+        TESTS=${TESTS} TESTPKG=${TESTPKG} SYSROOT=${PREFIX_PATH} TRIPLE=${TRIPLE} ARCHFLAGS=${ARCHFLAGS}
+    if [[ "${SKIP_TEST_RUN}" == "NO" ]]; then
+        make run TESTS=${TESTS} TESTPKG=${TESTPKG} SYSROOT=${PREFIX_PATH} TRIPLE=${TRIPLE} ARCHFLAGS=${ARCHFLAGS}
+    fi
+    popd
 }
 
 function build_package() {
@@ -490,6 +500,10 @@ case ${STAGE} in
       ;;
   musl-test)
       build_musl_test ${@:2};
+      exit 0;
+      ;;
+  libc-test)
+      build_libc_test ${@:2};
       exit 0;
       ;;
   package)

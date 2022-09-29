@@ -2363,5 +2363,21 @@
         "name": "textdomain_return_value",
         "xrc": [0],
         "skip": []
+    },
+    {
+        "app": "${build}/posix_spawn-${kind}.exe",
+        "name": "posix_spawn_file_path",
+        "args": ["2"],
+        "xrc": [0],
+        "timeout": 60,
+        "skip": ["flaky"]
+    },
+    {
+        "app": "${build}/posix_spawn-${kind}.exe",
+        "name": "posix_spawn_file_descriptor",
+        "args": ["3"],
+        "xrc": [0],
+        "timeout": 60,
+        "skip": ["flaky"]
     }
 ]

@@ -4,6 +4,7 @@ import time
 import os
 import subprocess
 import re
+import signal
 
 from os.path import basename
 from multiprocessing import Pool
@@ -60,7 +61,7 @@ class Args(object):
         self.nproc: int = int(opt[1])  # number of parallel processes
         self.workdir: str = opt[2]  # working directory
         self.testspec: str = opt[3]  # path to the JSON test spec
-        self.driver: str = opt[4] # path to test driver
+        self.driver: str = opt[4]  # path to test driver
         self.suitename: str = opt[5]  # testsuite name (classname for junit report)
         self.report: str = opt[6]  # path to junit report
         self.classname: str = f'{self.suitename}.{self.kind}'
@@ -128,18 +129,17 @@ class Test(object):
             xrc = [xrc]
         return [int(v) for v in xrc]
 
-def __subprocess(cmd: list, stdin, env: dict, timeout: int):
-    result = subprocess.run(cmd, universal_newlines=True,
-        stdout=subprocess.PIPE, stderr=subprocess.PIPE, input=stdin,
-        timeout=timeout, env={**env, **dict(os.environ)})
-    return result
+def __subprocess(cmd: list, stdin, env: dict):
+    return subprocess.Popen(cmd, universal_newlines=True,
+        start_new_session=True, stdin=subprocess.PIPE if stdin else None,
+        stdout=subprocess.PIPE, stderr=subprocess.PIPE,
+        env={**env, **dict(os.environ)})
 
 def __run_process(t: Test) -> tuple:
+    proc = __subprocess(t.cmd, t.stdin, t.env)
     try:
-        result = __subprocess(t.cmd, t.stdin, t.env, t.timeout)
-        stdout = result.stdout
-        stderr = result.stderr
-        code = result.returncode
+        stdout, stderr = proc.communicate(input=t.stdin, timeout=t.timeout)
+        code = proc.returncode
     except subprocess.TimeoutExpired as err:
         stdout = err.stdout
         stderr = err.stderr
@@ -148,6 +148,12 @@ def __run_process(t: Test) -> tuple:
         if not stderr:
             stderr = f'Timed out after {t.timeout} seconds'
         code = 217
+        pg = os.getpgid(proc.pid)
+        os.killpg(pg, signal.SIGKILL)
+    if type(stdout) is not str:
+        stdout = stdout.decode('utf-8')
+    if type(stderr) is not str:
+        stderr = stderr.decode('utf-8')
     return code, stdout.strip('\n'), stderr.strip('\n')
 
 def __scan_output(t: Test, received: list, expected: list) -> tuple:
@@ -256,7 +262,8 @@ def __run(t: Test, a: Args) -> tuple:
         if os.path.exists(t.file.get('path')):
             os.remove(t.file.get('path'))
     if t.cleanup:
-        __subprocess(t.cleanup, None, {}, None)
+        proc = __subprocess(t.cleanup, stdin=None, env={})
+        proc.communicate(timeout=60)
     successful, msg = __check(rc, out.split('\n'), err.split('\n'), t)
     nskipped = 0
     nfailed = 0

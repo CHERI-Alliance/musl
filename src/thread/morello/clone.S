@@ -24,6 +24,7 @@ __clone:
 1:	cmp     x7, #16
 	b.lt    1f // no args
 	ldr     c4, [c9, #0]
+1:
 
 #ifdef LIBSHIM
 	// store tls, flags
@@ -37,7 +38,7 @@ __clone:
 	mov c2,c4
 	mov c3,c5
 	mov c4,c6
-1:	mov x8,#220 // SYS_clone
+	mov x8,#220 // SYS_clone
 	svc #0
 
 	cbz x0,1f

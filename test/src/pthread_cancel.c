@@ -328,7 +328,7 @@ void *test_cancel_deferred_in_cp_custom(void *arg) {
 static int cancel_deferred_in_cp_custom() {
   void *thread_ret = 0;
   pthread_t thread;
-  for (int i = 0; i < 10000; i++) {
+  for (int i = 0; i < 1000; i++) {
     pthread_create(&thread, NULL, test_cancel_deferred_in_cp_custom, NULL);
     T(sem_wait(&sem), "sem_wait failed");
     pthread_cancel(thread);
@@ -361,10 +361,13 @@ int main(int argc, char **argv) {
     return cancel_deferred_disabled();
   case '7': // pthread-cancel-async-masked
     return cancel_async_masked();
-#if LIBSHIM
+#ifdef LIBSHIM
   case '8': // pthread-cancel-deferred-masked
     return cancel_deferred_masked();
-#endif
+#else // #ifdef LIBSHIM
+  case '8':
+    return 0;
+#endif // #ifdef LIBSHIM
   case '9': // pthread-cancel-deferred-in-cp-custom
     return cancel_deferred_in_cp_custom();
   }

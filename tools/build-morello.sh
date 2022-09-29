@@ -347,7 +347,7 @@ function download_kernel_headers() {
 function build_musl() {
     local MUSL_PATH=${1}            # path to Musl sources
     local PREFIX_PATH=${2}          # where to install Musl
-    local LIBSHIM_PATH=${3:-NOSHIM} # path to libshim (omit for non-libshim build)
+    local LIBSHIM_PATH=${3:-NOSHIM} # path to libshim
     local TRIPLE=${4}               # target triple
     if [[ "${TRIPLE}" == "${MORELLO_TRIPLE}" ]]; then
         if [[ "${LIBSHIM_PATH}" == "NOSHIM" ]]; then
@@ -398,14 +398,18 @@ function build_musl_test() {
     local MUSL_PATH=${1}            # path to Musl sources
     local PREFIX_PATH=${2}          # where Musl has been installed
     local TRIPLE=${3}               # target triple
-    local SKIP_TEST_RUN=${4:-NO}    # whether to skip running tests
+    local LIBSHIM_PATH=${4:-NOSHIM} # path to libshim
+    local SKIP_TEST_RUN=${5:-NO}    # whether to skip running tests
     if [[ "${TRIPLE}" == "${MORELLO_TRIPLE}" ]]; then  # these test only for Morello
         local ARCHFLAGS=${ARCHFLAGS:--march=morello+c64}
-        local CFGFLAGS="--enable-morello --disable-libshim"
+        if [[ "${LIBSHIM_PATH}" == "NOSHIM" ]]; then
+            local CFGFLAGS="--enable-morello --disable-libshim"
+        else
+            local CFGFLAGS="--enable-morello --enable-libshim --libshim-path=${LIBSHIM_PATH}"
+        fi
         pushd ${MUSL_PATH}
         make distclean
         ./configure --prefix=${PREFIX_PATH} --target=${TRIPLE} ${CFGFLAGS}
-
         make -C test clean
         make -C test build -j${MORELLO_NPROC:-8}
         if [[ "${SKIP_TEST_RUN}" == "NO" ]]; then

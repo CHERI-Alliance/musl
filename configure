@@ -748,11 +748,7 @@ tryldflag LDFLAGS_AUTO -Wl,--hash-style=both
 # libc.so will crash at runtime during relocation processing.
 # The common way this can happen is failure to link the compiler
 # runtime library; implementation error is also a possibility.
-# With CHERIseed the DSO will have a lot of undefined symbols,
-# and so it is incompatible with this flag.
-if test "$cheriseed" = no ; then
-    tryldflag LDFLAGS_AUTO -Wl,--no-undefined
-fi
+tryldflag LDFLAGS_AUTO -Wl,--no-undefined
 
 # Public data symbols must be interposable to allow for copy
 # relocations, but otherwise we want to bind symbols at libc link

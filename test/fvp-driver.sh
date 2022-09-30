@@ -54,10 +54,14 @@ TEST_CMD="send -- \"{ { cd ${FVP_SHARED_DIR} &> /dev/null; ${TEST} ${TEST_ARGS};
 # Generate commands for propagating environment variables from the current
 # environment
 ENV_CMDS="$(
-while read DEF; do
-	echo "send -- \"export ${DEF}\r\""
-	echo "expect -re {/ # $}"
-done <<< $(env | sed "/.\{100\}/d" | sed "s/=/='/" | sed "s/$/'/")
+env --null | while read -d '' -r DEF; do
+	if (( ${#DEF} < 100 )); then
+		LHS=$(echo ${DEF} | cut -d '=' -f 1)
+		RHS=$(echo ${DEF} | cut -d '=' -f 2-)
+		echo "send -- \"export ${LHS}=${RHS@Q}\r\""
+		echo "expect -re {/ # $}"
+	fi
+done
 )"
 
 # Read stdin and generate commands to propagate this to the test when run in

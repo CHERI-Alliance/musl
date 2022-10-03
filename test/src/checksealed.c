@@ -16,7 +16,7 @@ int main(int argc, char *argv[])
 		return 4;
 	}
 
-#ifdef DYNAMIC
+#if defined(DYNAMIC) && !defined(__SANITIZE_CHERISEED__)
 	printf(""); /* Ensure printf appears in PLT */
 
 	/**
@@ -40,6 +40,6 @@ int main(int argc, char *argv[])
 		return 5;
 	}
 
-#endif // DYNAMIC
+#endif // defined(DYNAMIC) && !defined(__SANITIZE_CHERISEED__)
 	return 0;
 }

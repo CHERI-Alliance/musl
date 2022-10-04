@@ -44,7 +44,7 @@ hidden void _dlstart_c(uintptr_t *sp, size_t *dynv_raw)
 	size_t *rel, rel_size, rel_count;
 	Rel_t *rel_ptr;
 	Rela_t *rela_ptr;
-	char *base_rx, *rw_cap;
+	char *base_rx;
 #if !defined(__CHERI_PURE_CAPABILITY__)
 	auxv_entry *auxv;
 	int argc = *sp;
@@ -58,6 +58,16 @@ hidden void _dlstart_c(uintptr_t *sp, size_t *dynv_raw)
 	for (i=0; i<AUX_CNT; i++) aux[i] = &aux_null;
 	for (i=0; auxv[i].a_type; i++) if (auxv[i].a_type<AUX_CNT)
 		aux[auxv[i].a_type] = auxv + i;
+
+#ifdef __CHERI_PURE_CAPABILITY__
+	const _Bool is_interpreter = (AUX_PTR(aux[AT_CHERI_INTERP_RW_CAP]) != NULL);
+	char *const rw_cap = AUX_PTR(aux[is_interpreter ?
+	                                 AT_CHERI_INTERP_RW_CAP :
+	                                 AT_CHERI_EXEC_RW_CAP]);
+	char *const rx_cap = AUX_PTR(aux[is_interpreter ?
+	                                 AT_CHERI_INTERP_RX_CAP :
+	                                 AT_CHERI_EXEC_RX_CAP]);
+#endif
 
 #if DL_FDPIC
 	struct fdpic_loadseg *segs, fakeseg;
@@ -140,12 +150,11 @@ hidden void _dlstart_c(uintptr_t *sp, size_t *dynv_raw)
 	 * the load address as the difference between &_DYNAMIC and the
 	 * virtual address in the PT_DYNAMIC program header. */
 
-#ifndef __CHERI_PURE_CAPABILITY__
+	// AT_BASE is always a raw 64-bit value.
 	base_rx = AUX_PTR(aux[AT_BASE]);
-#else
-	base_rx = AUX_PTR(aux[AT_CHERI_INTERP_RX_CAP]);
-	rw_cap = AUX_PTR(aux[AT_CHERI_INTERP_RW_CAP]);
-	base_rx = __builtin_cheri_address_set(base_rx, AUX_VAL(aux[AT_BASE]));
+#ifdef __CHERI_PURE_CAPABILITY__
+	if (is_interpreter)
+		base_rx = __builtin_cheri_address_set(rx_cap, base_rx);
 #endif
 
 	if (!base_rx) {

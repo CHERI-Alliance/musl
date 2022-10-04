@@ -2,6 +2,9 @@
 #include <sys/dynv.h>
 #include "dynlink.h"
 #include "libc.h"
+#if defined(__SANITIZE_CHERISEED__)
+#include <sanitizer/cheriseed_interface.h>
+#endif
 
 #ifndef START
 #define START "_dlstart"
@@ -67,6 +70,9 @@ hidden void _dlstart_c(uintptr_t *sp, size_t *dynv_raw)
 	char *const rx_cap = AUX_PTR(aux[is_interpreter ?
 	                                 AT_CHERI_INTERP_RX_CAP :
 	                                 AT_CHERI_EXEC_RX_CAP]);
+#if defined(__SANITIZE_CHERISEED__)
+	dynv = __builtin_cheri_address_set(rx_cap, dynv_raw);
+#endif
 #endif
 
 #if DL_FDPIC
@@ -197,8 +203,11 @@ hidden void _dlstart_c(uintptr_t *sp, size_t *dynv_raw)
 	for (; rel_count; rel_count--, rela_ptr++) {
 		if (!IS_RELATIVE(rela_ptr->r_info, 0)) continue;
 		char **rel_addr = base_rx + rela_ptr->r_offset;
-#if !defined(__CHERI_PURE_CAPABILITY__) || defined(__SANITIZE_CHERISEED__)
+#if !defined(__CHERI_PURE_CAPABILITY__)
 		*rel_addr = base_rx + rela_ptr->r_addend;
+#elif defined(__SANITIZE_CHERISEED__)
+		ptraddr_t *rel_addr2 = __builtin_cheri_address_set(rw_cap, rel_addr);
+		*rel_addr2 = (ptraddr_t)(base_rx + rela_ptr->r_addend);
 #else
 		rel_addr = __builtin_cheri_address_set(rw_cap, rel_addr);
 		char *v_address = base_rx + ((morello_reloc_cap_t *)rel_addr)->address;
@@ -228,6 +237,10 @@ hidden void _dlstart_c(uintptr_t *sp, size_t *dynv_raw)
 		*rel_addr = cap;
 #endif
 	}
+#endif
+
+#if defined(__SANITIZE_CHERISEED__)
+	__cheriseed_relocate(0, 0);
 #endif
 
 	stage2_func dls2;

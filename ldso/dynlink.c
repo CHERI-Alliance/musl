@@ -24,6 +24,9 @@
 #include "fork_impl.h"
 #include "libc.h"
 #include "dynlink.h"
+#if defined(__SANITIZE_CHERISEED__)
+#include <sanitizer/cheriseed_interface.h>
+#endif
 
 #define malloc __libc_malloc
 #define calloc __libc_calloc
@@ -388,6 +391,14 @@ static struct symdef find_sym(struct dso *dso, const char *s, int need_def)
 	return find_sym2(dso, s, need_def, 0);
 }
 
+static void do_reloc(struct dso *dso, char **reloc_addr, char *value) {
+#if defined(__SANITIZE_CHERISEED__)
+	*(ptraddr_t*)set_rw_cap(dso, reloc_addr) = __builtin_cheri_address_get(value);
+#else
+	*reloc_addr = value;
+#endif
+}
+
 static void do_relocs(struct dso *dso, size_t *rel, size_t rel_size, size_t stride)
 {
 	unsigned char *base_rx = dso->base;
@@ -479,9 +490,7 @@ static void do_relocs(struct dso *dso, size_t *rel, size_t rel_size, size_t stri
 		case REL_SYMBOLIC:
 		case REL_GOT:
 		case REL_PLT:
-#ifndef __CHERI_PURE_CAPABILITY__
-			*reloc_addr = sym_val + addend;
-#else
+#if defined(__CHERI_PURE_CAPABILITY__) && !defined(__SANITIZE_CHERISEED__)
 			{
 				char *cap_rx = sym_val + addend;
 				char *cap_rw = set_rw_cap(def.dso, cap_rx);
@@ -502,6 +511,8 @@ static void do_relocs(struct dso *dso, size_t *rel, size_t rel_size, size_t stri
 				reloc_addr = set_rw_cap(dso, reloc_addr);
 				*reloc_addr = cap;
 			}
+#else
+			do_reloc(dso, reloc_addr, sym_val + addend);
 #endif
 			break;
 		case REL_USYMBOLIC: {
@@ -510,9 +521,7 @@ static void do_relocs(struct dso *dso, size_t *rel, size_t rel_size, size_t stri
 			break;
 		}
 		case REL_RELATIVE: {
-#if !defined(__CHERI_PURE_CAPABILITY__) || defined(__SANITIZE_CHERISEED__)
-			*reloc_addr = base_rx + addend;
-#else
+#if defined(__CHERI_PURE_CAPABILITY__) && !defined(__SANITIZE_CHERISEED__)
 			/* aaelf64-morello reference on Elf64_Rela encoding:
 			https://github.com/ARM-software/abi-aa/blob/main/aaelf64-morello/aaelf64-morello.rst#445dynamic-linking-with-morello
 			*/
@@ -542,6 +551,8 @@ static void do_relocs(struct dso *dso, size_t *rel, size_t rel_size, size_t stri
 			cap += addend;
 			reloc_addr = set_rw_cap(dso, reloc_addr);
 			*reloc_addr = cap;
+#else
+			do_reloc(dso, reloc_addr, base_rx + addend);
 #endif
 			break;
 		}
@@ -577,7 +588,7 @@ static void do_relocs(struct dso *dso, size_t *rel, size_t rel_size, size_t stri
 			break;
 #else
 		case REL_TPOFF:
-			*reloc_addr = tls_val - def.dso->tls.offset + addend;
+			do_reloc(dso, reloc_addr, tls_val - def.dso->tls.offset + addend);
 			break;
 		case REL_TPOFF_NEG:
 			*reloc_addr = (tls_val - 2 * (size_t)tls_val) + def.dso->tls.offset + addend;
@@ -1899,6 +1910,10 @@ void __dls2b(uintptr_t *sp, size_t *auxv)
 		a_crash();
 	}
 
+#if defined(__SANITIZE_CHERISEED__)
+	__cheriseed_relocate(0, 0);
+#endif
+
 	struct symdef dls3_def = find_sym(&ldso, "__dls3", 0);
 	if (DL_FDPIC) {
 		stage3_func dls3 = ((stage3_func)&ldso.funcdescs[dls3_def.sym-ldso.syms]);
@@ -2213,7 +2228,9 @@ void __dls3(uintptr_t *sp, size_t *auxv)
 	if (replace_argv0) argv[0] = replace_argv0;
 
 	errno = 0;
-#if defined(__CHERI_PURE_CAPABILITY__) && !defined(__SANITIZE_CHERISEED__)
+#if defined(__SANITIZE_CHERISEED__)
+	CRTJMP(argc, argv, envp, auxv, sp, AUX_PTR(aux[AT_ENTRY]));
+#elif defined(__CHERI_PURE_CAPABILITY__)
 __asm__ __volatile__ (
 	"mov x0, %0\n"
 	"mov c1, %1\n"

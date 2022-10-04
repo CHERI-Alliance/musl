@@ -37,7 +37,12 @@ int parent(int testCase)
 
     /* Get absolute path to executable to spawn child */
     char path[4096];
-    readlink("/proc/self/exe", path, sizeof(path));
+    ssize_t len = readlink("/proc/self/exe", path, sizeof(path) - 1);
+    if (len == -1) {
+        perror("readlink");
+        return 21;
+    }
+    path[len] = '\0';
     char *args[3] = {path, "1", 0};
 
     posix_spawnattr_t spawnattr;

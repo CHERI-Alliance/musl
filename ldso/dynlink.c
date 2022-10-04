@@ -2030,7 +2030,10 @@ void __dls3(uintptr_t *sp, size_t *auxv)
 			}
 		}
 
-		argv[-1] = (size_t)(argc - (argv-argv_orig));
+		argc -= (argv-argv_orig);
+#if !defined(__CHERI_PURE_CAPABILITY__)
+		argv[-1] = (size_t)(argc);
+#endif
 		if (!argv[0]) {
 			dprintf(2, "musl libc (" LDSO_ARCH ")\n"
 				"Version %s\n"

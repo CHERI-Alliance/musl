@@ -154,7 +154,7 @@ hidden void _dlstart_c(uintptr_t *sp, size_t *dynv_raw)
 		Phdr *ph = AUX_PTR(aux[AT_PHDR]);
 		for (i=phnum; i--; ph = (void *)((char *)ph + phentsize)) {
 			if (ph->p_type == PT_DYNAMIC) {
-				base_rx = dynv - ph->p_vaddr;
+				base_rx = (char*)dynv - ph->p_vaddr;
 				break;
 			}
 		}

@@ -161,6 +161,10 @@ hidden void _dlstart_c(uintptr_t *sp, size_t *dynv_raw)
 		size_t phnum = AUX_VAL(aux[AT_PHNUM]);
 		size_t phentsize = AUX_VAL(aux[AT_PHENT]);
 		Phdr *ph = AUX_PTR(aux[AT_PHDR]);
+#ifdef __CHERI_PURE_CAPABILITY__
+		// Depending on ABI version AT_PHDR might not be a capability.
+		ph = __builtin_cheri_address_set(rx_cap, ph);
+#endif
 		for (i=phnum; i--; ph = (void *)((char *)ph + phentsize)) {
 			if (ph->p_type == PT_DYNAMIC) {
 				base_rx = (char*)dynv - ph->p_vaddr;

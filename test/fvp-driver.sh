@@ -47,10 +47,6 @@ read FVP_PORT < ${PIPE}
 # Trap release of port and deletion of temporary directory
 trap "echo ${FVP_PORT} > ${PIPE}; rm -rf ${TMP}" EXIT
 
-# Test invocation command.  This command adds prefixes to the output of the
-# test so that output on stdout and stderr can be propagated properly.
-TEST_CMD="send -- \"{ { cd ${FVP_SHARED_DIR} &> /dev/null; ${TEST} ${TEST_ARGS}; echo \$?; } 2>&3 | sed 's/^/STDOUT: /'; } 3>&1 1>&2 | sed 's/^/STDERR: /'\r\""
-
 # Generate commands for propagating environment variables from the current
 # environment
 ENV_CMDS="$(
@@ -67,7 +63,11 @@ done
 # Read stdin and generate commands to propagate this to the test when run in
 # the FVP
 read -t 0 && read -d '' STDIN
-STDIN_CMD="$(echo -n "${STDIN}" | sed 's/^.*$/send -- \"&\\r\"/')"
+STDIN_CMD="echo -en ${STDIN//$'\n'/\\n}"
+
+# Test invocation command.  This command adds prefixes to the output of the
+# test so that output on stdout and stderr can be propagated properly.
+TEST_CMD="send -- \"{ { cd ${FVP_SHARED_DIR} &> /dev/null; ${STDIN_CMD} | ${TEST} ${TEST_ARGS}; echo \$?; } 2>&3 | sed 's/^/STDOUT: /'; } 3>&1 1>&2 | sed 's/^/STDERR: /'\r\""
 
 RESULT=$(
 expect <<-EOM
@@ -78,7 +78,6 @@ expect <<-EOM
 	sleep 1
 	${ENV_CMDS}
 	${TEST_CMD}
-	${STDIN_CMD}
 	expect -re {(.*)\r\n/ # $}
 	send_user "\$expect_out(1,string)\n"
 	send -- "\r"

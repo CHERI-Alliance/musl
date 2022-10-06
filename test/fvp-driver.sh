@@ -67,7 +67,7 @@ STDIN_CMD="echo -en ${STDIN//$'\n'/\\n}"
 
 # Test invocation command.  This command adds prefixes to the output of the
 # test so that output on stdout and stderr can be propagated properly.
-TEST_CMD="send -- \"{ { cd ${FVP_SHARED_DIR} &> /dev/null; ${STDIN_CMD} | ${TEST} ${TEST_ARGS}; echo \$?; } 2>&3 | sed 's/^/STDOUT: /'; } 3>&1 1>&2 | sed 's/^/STDERR: /'\r\""
+TEST_CMD="send -- \"{ { set -o pipefail; cd ${FVP_SHARED_DIR} &> /dev/null; ${STDIN_CMD} | ${TEST} ${TEST_ARGS} | sed -e '\\\$a\\'; echo \$?; } 2>&3 | sed 's/^/STDOUT: /'; } 3>&1 1>&2 | sed 's/^/STDERR: /'\r\""
 
 RESULT=$(
 expect <<-EOM

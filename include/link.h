@@ -30,7 +30,8 @@ struct dl_phdr_info {
 };
 
 struct link_map {
-	ElfW(Addr) l_addr;
+	uintptr_t l_addr;
+	uintptr_t l_rw_capability_addr;
 	char *l_name;
 	ElfW(Dyn) *l_ld;
 	struct link_map *l_next, *l_prev;

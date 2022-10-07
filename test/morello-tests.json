@@ -2373,11 +2373,9 @@
         "skip": ["flaky"]
     },
     {
-        "app": "${build}/posix_spawn-${kind}.exe",
-        "name": "posix_spawn_file_descriptor",
-        "args": ["3"],
+        "app": "${build}/dlopen-${kind}.exe",
+        "name": "dlopen",
         "xrc": [0],
-        "timeout": 60,
-        "skip": ["flaky"]
+        "skip": []
     }
 ]

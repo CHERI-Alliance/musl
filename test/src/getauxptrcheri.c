@@ -5,6 +5,7 @@
 
 #define RW_PERMS    (READ_CAP_PERMS | WRITE_CAP_PERMS | ROOT_CAP_PERMS)
 #define RX_PERMS    (READ_CAP_PERMS | EXEC_CAP_PERMS | ROOT_CAP_PERMS)
+#define CMPT_ID_PERMS    (__ARM_CAP_PERMISSION_COMPARTMENT_ID__)
 
 typedef unsigned long uint;
 
@@ -15,28 +16,46 @@ int main (void) {
 	uint items[] = {
 		AT_CHERI_EXEC_RW_CAP,
 		AT_CHERI_EXEC_RX_CAP,
+#ifdef DYNAMIC
+		AT_CHERI_INTERP_RW_CAP,
+		AT_CHERI_INTERP_RX_CAP,
+#endif
 		AT_CHERI_STACK_CAP,
-		AT_CHERI_SEAL_CAP
+		AT_CHERI_SEAL_CAP,
+		AT_CHERI_CID_CAP
 	};
 
 	uint req_perms[] = {
 		RW_PERMS,
 		RX_PERMS,
+#ifdef DYNAMIC
 		RW_PERMS,
-		SEAL_CAP_PERMS
+		RX_PERMS,
+#endif
+		RW_PERMS,
+		SEAL_CAP_PERMS,
+		CMPT_ID_PERMS
 	};
 
 	const char* names[] = {
 		"AT_CHERI_EXEC_RW_CAP",
 		"AT_CHERI_EXEC_RX_CAP",
+#ifdef DYNAMIC
+		"AT_CHERI_INTERP_RW_CAP",
+		"AT_CHERI_INTERP_RX_CAP",
+#endif
 		"AT_CHERI_STACK_CAP",
-		"AT_CHERI_SEAL_CAP"
+		"AT_CHERI_SEAL_CAP",
+		"AT_CHERI_CID_CAP"
 	};
 
-	for (int k = 0; k < 3; k++) {
+	/* todo: remove -1 when AT_CHERI_CID_CAP is provided by libshim */
+	int n = sizeof(items) / sizeof(uint) - 1;
+
+	for (int k = 0; k < n; k++) {
 		void *cap = getauxptr(items[k]);
 		if (check(cap, req_perms[k], names[k])) {
-			return 1;
+			return k + 1;
 		}
 	}
 

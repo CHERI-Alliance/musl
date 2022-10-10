@@ -20,6 +20,7 @@ unsigned long __getauxval(unsigned long item)
 		case AT_CHERI_INTERP_RX_CAP:
 		case AT_CHERI_STACK_CAP:
 		case AT_CHERI_SEAL_CAP:
+		case AT_CHERI_CID_CAP:
 			goto error;
 	}
 #endif

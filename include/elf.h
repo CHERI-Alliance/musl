@@ -1052,17 +1052,18 @@ typedef struct {
 
 #define AT_MINSIGSTKSZ		51
 
-#define AT_CHERI_EXEC_RW_CAP    60
-#define AT_CHERI_EXEC_RX_CAP    61
-#define AT_CHERI_INTERP_RW_CAP  62
-#define AT_CHERI_INTERP_RX_CAP  63
-#define AT_CHERI_STACK_CAP      64
-#define AT_CHERI_SEAL_CAP       65
+#define AT_CHERI_EXEC_RW_CAP	60
+#define AT_CHERI_EXEC_RX_CAP	61
+#define AT_CHERI_INTERP_RW_CAP	62
+#define AT_CHERI_INTERP_RX_CAP	63
+#define AT_CHERI_STACK_CAP		64
+#define AT_CHERI_SEAL_CAP		65
+#define AT_CHERI_CID_CAP		66
 
-#define AT_ARGC 80
-#define AT_ARGV 81
-#define AT_ENVC 82
-#define AT_ENVP 83
+#define AT_ARGC	80
+#define AT_ARGV	81
+#define AT_ENVC	82
+#define AT_ENVP	83
 
 typedef struct {
   Elf32_Word n_namesz;

@@ -1,15 +1,12 @@
 #define _GNU_SOURCE
 
-#include <sys/stat.h>
 #include <sys/statvfs.h>
-#include <errno.h>
-#include <stdlib.h>
 #include <stdio.h>
 #include <unistd.h>
 #include <fcntl.h>
+#include "temp_file_helpers.h"
 
-#define TMP_DIR "/tmp/morello-musl-tests-stat/"
-#define IN_TMP_DIR(f) TMP_DIR f
+char DIR_PATH[PATH_MAX];
 
 int test_stat();
 int test_mkfifo();
@@ -23,24 +20,21 @@ mode_t mode = 0666;
 int main(int argc, char **argv) {
   if (argc < 2) return -1;
 
-  umask(0);
-
-  // set up root dir in /tmp -- also inherently tests mkdir()
-  if (mkdir(TMP_DIR, 0777) && errno != EEXIST)
-    return -2;
+  if (create_temp_directory("morello-musl-tests-stat/", DIR_PATH) != 0)
+    return -1;
 
   switch (argv[1][0]) {
-    case '0':
+  case '0':
       return test_stat();
-    case '1':
+  case '1':
       return test_mkfifo();
-    case '2':
+  case '2':
       return test_umask();
-    case '3':
+  case '3':
       return test_utimensat_futimensat();
-    case '4':
+  case '4':
       return test_chmod();
-    case '5':
+  case '5':
       return test_statvfs();
   }
 
@@ -52,7 +46,9 @@ int main(int argc, char **argv) {
 int test_stat() {
   struct stat statbuf = { 0 };
 
-  char filename[] = IN_TMP_DIR("statXXXXXX");
+  char filename[PATH_MAX];
+  strcpy(filename, DIR_PATH);
+  strcat(filename, "/statXXXXXX");
 
   int fd;
   if ((fd = mkstemp(filename)) < 0) return 1;
@@ -72,8 +68,7 @@ int test_stat() {
 
 // internally calls mknod()/mknodat(), so this provides some coverage of that.
 int test_mkfifo() {
-  char filename[] = IN_TMP_DIR("statXXXXXX");
-  mktemp(filename);
+  char *filename = create_temp_file(DIR_PATH, "/statXXXXXX");
 
   if (mkfifo(filename, mode)) return 1;
   if (remove(filename)) return 2;
@@ -96,7 +91,9 @@ int test_umask() {
 
 int test_utimensat_futimensat() {
   struct stat statbuf = { 0 };
-  char filename[] = IN_TMP_DIR("statXXXXXX");
+  char filename[PATH_MAX];
+  strcpy(filename, DIR_PATH);
+  strcat(filename, "/statXXXXXX");
 
   int fd;
   if ((fd = mkstemp(filename)) < 0) return 1;
@@ -145,7 +142,9 @@ int test_utimensat_futimensat() {
 
 // lchmod() is not tested as it simply wraps fchmodat()
 int test_chmod() {
-  char filename[] = IN_TMP_DIR("statXXXXXX");
+  char filename[PATH_MAX];
+  strcpy(filename, DIR_PATH);
+  strcat(filename, "/statXXXXXX");
 
   int fd;
   if ((fd = mkstemp(filename)) < 0) return 1;
@@ -161,7 +160,9 @@ int test_chmod() {
 }
 
 int test_statvfs() {
-  char filename[] = IN_TMP_DIR("statXXXXXX");
+  char filename[PATH_MAX];
+  strcpy(filename, DIR_PATH);
+  strcat(filename, "/statXXXXXX");
   struct statvfs statvfsbuf = { 0 };
 
   int fd;

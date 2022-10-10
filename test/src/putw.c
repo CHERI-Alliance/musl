@@ -2,8 +2,9 @@
 
 #include <stdio.h>
 #include <stdlib.h>
+#include "temp_file_helpers.h"
 
-#define TMP_DIR "/tmp/morello-musl-tests-open/"
+char DIR_PATH[PATH_MAX];
 #define IN_TMP_DIR(f) TMP_DIR f
 
 static int test_putw_read_only();
@@ -11,6 +12,9 @@ static int test_putw_write_only();
 
 int main(int argc, char *argv[]) {
     if (argc < 2) return -1;
+
+    if(create_temp_directory("morello-musl-tests-open/", DIR_PATH) != 0)
+        return -1;
 
     switch(argv[1][0]) {
         case '0':
@@ -29,8 +33,7 @@ static int test_putw_read_only() {
 }
 
 static int test_putw_write_only() {
-    char template[] = IN_TMP_DIR("testXXXXXX");
-    char *filename = mktemp(template);
+    char *filename = create_temp_file(DIR_PATH, "testXXXXXX");
 
     FILE *f = fopen(filename, "w");
     if (!f) return 1;

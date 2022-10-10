@@ -3,18 +3,15 @@
 #include <stdio.h>
 #include <fcntl.h>
 #include <unistd.h>
-#include <stdlib.h>
-#include <sys/stat.h>
-#include <errno.h>
+#include "temp_file_helpers.h"
 
-#define TMP_DIR "/tmp/morello-musl-tests-open/"
-#define IN_TMP_DIR(f) TMP_DIR f
+char DIR_PATH[PATH_MAX];
 
 mode_t mode = 0666;
 
 int test_open() {
   // set up root dir in /tmp
-  if (mkdir(TMP_DIR, 0777) && errno != EEXIST) return -2;
+  if (mkdir(DIR_PATH, 0777) && errno != EEXIST) return -2;
 
   // open temp file
   int fd = open(".", O_TMPFILE | O_RDWR | O_EXCL, mode);
@@ -32,9 +29,8 @@ int test_open() {
   if (close(fd)) return -3;
 
   // generate name for file in /tmp/...
-  char template[] = IN_TMP_DIR("openXXXXXX");
   char *filename;
-  filename = mktemp(template);
+  filename = create_temp_file(DIR_PATH, "openXXXXXX");
 
   // create file with generated name
   fd = open(filename, O_CREAT, mode);
@@ -66,13 +62,13 @@ int test_openat() {
 }
 
 int test_creat() {
+  char *filename;
+
   // set up root dir in /tmp
-  if (mkdir(TMP_DIR, 0777) && errno != EEXIST) return -2;
+  if (mkdir(DIR_PATH, 0777) && errno != EEXIST) return -2;
 
   // generate name for file in /tmp/...
-  char template[] = IN_TMP_DIR("openXXXXXX");
-  char *filename;
-  filename = mktemp(template);
+  filename = create_temp_file(DIR_PATH, "openXXXXXX");
 
   int fd = creat(filename, mode);
 
@@ -84,7 +80,10 @@ int test_creat() {
 }
 
 int main(int argc, char **argv) {
-  umask(0);
+  if (argc < 2) return -1;
+
+  if (create_temp_directory("morello-musl-tests-open/", DIR_PATH) != 0)
+    return -1;
 
   switch (argv[1][0]) {
     case '0': // open

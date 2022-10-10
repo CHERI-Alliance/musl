@@ -2,17 +2,15 @@
 
 #include <stdio.h>
 #include <fcntl.h>
-#include <errno.h>
 #include <unistd.h>
-#include <sys/stat.h>
-#include <stdlib.h>
+#include "temp_file_helpers.h"
 
-#define TMP_DIR "/tmp/morello-musl-tests-fcntl/"
-#define IN_TMP_DIR(f) TMP_DIR f
-
+char DIR_PATH[PATH_MAX];
 
 int create_tmp_file() {
-  char template[] = IN_TMP_DIR("testXXXXXX");
+  char template[PATH_MAX];
+  strcpy(template, DIR_PATH);
+  strcat(template, "/testXXXXXX");
   return mkstemp(template);
 }
 
@@ -115,10 +113,8 @@ int test_fcntl_fl() {
 int main(int argc, char **argv) {
   if (argc < 2) return -1;
 
-  umask(0);
-
-  // set up root dir in /tmp
-  if (mkdir(TMP_DIR, 0777) && errno != EEXIST) return -2;
+  if (create_temp_directory("morello-musl-tests-fcntl/", DIR_PATH) != 0)
+    return -1;
 
   switch (argv[1][0]) {
     case '0': // fcntl_flck

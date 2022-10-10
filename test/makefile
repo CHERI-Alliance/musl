@@ -77,8 +77,14 @@ include ldso.mk
 run-%: src/%.exe
 	$< $(TEST_ARGS)
 
+ifdef USER
+NAMESPACE := $(USER)
+else
+NAMESPACE := morello-tests
+endif
+
 clean:
 	@rm -vf *-results.xml $(EXE_STATIC) $(EXE_DYNAMIC) $(OBJS) $(LOBJS) $(SLOBJS) $(SSLOBJS)
-	@rm -vrf /tmp/morello-musl-tests-*
+	@rm -vrf /tmp/$(NAMESPACE)/morello-musl-tests-*
 
 .PHONY: clean check-test-driver test build test-static test-dynamic shared-libraries

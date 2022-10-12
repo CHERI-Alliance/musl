@@ -28,7 +28,14 @@ ${stderr}
 </testcase>''')
 failcase = Template('''<testcase classname="${classname}" name="${name}" time="${time}" status="run">
 <failure message="Test ${name} failed" type="failure">
-<![CDATA[${description}]]>
+<![CDATA[
+DESCRIPTION:
+${description}
+STDOUT:
+${stdout}
+STDERR:
+${stderr}
+]]>
 </failure>
 <system-out><![CDATA[
 ${stdout}
@@ -57,86 +64,73 @@ class Args(object):
 
     def __init__(self):
         opt = sys.argv[1:]
-        self.kind: str = opt[0]  # kind of test run (e.g. debug or release)
+        self.kind: str = opt[0]  # kind of test run (used for skip reasons)
         self.nproc: int = int(opt[1])  # number of parallel processes
         self.workdir: str = opt[2]  # working directory
         self.testspec: str = opt[3]  # path to the JSON test spec
         self.driver: str = opt[4]  # path to test driver
         self.suitename: str = opt[5]  # testsuite name (classname for junit report)
         self.report: str = opt[6]  # path to junit report
-        self.classname: str = f'{self.suitename}.{self.kind}'
+        self.tags: list = opt[7:]  # test tags (used for skip reasons)
 
 class Test(object):
 
-    def __init__(self, t: dict, a: Args):
-        self.app: str = Test.replace_variables(a, t.get('app'))   # test app
-        self.args: list = [Test.replace_variables(a, v) for v in t.get('args', [])]  # arguments for test app
-        self.params: list = [Test.replace_variables(a, v) for v in t.get('params', {}).get(os.path.basename(a.driver), [])]  # Driver parameters for this test
-        self.name: str = t.get('name', self.default_name())  # test name
+    def __init__(self, t: dict, a: Args, kind: str, driver: str):
+        self.kind: str = kind
+        self.app: str = self._replace_variables(a, t.get('app'))  # test app
+        self.args: list = [self._replace_variables(a, v) for v in t.get('args', [])]  # arguments for test app
+        self.params: list = [self._replace_variables(a, v) for v in t.get('params', {}).get(os.path.basename(driver), [])]  # Driver parameters for this test
+        self.name: str = t.get('name', self._default_name())  # test name
         self.timeout: int = int(t.get('timeout', 120))  # test timeout in seconds
         self.env: dict = {k: v for k, v in t.get('env', {}).items()}  # extra env vars
-        self.skip: list = Test.skip_reasons(t)  # list of reasons to ignore failure
-        self.file: dict = Test.temp_file(t)
+        self.skip: list = Test._reasons(t.get('skip', []))  # list of reasons to ignore failure
+        self.ignore: list = Test._reasons(t.get('ignore', []))  # when not to run the test at all
         self.stdin: str = t.get('stdin', None)  # standard input (optional)
         self.expected: dict = {  # expected results from the test run
-            'rc': Test.expected_rc(t),  # exit code
+            'rc': Test._expected_rc(t),  # expected exit codes
             'stdout': t.get('stdout', []),  # lines to match in stdout
             'stderr': t.get('stderr', []),  # lines to match in stderr
         }
-        self.kind: str = a.kind
-        self.cmd: list = [a.driver] + self.params + ['--'] + [self.app] + self.args
-        self.cleanup: list = [Test.replace_variables(a, v) for v in t.get('cleanup', [])]  # clean up command
+        self.cmd: list = [driver] + self.params + ['--'] + [self.app] + self.args
+        self.cwd = a.workdir
+        self.classname: str = f'{a.suitename}.{self.kind}'
 
-    @staticmethod
-    def replace_variables(a: Args, text: str) -> str:
+    def _replace_variables(self, a: Args, text: str) -> str:
         tmp = text.replace('${build}', a.workdir)
-        tmp = tmp.replace('${kind}', a.kind)
+        tmp = tmp.replace('${kind}', self.kind)
         for name, val in os.environ.items():
             if name.startswith('TEST_RUNNER_'):
                 nm = name[len('TEST_RUNNER_'):].lower()
                 tmp = tmp.replace(f'${{{nm}}}', val)
         return tmp
 
-    def default_name(self):
+    def _default_name(self):
         base = basename(self.app).replace('.', '-').replace('_', '-')
         suffix = '-' + str('-'.join([str(t).strip(' -') for t in self.args])) if self.args else ''
         postfix = '-' + str('-'.join([str(t).strip(' -') for t in self.params])) if self.params else ''
         return f'{base}{suffix}{postfix}'
 
     @staticmethod
-    def skip_reasons(t: dict) -> list:
-        skip = t.get('skip', [])
-        if not isinstance(skip, list):
-            skip = [str(skip)]
-        return skip
+    def _reasons(some) -> list:
+        if not isinstance(some, list):
+            some = [str(some)]
+        return some
 
     @staticmethod
-    def temp_file(t: dict) -> dict:
-        file = t.get('file', {})
-        if file:
-            return {
-                'path': file['path'],  # where to create file
-                'contents': file.get('contents', ''),  # text to put in the file
-                'keep': file.get('keep', False)  # keep the file after tests run?
-            }
-        else:
-            return {}  # means no file needed
-
-    @staticmethod
-    def expected_rc(t: dict) -> list:
+    def _expected_rc(t: dict) -> list:
         xrc = t.get('xrc', [0])
         if not isinstance(xrc, list):
             xrc = [xrc]
         return [int(v) for v in xrc]
 
-def __subprocess(cmd: list, stdin, env: dict):
-    return subprocess.Popen(cmd, universal_newlines=True,
+def __subprocess(cmd: list, stdin, env: dict, cwd: str):
+    return subprocess.Popen(cmd, universal_newlines=True, cwd=cwd,
         start_new_session=True, stdin=subprocess.PIPE if stdin else None,
         stdout=subprocess.PIPE, stderr=subprocess.PIPE,
         env={**env, **dict(os.environ)})
 
 def __run_process(t: Test) -> tuple:
-    proc = __subprocess(t.cmd, t.stdin, t.env)
+    proc = __subprocess(t.cmd, t.stdin, t.env, cwd=t.cwd)
     try:
         stdout, stderr = proc.communicate(input=t.stdin, timeout=t.timeout)
         code = proc.returncode
@@ -156,60 +150,21 @@ def __run_process(t: Test) -> tuple:
         stderr = stderr.decode('utf-8')
     return code, stdout.strip('\n'), stderr.strip('\n')
 
-def __scan_output(t: Test, received: list, expected: list) -> tuple:
+def __scan_output(received: list, expected: list) -> tuple:
     n = 0
-    find_next = False
-    tnm = t.name
     for kk, cmd in enumerate(expected):
-        if isinstance(cmd, dict):
-            query = cmd.get('command', '<none>')
-            iff = cmd.get('if', [])
-            if iff and t.kind not in iff:  # skip command if it's not applicable
-                continue
-            if query == 'find-next-match':
-                if find_next:
-                    yield '', '', -4  # bad command
-                find_next = True
-                continue
-            elif query == 'ignore-the-rest':
-                yield '', '', -1  # end of validation commands
-            else:
-                print(f'{TC.FAIL}{tnm}: bad command {query} in line {kk} in expected output{TC.CEND}', file=sys.stderr)
-                sys.exit(2)
-        if find_next:
-            found = False
-            line = None
-            while not found:
-                if n >= len(received):
-                    # print(f'{TC.WARN}{tnm}: reached end of output at line {n - 1}{TC.CEND}', file=sys.stderr)
-                    yield '', '', -2  # reached end of output
-                line = received[n]
-                n += 1
-                if cmd in line:
-                    # check that `expected` is just a substring
-                    found = True
-                else:
-                    # try to match regex
-                    matcher = re.compile(cmd)
-                    if matcher.match(line):
-                        found = True
-            find_next = False
-            yield line, cmd, n  # we index lines starting with 1
-        else:
-            if n >= len(received):
-                # print(f'{TC.WARN}{tnm}: reached end of output at line {n - 1}{TC.CEND}', file=sys.stderr)
-                yield '', '', -2  # reached end of output
-            line = received[n]
-            n += 1
-            yield line, cmd, n  # we index lines starting with 1
+        if n >= len(received):
+            yield '', '', -2  # reached end of output
+        line = received[n]
+        n += 1
+        yield line, cmd, n  # we index lines starting with 1
     if n < len(received):
-        # print(f'{TC.WARN}{tnm}: reached end of expected output{TC.CEND}', file=sys.stderr)
         yield '', '', -3  # reached end expected output but more lines are available
 
-def __compare_output(t: Test, received: list, expected: list) -> tuple:
+def __compare_output(received: list, expected: list) -> tuple:
     if not expected:
         return True, ''  # no need to check anything
-    for v in __scan_output(t, received, expected):
+    for v in __scan_output(received, expected):
         line, paragon, n = v
         if n == -1:
             # no more checks needed
@@ -240,30 +195,32 @@ def __check(rc: int, stdout: list, stderr: list, t: Test) -> tuple:
     successful = rc in t.expected.get('rc')
     if not successful:
         message += [f'unexpected exit code: {rc}']
-    successful, where = __compare_output(t, stdout, t.expected.get('stdout'))
+    successful, where = __compare_output(stdout, t.expected.get('stdout'))
     if not successful:
         message += [f'stdout mismatch {where}']
-    successful, where = __compare_output(t, stderr, t.expected.get('stderr'))
+    successful, where = __compare_output(stderr, t.expected.get('stderr'))
     if not successful:
         message += [f'stderr mismatch {where}']
     return len(message) == 0, ', '.join(message)
 
 def __run(t: Test, a: Args) -> tuple:
-    if t.file:
-        # create tmp text file before running the test
-        with open(t.file.get('path'), 'wt') as tf:
-            tf.write(t.file.get('contents', ''))
+    if t.ignore and (a.kind in t.ignore or (set(t.ignore) & set(a.tags))):
+        # do not run this test
+        dt = 0.0
+        dt_str = '%.3f' % dt
+        if a.kind in t.ignore:
+            skipping = a.kind
+        else:
+            cr = set(t.ignore) & set(a.tags)
+            skipping = '+'.join(sorted([str(t) for t in cr]))
+        res = skipcase.substitute(
+            name=t.name, classname=t.classname, time=dt_str,
+            stdout=f'test not run: {skipping}', stderr='')
+        return t.name, res, dt, 1, 0, skipping
     st = time.time()
     rc, out, err = __run_process(t)
     dt = (time.time() - st)
     dt_str = '%.3f' % dt
-    if t.file and not t.file.get('keep'):
-        # remove tmp text file after running the test
-        if os.path.exists(t.file.get('path')):
-            os.remove(t.file.get('path'))
-    if t.cleanup:
-        proc = __subprocess(t.cleanup, stdin=None, env={})
-        proc.communicate(timeout=60)
     successful, msg = __check(rc, out.split('\n'), err.split('\n'), t)
     nskipped = 0
     nfailed = 0
@@ -271,29 +228,35 @@ def __run(t: Test, a: Args) -> tuple:
     if successful:
         print(f'{TC.PASS}PASS{TC.CEND} {t.name} ({dt_str} sec)')
         res = passcase.substitute(
-            name=t.name, classname=a.classname, time=dt_str,
+            name=t.name, classname=t.classname, time=dt_str,
             stdout='' if out is None else out,
             stderr='' if err is None else err)
     else:
+        # test failed, but we may ignore the failure in certain cases
         if t.skip:
             if 'jenkins' in t.skip and 'JOB_URL' in os.environ:
                 skipping = 'jenkins'
             elif 'flaky' in t.skip or 'always' in t.skip:
                 skipping = 'flaky'
-            elif a.kind in t.skip:
+            elif a.kind in t.skip:  # skip by test kind
                 skipping = a.kind
+            else:
+                for tag in a.tags:  # skip by test tags
+                    if tag in t.skip:
+                        skipping = tag
+                        break
         if skipping:
             nskipped = 1
             print(f'{TC.WARN}SKIP{TC.CEND} {t.name}: {msg} [{skipping}] ({dt_str} sec)')
             res = skipcase.substitute(
-                name=t.name, classname=a.classname, time=dt_str,
+                name=t.name, classname=t.classname, time=dt_str,
                 stdout='' if out is None else out,
                 stderr='' if err is None else err)
         else:
             nfailed = 1
             print(f'{TC.FAIL}FAIL{TC.CEND} {t.name}: {msg} ({dt_str} sec)')
             res = failcase.substitute(
-                name=t.name, classname=a.classname, time=dt_str,
+                name=t.name, classname=t.classname, time=dt_str,
                 description=f'Command line: {" ".join(t.cmd)}\nReason: {msg}\nReturn code: {rc}',
                 stdout='' if out is None else out,
                 stderr='' if err is None else err)
@@ -303,7 +266,7 @@ if __name__ == '__main__':
     args = Args()
     with open(args.testspec, 'rt') as f:
         testspec: list = json.load(f)
-    tests = [Test(v, args) for v in testspec]
+    tests = [Test(v, args, kind=args.kind, driver=args.driver) for v in testspec]
     testnames = set([v.name for v in tests])
     if len(testnames) < len(tests):
         print(f'Duplicated test names found', file=sys.stderr)

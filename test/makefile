@@ -41,12 +41,14 @@ all: test
 test: check-test-driver test-static test-dynamic
 
 test-static: $(TEST_DRIVER) $(EXE_STATIC) runner.py morello-tests.json
-	TEST_RUNNER_MIEARGS='$(MIE_ARGS)' python3 runner.py static $(MORELLO_TESTS_PROCS) \
-	$(CURDIR)/src morello-tests.json $(TEST_DRIVER) custom morello-custom-static-results.xml
+	python3 runner.py static $(MORELLO_TESTS_PROCS) \
+	$(CURDIR)/src morello-tests.json $(TEST_DRIVER) custom morello-custom-static-results.xml \
+	$(TEST_RUNNER_TAGS)
 
 test-dynamic: $(TEST_DRIVER) $(EXE_DYNAMIC) runner.py morello-tests.json
-	TEST_RUNNER_MIEARGS='$(MIE_ARGS)' python3 runner.py dynamic $(MORELLO_TESTS_PROCS) \
-	$(CURDIR)/src morello-tests.json $(TEST_DRIVER) custom morello-custom-dynamic-results.xml
+	python3 runner.py dynamic $(MORELLO_TESTS_PROCS) \
+	$(CURDIR)/src morello-tests.json $(TEST_DRIVER) custom morello-custom-dynamic-results.xml \
+	$(TEST_RUNNER_TAGS)
 
 build: $(EXE_STATIC) $(EXE_DYNAMIC)
 

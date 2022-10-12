@@ -1325,7 +1325,8 @@
         "name": "pthread-cancel-deferred-masked",
         "args": ["8"],
         "xrc": [0],
-        "skip": ["flaky"]
+        "skip": ["flaky"],
+        "timeout": 30
     },
     {
         "app": "${build}/pthread_cancel-${kind}.exe",
@@ -2166,12 +2167,8 @@
         "name": "test_getdate_valid",
         "xrc": [0],
         "skip": [],
-        "file": {
-            "path": "/tmp/musl-test-getdate-valid",
-            "contents": "%Y-%m-%d\n"
-        },
         "env": {
-            "DATEMSK": "/tmp/musl-test-getdate-valid"
+            "DATEMSK": "resources/musl-test-getdate-valid"
         }
     },
     {
@@ -2369,13 +2366,14 @@
         "name": "posix_spawn_file_path",
         "args": ["2"],
         "xrc": [0],
-        "timeout": 60,
+        "timeout": 30,
         "skip": ["flaky"]
     },
     {
         "app": "${build}/dlopen-${kind}.exe",
         "name": "dlopen",
         "xrc": [0],
-        "skip": []
+        "skip": [],
+        "ignore": ["static"]
     }
 ]

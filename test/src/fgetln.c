@@ -1,7 +1,6 @@
 #define _GNU_SOURCE
 
 #include <stdio.h>
-#include <stdlib.h>
 
 static int test_fgetln_with_newline();
 static int test_fgetln_with_eof();

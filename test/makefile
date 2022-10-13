@@ -85,8 +85,33 @@ else
 NAMESPACE := morello-tests
 endif
 
+BUNDLE_NAME = morello-musl-tests
+TEST_RUNNER_SHELL_SCRIPT_NAME = test-runner.sh
+
+shell-script: src/$(TEST_RUNNER_SHELL_SCRIPT_NAME)
+
+bundle-tests: $(BUNDLE_NAME).tar
+
+$(BUNDLE_NAME).tar: $(EXE_STATIC) $(EXE_DYNAMIC) src/$(TEST_RUNNER_SHELL_SCRIPT_NAME)
+	@rm -rf $(BUNDLE_NAME)
+	@mkdir -p $(BUNDLE_NAME)/lib $(BUNDLE_NAME)/resources
+	cp $^ $(BUNDLE_NAME)
+	cp src/lib/*.so $(BUNDLE_NAME)/lib
+	cp src/resources/* $(BUNDLE_NAME)/resources/
+	cp $(MUSLLIB)/libc.so $(BUNDLE_NAME)/lib
+	find $(BUNDLE_NAME) -type f -name \*-dynamic.exe -exec patchelf --set-interpreter ./lib/libc.so {} \;
+	find $(BUNDLE_NAME) -type f -name \*-dynamic.exe -exec patchelf --set-rpath '$$ORIGIN/lib' {} \;
+	tar -cf $@ $(BUNDLE_NAME)
+	@rm -rf $(BUNDLE_NAME)
+
+src/$(TEST_RUNNER_SHELL_SCRIPT_NAME): $(EXE_STATIC) $(EXE_DYNAMIC) runner.py shell-runner-gen.py morello-tests.json
+	python3 shell-runner-gen.py $@ $(CURDIR)/src morello-tests.json custom $(TEST_RUNNER_TAGS)
+
+.PHONY: clean check-test-driver test build test-static test-dynamic shared-libraries
+.PNONY: shell-script bundle-tests
+
 clean:
 	@rm -vf *-results.xml $(EXE_STATIC) $(EXE_DYNAMIC) $(OBJS) $(LOBJS) $(SLOBJS) $(SSLOBJS)
 	@rm -vrf /tmp/$(NAMESPACE)/morello-musl-tests-*
-
-.PHONY: clean check-test-driver test build test-static test-dynamic shared-libraries
+	@rm -vf src/$(TEST_RUNNER_SHELL_SCRIPT_NAME) $(BUNDLE_NAME).tar
+	@rm -rf $(BUNDLE_NAME)

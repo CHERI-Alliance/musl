@@ -1168,14 +1168,14 @@
         "app": "${build}/getauxptrcheri-${kind}.exe",
         "name": "at-cheri-auxv",
         "xrc": [0],
-        "skip": []
+        "skip": ["purecap"]
     },
     {
         "app": "${build}/mainargv-${kind}.exe",
         "name": "mainargv",
         "args": ["1", "12", "123", "1234", "12345", "123456", "1234567", "12345678", "123456789", "1234567890", "12345678901234567890"],
         "xrc": [0],
-        "skip": []
+        "skip": ["purecap"]
     },
     {
         "app": "${build}/mainenvp-${kind}.exe",
@@ -1186,7 +1186,7 @@
             "MORELLO": "cheri"
         },
         "xrc": [0],
-        "skip": []
+        "skip": ["purecap"]
     },
     {
         "app": "${build}/sprintf-${kind}.exe",
@@ -1276,49 +1276,56 @@
         "name": "pthread-cancel-async-no-cp",
         "args": ["1"],
         "xrc": [0],
-        "skip": []
+        "skip": [],
+        "ignore": ["fvp"]
     },
     {
         "app": "${build}/pthread_cancel-${kind}.exe",
         "name": "pthread-cancel-async-in-cp",
         "args": ["2"],
         "xrc": [0],
-        "skip": []
+        "skip": [],
+        "ignore": ["fvp"]
     },
     {
         "app": "${build}/pthread_cancel-${kind}.exe",
         "name": "pthread-cancel-deferred-no-cp",
         "args": ["3"],
         "xrc": [0],
-        "skip": ["flaky"]
+        "skip": ["flaky"],
+        "ignore": ["fvp"]
     },
     {
         "app": "${build}/pthread_cancel-${kind}.exe",
         "name": "pthread-cancel-deferred-in-cp",
         "args": ["4"],
         "xrc": [0],
-        "skip": ["flaky"]
+        "skip": ["flaky"],
+        "ignore": ["fvp"]
     },
     {
         "app": "${build}/pthread_cancel-${kind}.exe",
         "name": "pthread-cancel-async-disabled",
         "args": ["5"],
         "xrc": [0],
-        "skip": ["flaky"]
+        "skip": ["flaky"],
+        "ignore": ["fvp"]
     },
     {
         "app": "${build}/pthread_cancel-${kind}.exe",
         "name": "pthread-cancel-deferred-disabled",
         "args": ["6"],
         "xrc": [0],
-        "skip": ["flaky"]
+        "skip": ["flaky"],
+        "ignore": ["fvp"]
     },
     {
         "app": "${build}/pthread_cancel-${kind}.exe",
         "name": "pthread-cancel-async-masked",
         "args": ["7"],
         "xrc": [0],
-        "skip": []
+        "skip": [],
+        "ignore": ["fvp"]
     },
     {
         "app": "${build}/pthread_cancel-${kind}.exe",
@@ -1326,6 +1333,7 @@
         "args": ["8"],
         "xrc": [0],
         "skip": ["flaky"],
+        "ignore": ["fvp"],
         "timeout": 30
     },
     {
@@ -1333,13 +1341,15 @@
         "name": "pthread-cancel-deferred-in-cp-custom",
         "args": ["9"],
         "xrc": [0],
-        "skip": ["flaky"]
+        "skip": ["flaky"],
+        "ignore": ["fvp"]
     },
     {
         "app": "${build}/pthread_cleanup-${kind}.exe",
         "name": "pthread-cleanup",
         "xrc": [0],
-        "skip": ["flaky"]
+        "skip": ["flaky"],
+        "ignore": ["fvp"]
     },
     {
         "app": "${build}/printf_plain_text-${kind}.exe",

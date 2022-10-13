@@ -413,7 +413,7 @@ function build_musl_test() {
         make -C test clean
         make -C test build -j${MORELLO_NPROC:-8}
         if [[ "${SKIP_TEST_RUN}" == "NO" ]]; then
-            make -C test test
+            make -k -C test test
         fi
         popd
     fi
@@ -442,7 +442,7 @@ function build_libc_test() {
     make -j${MORELLO_NPROC:-8} build \
         TESTS=${TESTS} TESTPKG=${TESTPKG} SYSROOT=${PREFIX_PATH} TRIPLE=${TRIPLE} ARCHFLAGS=${ARCHFLAGS}
     if [[ "${SKIP_TEST_RUN}" == "NO" ]]; then
-        make run TESTS=${TESTS} TESTPKG=${TESTPKG} SYSROOT=${PREFIX_PATH} TRIPLE=${TRIPLE} ARCHFLAGS=${ARCHFLAGS}
+        make -k run TESTS=${TESTS} TESTPKG=${TESTPKG} SYSROOT=${PREFIX_PATH} TRIPLE=${TRIPLE} ARCHFLAGS=${ARCHFLAGS}
     fi
     popd
 }

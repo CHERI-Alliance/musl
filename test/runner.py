@@ -69,18 +69,23 @@ class Args(object):
         self.workdir: str = opt[2]  # working directory
         self.testspec: str = opt[3]  # path to the JSON test spec
         self.driver: str = opt[4]  # path to test driver
+        self.driver_id: str = os.path.basename(self.driver)  # driver id
         self.suitename: str = opt[5]  # testsuite name (classname for junit report)
         self.report: str = opt[6]  # path to junit report
         self.tags: list = opt[7:]  # test tags (used for skip reasons)
 
 class Test(object):
 
-    def __init__(self, t: dict, a: Args, kind: str, driver: str):
+    test_names = {}
+
+    def __init__(self, t: dict, a: Args, kind: str):
         self.kind: str = kind
         self.app: str = self._replace_variables(a, t.get('app'))  # test app
-        self.args: list = [self._replace_variables(a, v) for v in t.get('args', [])]  # arguments for test app
-        self.params: list = [self._replace_variables(a, v) for v in t.get('params', {}).get(os.path.basename(driver), [])]  # Driver parameters for this test
+        self.args: list = self._get_test_args(a, t.get('args', []))
+        self.params: list = self._get_driver_params(a, t.get('params', {}))
         self.name: str = t.get('name', self._default_name())  # test name
+        if self.name not in Test.test_names:
+            Test.test_names[self.name] = 1
         self.timeout: int = int(t.get('timeout', 120))  # test timeout in seconds
         self.env: dict = {k: v for k, v in t.get('env', {}).items()}  # extra env vars
         self.skip: list = Test._reasons(t.get('skip', []))  # list of reasons to ignore failure
@@ -91,7 +96,7 @@ class Test(object):
             'stdout': t.get('stdout', []),  # lines to match in stdout
             'stderr': t.get('stderr', []),  # lines to match in stderr
         }
-        self.cmd: list = [driver] + self.params + ['--'] + [self.app] + self.args
+        self.cmd: list = [a.driver] + self.params + ['--'] + [self.app] + self.args
         self.cwd = a.workdir
         self.classname: str = f'{a.suitename}.{self.kind}'
 
@@ -105,10 +110,24 @@ class Test(object):
         return tmp
 
     def _default_name(self):
+        # generate unique default name
         base = basename(self.app).replace('.', '-').replace('_', '-')
         suffix = '-' + str('-'.join([str(t).strip(' -') for t in self.args])) if self.args else ''
-        postfix = '-' + str('-'.join([str(t).strip(' -') for t in self.params])) if self.params else ''
-        return f'{base}{suffix}{postfix}'
+        name = f'{base}{suffix}'
+        if name in Test.test_names:
+            n = Test.test_names[name] + 1
+            Test.test_names[name] = n
+            return f'{name}-{n}'
+        else:
+            return name
+
+    def _get_test_args(self, a: Args, test_args: list) -> list:
+        # arguments for the test app
+        return [self._replace_variables(a, v) for v in test_args]
+
+    def _get_driver_params(self, a: Args, params) -> list:
+        # driver parameters for this test
+        return [self._replace_variables(a, v) for v in params.get(a.driver_id, [])]
 
     @staticmethod
     def _reasons(some) -> list:
@@ -141,7 +160,7 @@ def __run_process(t: Test) -> tuple:
             stdout = f'Timed out after {t.timeout} seconds'
         if not stderr:
             stderr = f'Timed out after {t.timeout} seconds'
-        code = 217
+        code = 124  # timed out
         pg = os.getpgid(proc.pid)
         os.killpg(pg, signal.SIGKILL)
     if type(stdout) is not str:
@@ -266,11 +285,9 @@ if __name__ == '__main__':
     args = Args()
     with open(args.testspec, 'rt') as f:
         testspec: list = json.load(f)
-    tests = [Test(v, args, kind=args.kind, driver=args.driver) for v in testspec]
-    testnames = set([v.name for v in tests])
-    if len(testnames) < len(tests):
-        print(f'Duplicated test names found', file=sys.stderr)
-        sys.exit(3)
+    tests = [Test(v, args, kind=args.kind) for v in testspec]
+
+    # run tests
     if args.nproc == 1:
         q: list = [__run(t, args) for t in tests]
     else:
@@ -278,6 +295,8 @@ if __name__ == '__main__':
             return __run(v, args)
         with Pool(args.nproc) as p:
             q: list = p.map(__run__, tests)
+
+    # process results
     testcases = []  # list of results for junit report
     ntests, failures, skipped = 0, 0, 0  # counters for tests
     failed_tests = []  # list of failed tests
@@ -315,10 +334,10 @@ if __name__ == '__main__':
     print(f'Results: total tests {ntests}, failed {failures}, skipped {skipped}')
     if failures > 0:
         print('Failed tests:')
-    for tn in failed_tests:
+    for tn in sorted(failed_tests):
         print(f'- failed: {tn}')
     if skipped > 0:
         print('Skipped tests:')
-    for tn, tsreason in skipped_tests:
+    for tn, tsreason in sorted(skipped_tests, key=lambda t: t[0]):
         print(f'- skipped: {tn} ({tsreason})')
     sys.exit(1 if failures > 0 else 0)

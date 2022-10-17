@@ -2253,7 +2253,6 @@
         "app": "${build}/signal-${kind}.exe",
         "name": "signal",
         "xrc": [0],
-        "skip": ["flaky"],
         "comment": "This test should pass on a real Morello system"
     },
     {

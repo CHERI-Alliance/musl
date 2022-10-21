@@ -2374,5 +2374,11 @@
         "xrc": [0],
         "skip": [],
         "ignore": ["static"]
+    },
+    {
+        "app": "${build}/signal_functions-${kind}.exe",
+        "name": "signal_functions",
+        "xrc": [0],
+        "skip": ["flaky"]
     }
 ]

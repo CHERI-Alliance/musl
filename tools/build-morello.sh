@@ -421,28 +421,25 @@ function build_musl_test() {
 
 # Environment variables:
 #  - TEST_DRIVER: path to the test driver script or Morello IE
+#  - TEST_RUNNER: path to the runner.py script in the Musl repository
 #  - CC: path to Morello clang (when libc-test tests are used)
 #  - MORELLO_NPROC: number of parallel jobs (default: 8)
-#  - TESTPKG: base name for test report
 function build_libc_test() {
-    local MUSL_PATH=${1}            # path to Musl sources
-    local PREFIX_PATH=${2}          # where Musl has been installed
-    local TRIPLE=${3}               # target triple
-    local LIBC_TEST_PATH=${4}       # path to libc-test suite sources
-    local SKIP_TEST_RUN=${5:-NO}    # whether to skip running tests
+    local PREFIX_PATH=${1}          # where Musl has been installed
+    local TRIPLE=${2}               # target triple
+    local LIBC_TEST_PATH=${3}       # path to libc-test suite sources
+    local SKIP_TEST_RUN=${4:-NO}    # whether to skip running tests
     if [[ "${TRIPLE}" == "${MORELLO_TRIPLE}" ]]; then
         local ARCHFLAGS=${ARCHFLAGS:--march=morello+c64}
     else
         local ARCHFLAGS=${ARCHFLAGS:--march=armv8-a}
     fi
-    local TESTS=${MUSL_PATH}/test/libc-test-enabled-tests.txt
-    local TESTPKG=${TESTPKG:-musl.libc-test.${TRIPLE}}
     pushd ${LIBC_TEST_PATH}
     make clean
     make -j${MORELLO_NPROC:-8} build \
-        TESTS=${TESTS} TESTPKG=${TESTPKG} SYSROOT=${PREFIX_PATH} TRIPLE=${TRIPLE} ARCHFLAGS=${ARCHFLAGS}
+        SYSROOT=${PREFIX_PATH} TRIPLE=${TRIPLE} ARCHFLAGS=${ARCHFLAGS}
     if [[ "${SKIP_TEST_RUN}" == "NO" ]]; then
-        make -k run TESTS=${TESTS} TESTPKG=${TESTPKG} SYSROOT=${PREFIX_PATH} TRIPLE=${TRIPLE} ARCHFLAGS=${ARCHFLAGS}
+        make -k run SYSROOT=${PREFIX_PATH} TRIPLE=${TRIPLE} ARCHFLAGS=${ARCHFLAGS}
     fi
     popd
 }

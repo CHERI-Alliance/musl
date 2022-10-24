@@ -62,19 +62,12 @@ static void catcher(int sig, siginfo_t *si, void *ctx) {
 //	}
 #endif
 
-    /* The LSB of the PCC should not be set otherwise an instruction abort will occur.
-	 * PSTATE.C64 can assumed to be correct as:
+	/* The LSB of the PC should not be set otherwise an instruction abort will occur.
+	 * PSTATE.C64 is correct as:
 	 * C64 ISA - Remove LSB but PSTATE.C64 would have been set already by signal handler.
 	 * A64 ISA - LSB not set and PSTATE.C64 would not have been set by signal handler.
 	 */
-	unsigned long address = (unsigned long) __builtin_cheri_address_get(jump_to_c) & ~0x1;
-
-	if(address & 0x1)
-	{
-		address &= 0x1;
-	}
-
-	UC_MCONTEXT_PC(uc->uc_mcontext) =  address;
+	UC_MCONTEXT_PC(uc->uc_mcontext) = (unsigned long) __builtin_cheri_address_get(jump_to_c) & ~0x1;
 }
 
 int main() {

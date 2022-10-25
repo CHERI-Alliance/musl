@@ -12,7 +12,7 @@
 #include "checkmacros.h"
 
 #define CHECK_ALIGNED(cap, sz) ({ \
-	((__builtin_cheri_address_get(cap) & (sz - 1)) == 0) && ((__builtin_cheri_length_get(cap) % sz) == 0);\
+	((__builtin_cheri_address_get(cap) & (sz - 1)) == 0); \
 })
 
 // These are used in ASSIGN_CAPS

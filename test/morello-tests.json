@@ -1032,21 +1032,21 @@
         "name": "syscall-mmap",
         "args": ["2"],
         "xrc": [0],
-        "skip": []
+        "skip": ["purecap"]
     },
     {
         "app": "${build}/mmap-${kind}.exe",
         "name": "mmap",
         "args": ["0"],
         "xrc": [0],
-        "skip": []
+        "skip": ["purecap"]
     },
     {
         "app": "${build}/mmap-${kind}.exe",
         "name": "mmap-offset",
         "args": ["1"],
         "xrc": [0],
-        "skip": []
+        "skip": ["purecap"]
     },
     {
         "app": "${build}/mmap-${kind}.exe",
@@ -1390,32 +1390,35 @@
         "name": "mremap-shrink",
         "args": ["0"],
         "xrc": [0],
-        "skip": []
+        "skip": ["purecap"]
     },
     {
         "app": "${build}/mremap-${kind}.exe",
         "name": "mremap-extend",
         "args": ["1"],
         "xrc": [0],
-        "skip": []
+        "skip": ["purecap"]
     },
     {
         "app": "${build}/mremap-${kind}.exe",
         "name": "mremap-move-fixed",
         "args": ["2"],
-        "xrc": [0]
+        "xrc": [0],
+        "skip": ["purecap"]
     },
     {
         "app": "${build}/mremap-${kind}.exe",
         "name": "mremap-move-dontunmap",
         "args": ["3"],
-        "xrc": [0]
+        "xrc": [0],
+        "skip": ["purecap"]
     },
     {
         "app": "${build}/mremap-${kind}.exe",
         "name": "mremap-should-segfault",
         "args": ["4"],
-        "xrc": [139, -11]
+        "xrc": [139, -11],
+        "skip": ["purecap"]
     },
     {
         "app": "${build}/shm_open-${kind}.exe",

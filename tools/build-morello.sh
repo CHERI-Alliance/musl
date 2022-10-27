@@ -100,7 +100,7 @@ STAGE=${1} # stage to run: clang, clang-test, musl, crt, compiler-rt, musl-test,
 case ${STAGE} in
   -help|--help|help)
       echo "Usage: ${0} STAGE [ARGS]"
-      echo "Stages: clang, clang-test, musl-headers, musl, crt, compiler-rt, musl-test, libc-test, package"
+      echo "Stages: clang, clang-test, musl-headers, musl-cheriseed, musl, crt, compiler-rt, musl-test, libc-test, package"
       echo ""
       sed -n '/^# How to/,${p;/^# END-OF-HOWTO/q}' ${0}
       echo ""
@@ -391,6 +391,37 @@ EOF
 }
 
 # Environment variables:
+#  - CC: path to Morello clang
+#  - MORELLO_NPROC: number of parallel jobs (default: 8)
+function build_musl_cheriseed() {
+    local MUSL_PATH=${1}            # path to Musl sources
+    local PREFIX_PATH=${2}          # where to install Musl
+    local LIBSHIM_PATH=${3}         # path to libshim
+    local TRIPLE=$(uname -m)-linux-musl
+    local CFGFLAGS="--enable-debug --disable-morello --disable-shared --enable-cheriseed --enable-libshim --libshim-path=${LIBSHIM_PATH}"
+    rm -rf ${PREFIX_PATH}
+    pushd ${MUSL_PATH}
+    make distclean
+    ./configure --prefix=${PREFIX_PATH} --target=${TRIPLE} ${CFGFLAGS}
+    download_kernel_headers ${MUSL_PATH}/lib 5.19
+    KERNEL_HEADER_INCLUDES="-isystem ${MUSL_PATH}/lib/kernel/include" make -j${MORELLO_NPROC:-8}
+    make install
+    mkdir -p ${PREFIX_PATH}/share
+    cp COPYRIGHT ${PREFIX_PATH}/share/MUSL-LICENSE.txt
+    wget -q https://www.apache.org/licenses/LICENSE-2.0.txt -O ${PREFIX_PATH}/LICENSE.txt
+    cat << EOF > ${PREFIX_PATH}/NOTICE.txt
+This product embeds and uses the following pieces of software
+which have additional or alternate licenses:
+ - Musl libc: share/MUSL-LICENSE.txt
+EOF
+    popd
+    cp ${LIBSHIM_PATH}/LICENSE.txt ${PREFIX_PATH}/share/LIBSHIM-LICENSE.txt
+    cat << EOF >> ${PREFIX_PATH}/NOTICE.txt
+ - Libshim: share/LIBSHIM-LICENSE.txt
+EOF
+}
+
+# Environment variables:
 #  - TEST_DRIVER: path to the test driver script or Morello IE
 #  - CC: path to Morello clang (when libc-test tests are used)
 #  - MORELLO_NPROC: number of parallel jobs (default: 8)
@@ -484,6 +515,10 @@ case ${STAGE} in
       ;;
   musl)
       build_musl ${@:2};
+      exit 0;
+      ;;
+  musl-cheriseed)
+      build_musl_cheriseed ${@:2};
       exit 0;
       ;;
   musl-headers)

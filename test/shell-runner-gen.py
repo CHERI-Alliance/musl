@@ -51,7 +51,7 @@ function test_run() {
     if [ "$${stdinput}" == "" ]; then
         $${cmd}
     else
-        echo -e "$${stdinput}" | $${cmd}
+        echo -e -n "$${stdinput}" | $${cmd}
     fi
     local rc=$${?}
     echo "-- END -------------------------"

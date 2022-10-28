@@ -410,7 +410,6 @@ function build_musl_test() {
         pushd ${MUSL_PATH}
         make distclean
         ./configure --prefix=${PREFIX_PATH} --target=${TRIPLE} ${CFGFLAGS}
-        make -C test clean
         make -C test build -j${MORELLO_NPROC:-8}
         if [[ "${SKIP_TEST_RUN}" == "NO" ]]; then
             make -k -C test test

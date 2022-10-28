@@ -296,6 +296,8 @@ musl-%.tar.gz: .git
 
 endif
 
+testdir ?= test
+
 ifeq ($(LIBSHIM),yes)
 shimclean:
 	@if [ -d $(LIBSHIM_BUILD) ]; then $(MAKE) -C $(LIBSHIM_PATH) ARCH=$(ARCH) clean; fi
@@ -304,12 +306,12 @@ else
 clean:
 endif
 	rm -rf obj lib
+	$(MAKE) -C $(testdir) clean
 
 # Note that build on custom libshim path will not be cleaned
 # if config.mak configured like that is not present.
 distclean: clean
 	rm -f config.mak
-
 
 ifeq ($(ARCH),morello)
 test:

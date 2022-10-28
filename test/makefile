@@ -4,7 +4,7 @@ MORELLO_TESTS_PROCS = 8
 
 CONFIG ?= $(CURDIR)/../config.mak
 
-include $(CONFIG)
+-include $(CONFIG)
 
 override SYSROOT = $(prefix)
 override MUSLLIB = $(SYSROOT)/lib

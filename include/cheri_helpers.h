@@ -1,6 +1,7 @@
 #ifndef MUSL_CHERI_HELPERS_H
 #define MUSL_CHERI_HELPERS_H
 
+#include <stddef.h>
 #include <stdint.h>
 
 #ifdef __CHERI_PURE_CAPABILITY__

@@ -6,6 +6,7 @@
 #include <stddef.h>
 #include <stdint.h>
 #include <string.h>
+#include "cheri_helpers.h"
 #include "syscall.h"
 
 #define alignof(t) offsetof(struct { char c; t x; }, x)
@@ -125,7 +126,7 @@ int ioctl(int fd, int req, ...)
 	void *arg;
 	va_list ap;
 	va_start(ap, req);
-	arg = va_arg(ap, void *);
+	arg = VA_ARG_IF_IN_BOUNDS(ap, void *);
 	va_end(ap);
 	int r = __syscall(SYS_ioctl, fd, req, arg);
 	if (SIOCGSTAMP != SIOCGSTAMP_OLD && req && r==-ENOTTY) {

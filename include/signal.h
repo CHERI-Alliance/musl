@@ -183,7 +183,11 @@ struct sigevent {
 	int sigev_signo;
 	int sigev_notify;
 	union {
+#ifdef __CHERI_PURE_CAPABILITY__
+		char __pad[64 - _Alignof(void*) - sizeof(union sigval)];
+#else
 		char __pad[64 - 2*sizeof(int) - sizeof(union sigval)];
+#endif
 		pid_t sigev_notify_thread_id;
 		struct {
 			void (*sigev_notify_function)(union sigval);

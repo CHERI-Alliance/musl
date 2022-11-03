@@ -2395,6 +2395,18 @@
         "skip": ["flaky"]
     },
     {
+        "app": "${build}/syscall_struct_sizes-${kind}.exe",
+        "name": "syscall_struct_sizes",
+        "stdout": [
+            "struct sigevent = 64",
+            "siginfo_t = 128",
+            "struct signalfd_siginfo = 128",
+            "struct timex = 208"
+        ],
+        "xrc": [0],
+        "comment": "Sizes should correspond to AArch64"
+    },
+    {
         "app": "${build}/malloc-multiple-sizes-${kind}.exe",
         "name": "malloc_multiple_sizes",
         "xrc": [0],

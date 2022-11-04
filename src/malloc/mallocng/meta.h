@@ -14,7 +14,12 @@
 __attribute__((__visibility__("hidden")))
 extern const uint16_t size_classes[];
 
+// MMAP THRESHOLD is created by (UNIT * max size class) - IB
+#ifdef __CHERI_PURE_CAPABILITY__
+#define MMAP_THRESHOLD 131036
+#else
 #define MMAP_THRESHOLD 131052
+#endif
 
 #ifdef __CHERI_PURE_CAPABILITY__
 #define GRP_SIZE 32
@@ -292,6 +297,7 @@ static inline int size_to_class(size_t n)
 	n = (n+IB-1)>>4;
 	if (n<10) return n;
 	n += GRP_SIZE >> 4;
+	// Find size_class by number of leading 0's.
 	int i = (28-a_clz_32(n))*4 + 8;
 	if (n>size_classes[i+1]) i+=2;
 	if (n>size_classes[i]) i++;

@@ -344,7 +344,8 @@ void *malloc_aligned(size_t n, size_t align)
 	}
 
 	if (padded_n >= MMAP_THRESHOLD) {
-		size_t needed = padded_n + IB;
+		// mmap must contain enough room for group structure information
+		size_t needed = padded_n + IB + GRP_SIZE;
 		void *p = mmap(0, needed, PROT_READ|PROT_WRITE,
 			MAP_PRIVATE|MAP_ANON, -1, 0);
 		if (p==MAP_FAILED) return 0;

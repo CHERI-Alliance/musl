@@ -2393,5 +2393,12 @@
         "name": "signal_functions",
         "xrc": [0],
         "skip": ["flaky"]
+    },
+    {
+        "app": "${build}/malloc-multiple-sizes-${kind}.exe",
+        "name": "malloc_multiple_sizes",
+        "xrc": [0],
+        "skip": [],
+        "ignore": ["fvp", "mie"]
     }
 ]

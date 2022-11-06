@@ -5,7 +5,9 @@
 
 #define RW_PERMS    (READ_CAP_PERMS | WRITE_CAP_PERMS | ROOT_CAP_PERMS)
 #define RX_PERMS    (READ_CAP_PERMS | EXEC_CAP_PERMS | ROOT_CAP_PERMS)
+#if defined(__CHERI_CAP_PERMISSION_GLOBAL__) && defined(__ARM_CAP_PERMISSION_COMPARTMENT_ID__)
 #define CMPT_ID_PERMS    (__CHERI_CAP_PERMISSION_GLOBAL__ | __ARM_CAP_PERMISSION_COMPARTMENT_ID__)
+#endif
 
 static int check(void *cap, uint64_t req_perms, const char name[]);
 
@@ -20,7 +22,9 @@ int main (void) {
 #endif
 		AT_CHERI_STACK_CAP,
 		AT_CHERI_SEAL_CAP,
+#ifdef CMPT_ID_PERMS
 		AT_CHERI_CID_CAP
+#endif
 	};
 
 	uint64_t req_perms[] = {
@@ -44,7 +48,9 @@ int main (void) {
 #endif
 		RW_PERMS,
 		SEAL_CAP_PERMS,
+#ifdef CMPT_ID_PERMS
 		CMPT_ID_PERMS
+#endif
 	};
 
 	const char* names[] = {
@@ -56,7 +62,9 @@ int main (void) {
 #endif
 		"AT_CHERI_STACK_CAP",
 		"AT_CHERI_SEAL_CAP",
+#ifdef CMPT_ID_PERMS
 		"AT_CHERI_CID_CAP"
+#endif
 	};
 
 	int n = sizeof(items) / sizeof(uint64_t);

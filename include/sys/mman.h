@@ -59,6 +59,7 @@ extern "C" {
 #define PROT_EXEC      4
 #define PROT_GROWSDOWN 0x01000000
 #define PROT_GROWSUP   0x02000000
+#define PROT_CAP_INVOKE 0x2000
 
 #define MS_ASYNC       1
 #define MS_INVALIDATE  2

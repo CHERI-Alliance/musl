@@ -297,8 +297,19 @@ static inline int size_to_class(size_t n)
 	n = (n+IB-1)>>4;
 	if (n<10) return n;
 	n += GRP_SIZE >> 4;
-	// Find size_class by number of leading 0's.
+	/*
+	 * 28 is the number of leading 0's of the geometric progression.
+	 * Largest power of 2 that is smaller than n by counting leading 0's (clz_32).
+	 * 28 - clz_32(n) = log2(n) - log2(first of element of geometric progression),
+	 * which is the number of rows progressed in the array.
+	 * Multiply by 4 as there is 4 elements per size_class row. Each 4th element
+	 * is doubled and increased to power of 2 - GRP_SIZE >> 4.
+	 * Add 8 as geometric progression is offset by 8 due to 8 linear size_classes.
+	 */
 	int i = (28-a_clz_32(n))*4 + 8;
+	/*
+	 * Calculate offset in row.
+	 */
 	if (n>size_classes[i+1]) i+=2;
 	if (n>size_classes[i]) i++;
 	return i;

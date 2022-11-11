@@ -1168,7 +1168,7 @@
         "app": "${build}/getauxptrcheri-${kind}.exe",
         "name": "at-cheri-auxv",
         "xrc": [0],
-        "skip": ["purecap"]
+        "skip": ["morello", "libshim"]
     },
     {
         "app": "${build}/mainargv-${kind}.exe",

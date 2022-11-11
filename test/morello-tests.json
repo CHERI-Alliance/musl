@@ -2400,5 +2400,34 @@
         "xrc": [0],
         "skip": [],
         "ignore": ["fvp", "mie"]
+    },
+    {
+        "app":  "${build}/wcsrtombs-${kind}.exe",
+        "name": "wcsrtombs_get_size",
+        "args": ["0"],
+        "xrc": [0]
+    },
+    {
+        "app":  "${build}/wcsrtombs-${kind}.exe",
+        "name": "wcsrtombs_convert",
+        "args": ["1"],
+        "xrc": [0]
+    },
+    {
+        "app": "${build}/fwscanf-${kind}.exe",
+        "name": "fwscanf_int",
+        "xrc": [0]
+    },
+    {
+        "app": "${build}/swscanf-${kind}.exe",
+        "name": "swscanf_ascii",
+        "args": ["0"],
+        "xrc": [0]
+    },
+    {
+        "app": "${build}/swscanf-${kind}.exe",
+        "name": "swscanf_utf8",
+        "args": ["1"],
+        "xrc": [0]
     }
 ]

@@ -1168,7 +1168,7 @@
         "app": "${build}/getauxptrcheri-${kind}.exe",
         "name": "at-cheri-auxv",
         "xrc": [0],
-        "skip": ["morello", "libshim"]
+        "skip": ["morello", "libshim", "fvp"]
     },
     {
         "app": "${build}/mainargv-${kind}.exe",
@@ -1411,7 +1411,7 @@
         "name": "mremap-move-dontunmap",
         "args": ["3"],
         "xrc": [0],
-        "skip": ["purecap"]
+        "skip": ["morello", "libshim", "fvp"]
     },
     {
         "app": "${build}/mremap-${kind}.exe",
@@ -1703,7 +1703,7 @@
         "app": "${build}/pty-${kind}.exe",
         "name": "pty",
         "xrc": [0],
-        "skip": []
+        "skip": ["fvp"]
     },
     {
         "app": "${build}/stdio_misc-${kind}.exe",
@@ -2066,14 +2066,14 @@
         "args": ["0"],
         "name": "test_groupentry",
         "xrc": [0],
-        "skip": []
+        "skip": ["fvp"]
     },
     {
         "app": "${build}/passwd-${kind}.exe",
         "args": ["0"],
         "name": "test_fgetpwent",
         "xrc": [0],
-        "skip": []
+        "skip": ["fvp"]
     },
     {
         "app": "${build}/getserv-${kind}.exe",
@@ -2109,14 +2109,14 @@
         "args": ["1"],
         "name": "ns_parse",
         "xrc": [0],
-        "skip": []
+        "skip": ["fvp"]
     },
     {
         "app": "${build}/openpty-${kind}.exe",
         "args": ["0"],
         "name": "openpty",
         "xrc": [0],
-        "skip": []
+        "skip": ["fvp"]
     },
     {
         "app": "${build}/openpty-${kind}.exe",
@@ -2266,7 +2266,8 @@
         "app": "${build}/signal-${kind}.exe",
         "name": "signal",
         "xrc": [0],
-        "comment": "This test should pass on a real Morello system"
+        "comment": "This test should pass on a real Morello system",
+        "skip": ["dynamic"]
     },
     {
         "app": "${build}/exit-${kind}.exe",

@@ -2442,5 +2442,20 @@
         "name": "swscanf_utf8",
         "args": ["1"],
         "xrc": [0]
+    },
+    {
+        "app": "${build}/mblen-${kind}.exe",
+        "name": "mblen",
+        "xrc": [0]
+    },
+    {
+        "app": "${build}/mbtowc-${kind}.exe",
+        "name": "mbtowc",
+        "xrc": [0]
+    },
+    {
+        "app": "${build}/wctomb-${kind}.exe",
+        "name": "wctomb",
+        "xrc": [0]
     }
 ]

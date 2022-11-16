@@ -1435,6 +1435,7 @@
         "name": "printcap-null",
         "args": ["0"],
         "stdout": [
+            "0x0",
             "0x0"
         ],
         "xrc": [0],
@@ -1445,6 +1446,7 @@
         "name": "printcap-csp",
         "args": ["1"],
         "stdout": [
+            "0x[0-9a-f]+\\s\\[[rwxRWE]{1,6},0x[0-9a-f]+\\-0x[0-9a-f]+\\]",
             "0x[0-9a-f]+\\s\\[[rwxRWE]{1,6},0x[0-9a-f]+\\-0x[0-9a-f]+\\]"
         ],
         "xrc": [0],
@@ -1456,6 +1458,7 @@
         "name": "printcap-max",
         "args": ["2"],
         "stdout": [
+            "0x0 [rwxRWE,0x0-0xffffffffffffffff] (invalid)",
             "0x0 [rwxRWE,0x0-0xffffffffffffffff] (invalid)"
         ],
         "xrc": [0],
@@ -1466,6 +1469,7 @@
         "name": "printcap-sealed",
         "args": ["3"],
         "stdout": [
+            "0x[0-9a-f]+\\s\\[[rwxRWE]{1,6},0x[0-9a-f]+\\-0x[0-9a-f]+\\]\\s\\(sealed\\)",
             "0x[0-9a-f]+\\s\\[[rwxRWE]{1,6},0x[0-9a-f]+\\-0x[0-9a-f]+\\]\\s\\(sealed\\)"
         ],
         "xrc": [0],
@@ -1476,6 +1480,7 @@
         "name": "printcap-sentry",
         "args": ["4"],
         "stdout": [
+            "0x[0-9a-f]+\\s\\[[rwxRWE]{1,6},0x[0-9a-f]+\\-0x[0-9a-f]+\\]\\s\\(sentry\\)",
             "0x[0-9a-f]+\\s\\[[rwxRWE]{1,6},0x[0-9a-f]+\\-0x[0-9a-f]+\\]\\s\\(sentry\\)"
         ],
         "xrc": [0],
@@ -1486,6 +1491,7 @@
         "name": "printcap-sealed-invalid",
         "args": ["5"],
         "stdout": [
+            "0x[0-9a-f]+\\s\\[[rwxRWE]{1,6},0x[0-9a-f]+\\-0x[0-9a-f]+\\]\\s\\(invalid,sealed\\)",
             "0x[0-9a-f]+\\s\\[[rwxRWE]{1,6},0x[0-9a-f]+\\-0x[0-9a-f]+\\]\\s\\(invalid,sealed\\)"
         ],
         "xrc": [0],
@@ -1496,6 +1502,7 @@
         "name": "printcap-null-derived",
         "args": ["6"],
         "stdout": [
+            "^0x[0-9a-f]+$",
             "^0x[0-9a-f]+$"
         ],
         "xrc": [0],

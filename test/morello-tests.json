@@ -2464,5 +2464,10 @@
         "app": "${build}/wctomb-${kind}.exe",
         "name": "wctomb",
         "xrc": [0]
+    },
+    {
+        "app": "${build}/prctl-${kind}.exe",
+        "name": "prctl",
+        "xrc": [0]
     }
 ]

@@ -33,7 +33,8 @@ int main (int argc, char *argv[])
 
     unsigned int tmp = 0;
 
-    char* filename = create_temp_file(DIR_PATH, "fwscanfXXXXXX");
+    char filename_buffer[PATH_MAX];
+    char* filename = create_temp_file(DIR_PATH, "fwscanfXXXXXX", &filename_buffer[0]);
 
     FILE *fp = fopen(filename, "w+");
     try_write(L"25", fp);

@@ -68,7 +68,8 @@ int test_stat() {
 
 // internally calls mknod()/mknodat(), so this provides some coverage of that.
 int test_mkfifo() {
-  char *filename = create_temp_file(DIR_PATH, "/statXXXXXX");
+  char filename_buffer[PATH_MAX];
+  char *filename = create_temp_file(DIR_PATH, "/statXXXXXX", &filename_buffer[0]);
 
   if (mkfifo(filename, mode)) return 1;
   if (remove(filename)) return 2;

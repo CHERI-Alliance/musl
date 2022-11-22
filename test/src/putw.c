@@ -33,7 +33,8 @@ static int test_putw_read_only() {
 }
 
 static int test_putw_write_only() {
-    char *filename = create_temp_file(DIR_PATH, "testXXXXXX");
+    char filename_buffer[PATH_MAX];
+    char *filename = create_temp_file(DIR_PATH, "testXXXXXX", &filename_buffer[0]);
 
     FILE *f = fopen(filename, "w");
     if (!f) return 1;

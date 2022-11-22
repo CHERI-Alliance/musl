@@ -29,8 +29,8 @@ int test_open() {
   if (close(fd)) return -3;
 
   // generate name for file in /tmp/...
-  char *filename;
-  filename = create_temp_file(DIR_PATH, "openXXXXXX");
+  char filename_buffer[PATH_MAX];
+  char *filename = create_temp_file(DIR_PATH, "openXXXXXX", &filename_buffer[0]);
 
   // create file with generated name
   fd = open(filename, O_CREAT, mode);
@@ -68,7 +68,8 @@ int test_creat() {
   if (mkdir(DIR_PATH, 0777) && errno != EEXIST) return -2;
 
   // generate name for file in /tmp/...
-  filename = create_temp_file(DIR_PATH, "openXXXXXX");
+  char filename_buffer[PATH_MAX];
+  filename = create_temp_file(DIR_PATH, "openXXXXXX", &filename_buffer[0]);
 
   int fd = creat(filename, mode);
 

@@ -35,10 +35,9 @@ static inline int create_temp_directory(const char *name, char *directory_path)
     return 0;
 }
 
-static inline char *create_temp_file(const char *directory, const char *filename)
+static inline char *create_temp_file(const char *directory, const char *filename, char *buffer)
 {
-    char filepath[PATH_MAX];
-    strcpy(filepath, directory);
-    strcat(filepath, filename);
-    return mktemp(filepath);
+    strncpy(buffer, directory, PATH_MAX);
+    strncat(buffer, filename, PATH_MAX);
+    return mktemp(buffer);
 }

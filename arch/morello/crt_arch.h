@@ -14,24 +14,35 @@ START ":\n"
 "	ldp c2, c3, [csp, #32]\n"   // ENVP, AUXV
 "1:\n"
 #endif
+#ifndef SHARED
 "	mov c20, c0\n"
 "	mov c21, c1\n"
 "	mov c22, c2\n"
 "	mov c23, c3\n"
 "	bl __morello_init_static\n"
+#else
+"	mov c5, c3\n"
+"	mov c4, c2\n"
+"	mov c3, c1\n"
+"	mov c2, c0\n"
+#endif
 "	mov c0, csp\n"
 ".weak _DYNAMIC\n"
 ".hidden _DYNAMIC\n"
 "	adrp c1, _DYNAMIC\n"
 "	add c1, c1, #:lo12:_DYNAMIC\n"
 "	alignd csp, csp, #4\n"
+#ifndef SHARED
 "	mov c2, c20\n"
 "	mov c3, c21\n"
 "	mov c4, c22\n"
 "	mov c5, c23\n"
+#endif
 "	b " START "_c\n"
 ".size " START ", .-" START "\n"
 );
+
+#ifndef SHARED
 
 typedef struct {
 	uint64_t location;	/* Capability location */
@@ -97,3 +108,4 @@ __morello_init_static(int, char **, char **, auxv_entry *auxv)
 		}
 	}
 }
+#endif

@@ -2469,5 +2469,12 @@
         "app": "${build}/prctl-${kind}.exe",
         "name": "prctl",
         "xrc": [0]
+    },
+    {
+        "app": "${build}/aio-${kind}.exe",
+        "name": "aio",
+        "xrc": [0],
+        "stdout": ["Hello World"],
+        "skip": ["libshim"]
     }
 ]

@@ -2522,5 +2522,125 @@
         "xrc": [0],
         "args": ["1"],
         "stdout": ["Thread Running"]
+    },
+    {
+        "app": "${build}/strfcap-${kind}.exe",
+        "name": "strfcap_ordinary_chars",
+        "xrc": [0],
+        "args": ["0"]
+    },
+    {
+        "app": "${build}/strfcap-${kind}.exe",
+        "name": "strfcap_padding_and_width",
+        "xrc": [0],
+        "args": ["1"]
+    },
+    {
+        "app": "${build}/strfcap-${kind}.exe",
+        "name": "strfcap_maxsize",
+        "xrc": [0],
+        "args": ["2"]
+    },
+    {
+        "app": "${build}/strfcap-${kind}.exe",
+        "name": "strfcap_NULL_terminated",
+        "xrc": [0],
+        "args": ["3"]
+    },
+    {
+        "app": "${build}/strfcap-${kind}.exe",
+        "name": "strfcap_large_format",
+        "xrc": [0],
+        "args": ["4"]
+    },
+    {
+        "app": "${build}/strfcap-${kind}.exe",
+        "name": "strfcap_specifier_a",
+        "xrc": [0],
+        "args": ["a"]
+    },
+    {
+        "app": "${build}/strfcap-${kind}.exe",
+        "name": "strfcap_specifier_A",
+        "xrc": [0],
+        "args": ["A"]
+    },
+    {
+        "app": "${build}/strfcap-${kind}.exe",
+        "name": "strfcap_specifier_b",
+        "xrc": [0],
+        "args": ["b"]
+    },
+    {
+        "app": "${build}/strfcap-${kind}.exe",
+        "name": "strfcap_specifier_B",
+        "xrc": [0],
+        "args": ["B"]
+    },
+    {
+        "app": "${build}/strfcap-${kind}.exe",
+        "name": "strfcap_specifier_C",
+        "xrc": [0],
+        "args": ["C"]
+    },
+    {
+        "app": "${build}/strfcap-${kind}.exe",
+        "name": "strfcap_specifier_l",
+        "xrc": [0],
+        "args": ["l"]
+    },
+    {
+        "app": "${build}/strfcap-${kind}.exe",
+        "name": "strfcap_specifier_o",
+        "xrc": [0],
+        "args": ["o"]
+    },
+    {
+        "app": "${build}/strfcap-${kind}.exe",
+        "name": "strfcap_specifier_p",
+        "xrc": [0],
+        "args": ["p"]
+    },
+    {
+        "app": "${build}/strfcap-${kind}.exe",
+        "name": "strfcap_specifier_P",
+        "xrc": [0],
+        "args": ["P"]
+    },
+    {
+        "app": "${build}/strfcap-${kind}.exe",
+        "name": "strfcap_specifier_s",
+        "xrc": [0],
+        "args": ["s"]
+    },
+    {
+        "app": "${build}/strfcap-${kind}.exe",
+        "name": "strfcap_specifier_S",
+        "xrc": [0],
+        "args": ["S"]
+    },
+    {
+        "app": "${build}/strfcap-${kind}.exe",
+        "name": "strfcap_specifier_t",
+        "xrc": [0],
+        "args": ["t"]
+    },
+    {
+        "app": "${build}/strfcap-${kind}.exe",
+        "name": "strfcap_specifier_T",
+        "xrc": [0],
+        "args": ["T"]
+    },
+    {
+        "app": "${build}/strfcap-${kind}.exe",
+        "name": "strfcap_specifier_v",
+        "xrc": [0],
+        "args": ["v"]
+    },
+    {
+        "app": "${build}/strfcap-${kind}.exe",
+        "name": "strfcap_specifier_percent",
+        "xrc": [0],
+        "args": ["%"]
     }
 ]

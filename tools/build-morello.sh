@@ -95,12 +95,12 @@
 #
 # END-OF-HOWTO
 
-STAGE=${1} # stage to run: clang, clang-test, musl, crt, compiler-rt, musl-test, package
+STAGE=${1} # stage to run: clang, clang-test, clang-test-cheriseed, musl, crt, compiler-rt, musl-test, package
 
 case ${STAGE} in
   -help|--help|help)
       echo "Usage: ${0} STAGE [ARGS]"
-      echo "Stages: clang, clang-test, musl-headers, musl-cheriseed, musl, crt, compiler-rt, musl-test, libc-test, package"
+      echo "Stages: clang, clang-test, clang-test-cheriseed, musl-headers, musl-cheriseed, musl, crt, compiler-rt, musl-test, libc-test, package"
       echo ""
       sed -n '/^# How to/,${p;/^# END-OF-HOWTO/q}' ${0}
       echo ""
@@ -282,6 +282,19 @@ function build_clang_test() {
     pushd ${BUILD_PATH}
     make -j${MORELLO_NPROC:-16} UnitTests
     make check-llvm
+    popd
+}
+
+# Environment variables:
+#  - MORELLO_NPROC: number of parallel jobs (default: 16)
+function test_clang_cheriseed() {
+    local BUILD_PATH=${1}           # path to the LLVM build folder
+    pushd ${BUILD_PATH}
+    python3 ./bin/llvm-lit ../llvm/test/Instrumentation/CHERIseed
+    python3 ./bin/llvm-lit ../clang/test --filter cheriseed
+    # Tests will use libc++, libc++abi and libunwind forced in configure.
+    LD_LIBRARY_PATH=${BUILD_PATH}/lib \
+        make -j${MORELLO_NPROC:-16} check-cheriseed
     popd
 }
 
@@ -525,6 +538,10 @@ case ${STAGE} in
       ;;
   clang-test)
       build_clang_test ${@:2};
+      exit 0;
+      ;;
+  clang-test-cheriseed)
+      test_clang_cheriseed ${@:2};
       exit 0;
       ;;
   musl)

@@ -117,24 +117,28 @@ AARCH64_TRIPLE=aarch64-unknown-linux-gnu
 # Environment variables:
 #  - LLVM_TARGETS: AArch64 or X86;AArch64
 #  - LLVM_LIT_ARGS: LIT args for tests (can be unset or empty)
+#  - HOST_LLVM_VERSION: Suffix to apply to toolchain binary names, if any.
+#                       Example: HOST_LLVM_VERSION="14" means clang-14, nm-14, etc.
+#                       Can be unset or empty.
 function configure_clang() {
     local LLVM_PROJECT=${1}
     local HOST_LLVM_BIN=${2}
     local MORELLO_HOME=${3}
+    local -r HOST_LLVM_SUFFIX=${HOST_LLVM_VERSION:+-${HOST_LLVM_VERSION}}
     mkdir -p ${MORELLO_HOME}
     cmake -Wno-dev \
-        -DCMAKE_C_COMPILER=${HOST_LLVM_BIN}/clang \
+        -DCMAKE_C_COMPILER=${HOST_LLVM_BIN}/clang${HOST_LLVM_SUFFIX} \
         -DCMAKE_C_COMPILER_WORKS=YES \
-        -DCMAKE_ASM_COMPILER=${HOST_LLVM_BIN}/clang \
+        -DCMAKE_ASM_COMPILER=${HOST_LLVM_BIN}/clang${HOST_LLVM_SUFFIX} \
         -DCMAKE_ASM_COMPILER_WORKS=YES \
-        -DCMAKE_CXX_COMPILER=${HOST_LLVM_BIN}/clang++ \
+        -DCMAKE_CXX_COMPILER=${HOST_LLVM_BIN}/clang++${HOST_LLVM_SUFFIX} \
         -DCMAKE_CXX_COMPILER_WORKS=YES \
-        -DCMAKE_AR=${HOST_LLVM_BIN}/llvm-ar \
-        -DCMAKE_RANLIB=${HOST_LLVM_BIN}/llvm-ranlib \
-        -DCMAKE_NM=${HOST_LLVM_BIN}/llvm-nm \
-        -DCMAKE_LINKER=${HOST_LLVM_BIN}/ld.lld \
-        -DCMAKE_OBJDUMP=${HOST_LLVM_BIN}/llvm-objdump \
-        -DCMAKE_OBJCOPY=${HOST_LLVM_BIN}/llvm-objcopy \
+        -DCMAKE_AR=${HOST_LLVM_BIN}/llvm-ar${HOST_LLVM_SUFFIX} \
+        -DCMAKE_RANLIB=${HOST_LLVM_BIN}/llvm-ranlib${HOST_LLVM_SUFFIX} \
+        -DCMAKE_NM=${HOST_LLVM_BIN}/llvm-nm${HOST_LLVM_SUFFIX} \
+        -DCMAKE_LINKER=${HOST_LLVM_BIN}/ld.lld${HOST_LLVM_SUFFIX} \
+        -DCMAKE_OBJDUMP=${HOST_LLVM_BIN}/llvm-objdump${HOST_LLVM_SUFFIX} \
+        -DCMAKE_OBJCOPY=${HOST_LLVM_BIN}/llvm-objcopy${HOST_LLVM_SUFFIX} \
         -DCMAKE_EXE_LINKER_FLAGS="-fuse-ld=lld" \
         -DCMAKE_SHARED_LINKER_FLAGS="-fuse-ld=lld" \
         -DCMAKE_BUILD_TYPE=Release \
@@ -233,17 +237,24 @@ EOF
 #  - LLVM_TARGETS: AArch64 or X86;AArch64
 #  - LLVM_LIT_ARGS: LIT args for tests (can be unset or empty)
 #  - MORELLO_NPROC: number of parallel jobs (default: 16)
+#  - HOST_LLVM_VERSION: Suffix to apply to toolchain binary names, if any.
+#                       Example: HOST_LLVM_VERSION="14" means clang-14 nm-14, etc.
+#                       Can be unset or empty.
 function build_clang() {
     local LLVM_PROJECT=${1}         # path to LLVM sources
     local HOST_LLVM_PATH=${2}       # path to host LLVM (11.0 or newer)
     local MORELLO_LLVM_PATH=${3}    # path to install Morello LLVM
     local BUILD_PATH=${4}           # path to the build folder
     local TPIP_PATH=${MORELLO_LLVM_PATH}/thirdpartylicences
+    local -r HOST_LLVM_BIN_PATH=${HOST_LLVM_PATH}/bin
+    local -r HOST_LLVM_SUFFIX=${HOST_LLVM_VERSION:+-${HOST_LLVM_VERSION}}
     echo "Building clang from ${LLVM_PROJECT} with ${HOST_LLVM_PATH} ..."
     mkdir -p ${BUILD_PATH}
     pushd ${BUILD_PATH}
-    configure_clang ${LLVM_PROJECT} ${HOST_LLVM_PATH}/bin ${MORELLO_LLVM_PATH}
-    make -j${MORELLO_NPROC:-16}
+    configure_clang ${LLVM_PROJECT} ${HOST_LLVM_BIN_PATH} ${MORELLO_LLVM_PATH}
+    # NM envvar is used by some generators in compiler-rt.
+    NM=${HOST_LLVM_BIN_PATH}/llvm-nm${HOST_LLVM_SUFFIX} \
+        make -j${MORELLO_NPROC:-16}
     make install
     popd
     mkdir -p ${TPIP_PATH}

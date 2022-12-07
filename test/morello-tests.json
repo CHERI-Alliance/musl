@@ -1,23 +1,23 @@
 [
     {
-        "app": "${build}/hello-${kind}.exe",
-        "name": "hello",
+        "app": "${build}/argvbounds-${kind}.exe",
+        "name": "argv_bounds_no_args",
         "xrc": [32],
-        "skip": []
+        "skip": ["morello", "fvp"]
     },
     {
-        "app": "${build}/hello-${kind}.exe",
-        "name": "hello-one-arg",
+        "app": "${build}/argvbounds-${kind}.exe",
+        "name": "argv_bounds_one_arg",
         "args": ["test"],
         "xrc": [48],
-        "skip": []
+        "skip": ["morello", "fvp"]
     },
     {
-        "app": "${build}/hello-${kind}.exe",
-        "name": "hello-two-args",
+        "app": "${build}/argvbounds-${kind}.exe",
+        "name": "argv_bounds_two_args",
         "args": ["morello", "test"],
         "xrc": [64],
-        "skip": []
+        "skip": ["morello", "fvp"]
     },
     {
         "app": "${build}/strerror_r-${kind}.exe",
@@ -1175,7 +1175,7 @@
         "name": "mainargv",
         "args": ["1", "12", "123", "1234", "12345", "123456", "1234567", "12345678", "123456789", "1234567890", "12345678901234567890"],
         "xrc": [0],
-        "skip": ["purecap"]
+        "skip": ["morello", "fvp"]
     },
     {
         "app": "${build}/mainenvp-${kind}.exe",
@@ -1186,7 +1186,7 @@
             "MORELLO": "cheri"
         },
         "xrc": [0],
-        "skip": ["purecap"]
+        "skip": ["morello", "fvp"]
     },
     {
         "app": "${build}/sprintf-${kind}.exe",

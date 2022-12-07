@@ -108,23 +108,9 @@ int __libc_start_main(int (*main)(int,char **,char **, char**),
 	return stage2(main, argc, argv, envp);
 }
 
-#ifdef __CHERI_PURE_CAPABILITY__
-static void cheri_set_bounds_on_cap_array(void ***array) {
-	int n = 0;
-	for (; (*array)[n]; ++n);
-	*array = __builtin_cheri_bounds_set(*array, (n + 1) * sizeof(uintptr_t));
-}
-#endif
-
-
 static int libc_start_main_stage2(int (*main)(int,char **,char **), int argc, char **argv, char **envp)
 {
 	__libc_start_init();
-
-#ifdef __CHERI_PURE_CAPABILITY__
-	cheri_set_bounds_on_cap_array(&argv);
-	cheri_set_bounds_on_cap_array(&envp);
-#endif
 
 	/* Pass control to the application */
 	exit(main(argc, argv, envp));

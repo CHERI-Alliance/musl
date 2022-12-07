@@ -1,4 +1,5 @@
 #include <stddef.h>
+#include <stdint.h>
 #include <stdio.h>
 #include <string.h>
 
@@ -8,10 +9,22 @@ int main (int argc, char *argv[])
 		printf("argv tag is not set: %#p\n", (void *)argv);
 		return 5;
 	}
-	if (__builtin_cheri_length_get(argv) != (sizeof(char *) * (argc + 1))) {
-		printf("argv length is not set correctly: %zu\n", __builtin_cheri_length_get(argv));
-		return 6;
+
+	const size_t argv_representable_length =
+		__builtin_cheri_round_representable_length((argc + 1) * sizeof(char *));
+	const size_t argv_representable_mask =
+		__builtin_cheri_representable_alignment_mask(argv_representable_length);
+	if (argv_representable_length != __builtin_cheri_length_get(argv)) {
+		printf("argv has unexpected length:\nargv: %#p\nrepresentable length: 0x%lx\n",
+		       (void *)argv, argv_representable_length);
+		return 7;
 	}
+	if ((uintptr_t)argv != ((uintptr_t)argv & argv_representable_mask)) {
+		printf("argv has unexpected alignment:\nargv: %#p\nrepresentable mask: 0x%lx\n",
+		       (void *)argv, argv_representable_mask);
+		return 8;
+	}
+
 	void *cap = NULL;
 	size_t tag = 0;
 	size_t sz = 0;

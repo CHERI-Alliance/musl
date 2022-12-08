@@ -2476,5 +2476,29 @@
         "xrc": [0],
         "stdout": ["Hello World"],
         "skip": ["libshim"]
+    },
+    {
+        "app": "${build}/gethost-${kind}.exe",
+        "name": "gethost",
+        "xrc": [0],
+        "stdout": ["localhost", "localhost"],
+        "skip": ["fvp"]
+    },
+    {
+        "app": "${build}/getprot-${kind}.exe",
+        "name": "getprot",
+        "xrc": [0],
+        "stdout": ["0", "ip", "icmp"]
+    },
+    {
+        "app": "${build}/ifname-${kind}.exe",
+        "name": "ifnameindex",
+        "xrc": [0]
+    },
+    {
+        "app": "${build}/addrinfo-${kind}.exe",
+        "name": "addrinfo",
+        "xrc": [0],
+        "skip": ["fvp"]
     }
 ]

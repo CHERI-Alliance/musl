@@ -287,7 +287,11 @@ int __pthread_create(pthread_t *restrict res, const pthread_attr_t *restrict att
 		}
 		guard = 0;
 	} else {
+#ifdef __CHERI_PURE_CAPABILITY__
+		guard = 0;
+#else
 		guard = ROUND(attr._a_guardsize);
+#endif
 		size = guard + ROUND(attr._a_stacksize
 			+ libc.tls_size +  __pthread_tsd_size);
 	}

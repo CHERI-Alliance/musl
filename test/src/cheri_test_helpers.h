@@ -85,3 +85,13 @@ __print_perms(uint64_t perms, char *__perms_buffer)
 	}
 	return __perms_buffer;
 }
+
+#ifdef __CHERI_PURE_CAPABILITY__
+
+#define CAP_TAIL_LENGTH(cap) __builtin_cheri_length_get(cap) - __builtin_cheri_offset_get(cap)
+
+#else
+
+#define CAP_TAIL_LENGTH(cap) SIZE_MAX
+
+#endif

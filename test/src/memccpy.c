@@ -1,7 +1,8 @@
 #include <string.h>
 #include <stdbool.h>
+#include <stdio.h>
 
-#include "cheri_helpers.h"
+#include "cheri_test_helpers.h"
 
 int do_memccpy_test(char *buf, char *src, char c, size_t n, char *expected_buf,
                     bool expected_res_tag, size_t bytes_left) {

@@ -2505,6 +2505,8 @@
         "app": "${build}/clientserver-${kind}.exe",
         "name": "clientserver",
         "xrc": [0],
-        "stdout": ["Message sent to client: Morello", "Message recieved from server: Morello"]
+        "stdout": ["Message sent to client: Morello", "Message recieved from server: Morello"],
+        "timeout": 100,
+        "skip": ["flaky"]
     }
 ]

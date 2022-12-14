@@ -35,7 +35,7 @@ void *server(void *args)
     }
 
     address.sin_family = AF_INET;
-    address.sin_addr.s_addr = INADDR_ANY;
+    address.sin_addr.s_addr = inet_addr(IP_ADDRESS);
     address.sin_port = htons(PORT);
 
     /* Bind the server to localhost and port number. */
@@ -52,7 +52,6 @@ void *server(void *args)
         return (void *) 4;
     }
 
-    /* Prevent printf race conditions between server and client thread. */
     pthread_mutex_lock(&STDOUT_MUTEX);
 
     /* Accept client connection. */
@@ -82,6 +81,8 @@ void *client(void *args)
     char buffer[BUFFER_SIZE] = {0};
     struct sockaddr_in servaddr;
 
+    sleep(2);
+
     if ((sockfd = socket(AF_INET, SOCK_STREAM, 0)) < 0)
     {
         perror("Failed to create client socket.");
@@ -102,14 +103,14 @@ void *client(void *args)
         return (void *) 2;
     }
 
-    pthread_mutex_lock(&STDOUT_MUTEX);
-
     /* Read message from server. */
     int valread = read(sockfd, buffer, BUFFER_SIZE);
     if(valread == -1)
     {
         perror("Failed to read data from server socket.");
     }
+
+    pthread_mutex_lock(&STDOUT_MUTEX);
 
     /* Give time for server to print out first. */
     printf("Message recieved from server: %s", buffer);
@@ -131,8 +132,8 @@ int main(int argc, char *argv[])
     pthread_create(&serverThread, NULL, &server, NULL);
     pthread_create(&clientThread, NULL, &client, NULL);
 
-    pthread_join(serverThread, (void *) clientRes);
-    pthread_join(clientThread, (void *) serverRes);
+    pthread_join(serverThread, (void *) serverRes);
+    pthread_join(clientThread, (void *) clientRes);
 
     if(serverRes != 0) return *serverRes;
     if(clientRes != 0) return *clientRes;

@@ -27,6 +27,9 @@ __clone:
 1:
 
 #ifdef LIBSHIM
+	// store child stack pointer
+	str c1, [c1, #-16]!
+
 	// store tls, flags
 	stp c5,c2,[c1,#-32]!
 #endif
@@ -54,6 +57,10 @@ __clone:
 
 	// load tls, flags
 	ldp c2,c3,[csp],#32
+
+	// load child stack pointer into csp
+	ldr c4,[csp],#16
+	mov csp,c4
 
 	and x3,x3,0x00080000 // CLONE_SETTLS
 	cbz x3,2f

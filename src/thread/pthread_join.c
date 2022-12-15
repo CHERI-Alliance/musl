@@ -2,6 +2,12 @@
 #include "pthread_impl.h"
 #include <sys/mman.h>
 
+#ifdef __CHERI_PURE_CAPABILITY__
+
+#define ROUND(x) (((x)+PAGE_SIZE-1)&-PAGE_SIZE)
+
+#endif
+
 static void dummy1(pthread_t t)
 {
 }
@@ -21,7 +27,16 @@ static int __pthread_timedjoin_np(pthread_t t, void **res, const struct timespec
 	if (r == ETIMEDOUT || r == EINVAL) return r;
 	__tl_sync(t);
 	if (res) *res = t->result;
+
+#ifdef __CHERI_PURE_CAPABILITY__
+	/* Free tsd as it is allocated seperately on CHERI. 
+	 * Must be freed before map_base otherwise segmentation fault.
+	*/
+	if (t->tsd) __munmap((t->tsd) - libc.tls_size, ROUND(libc.tls_size +  __pthread_tsd_size));
+#endif
+
 	if (t->map_base) __munmap(t->map_base, t->map_size);
+
 	return 0;
 }
 

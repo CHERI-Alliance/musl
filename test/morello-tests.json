@@ -2508,5 +2508,19 @@
         "stdout": ["Message sent to client: Morello", "Message received from server: Morello"],
         "timeout": 100,
         "skip": ["flaky"]
+    },
+    {
+        "app": "${build}/thread_bounds-${kind}.exe",
+        "name": "thread_tsd_bounds",
+        "xrc": [0],
+        "args": ["0"],
+        "stdout": ["Thread Running"]
+    },
+    {
+        "app": "${build}/thread_bounds-${kind}.exe",
+        "name": "thread_csp_bounds",
+        "xrc": [0],
+        "args": ["1"],
+        "stdout": ["Thread Running"]
     }
 ]

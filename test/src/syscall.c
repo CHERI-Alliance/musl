@@ -23,7 +23,7 @@ int test_getcpu()
 
 int test_mmap()
 {
-	intptr_t point = syscall(SYS_mmap, 0, 100, PROT_NONE, MAP_PRIVATE|MAP_ANON, -1, 0);
+	intptr_t point = syscall(SYS_mmap, NULL, 100, PROT_NONE, MAP_PRIVATE|MAP_ANON, -1, 0);
 	if (!__builtin_cheri_tag_get(point)) return 5;
 	if (0 != syscall(SYS_munmap, point, 100)) return 6;
 	return 0;

@@ -7,6 +7,7 @@
 #include <fcntl.h>
 #include <unistd.h>
 #include <stdlib.h>
+#include "temp_file_helpers.h"
 
 #define CHECK_LAST_CALL(st, fun, rc) ({ if (st != 0) { perror(fun); return rc; } })
 
@@ -83,7 +84,12 @@ int parent(int testCase)
         return 42;
     }
 
-    int fp = open("/tmp/posix-spawn-test.txt", O_CREAT, 0666);
+    char filename_buffer[PATH_MAX];
+    if (0 != create_temp_directory("morello-musl-tests-posix/", &filename_buffer[0]))
+        return 20;
+    char* filename = strncat(&filename_buffer[0], "posix-spawn-test.txt", PATH_MAX);
+
+    int fp = open(filename, O_CREAT, 0666);
     if (fp < 0)
     {
         perror("Failed to create temporary file.");
@@ -91,7 +97,7 @@ int parent(int testCase)
     }
     close(fp);
 
-    status = posix_spawn_file_actions_addopen(&fileactions, STDOUT_FILENO, "/tmp/posix-spawn-test.txt", O_RDWR, 0666);
+    status = posix_spawn_file_actions_addopen(&fileactions, STDOUT_FILENO, filename, O_RDWR, 0666);
     CHECK_LAST_CALL(status, "posix_spawn_file_actions_addopen", 9);
 
     int fd = 0;

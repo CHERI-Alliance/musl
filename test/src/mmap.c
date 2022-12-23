@@ -4,6 +4,7 @@
 #include <stdlib.h>
 #include <sys/mman.h>
 #include <unistd.h>
+#include "temp_file_helpers.h"
 
 #define MEM_PROT    PROT_READ | PROT_WRITE
 #define MEM_FLAGS   MAP_PRIVATE | MAP_ANONYMOUS
@@ -50,7 +51,15 @@ int test_mmap() {
 }
 
 int test_mmap_offset() {
-	int fd = open(".", O_TMPFILE | O_RDWR | O_EXCL, 600);
+	char directory_buffer[PATH_MAX];
+	char filename_buffer[PATH_MAX];
+
+	if(create_temp_directory("morello-musl-tests-mmap/", &directory_buffer[0]) != 0)
+		return -1;
+
+	char *filename = create_temp_file(&directory_buffer[0], "mmap_offset_XXXXXX", &filename_buffer[0]);
+
+	int fd = open(filename, O_CREAT | O_RDWR | O_EXCL, 600);
 	if (fd < 0) return -1;
 	off_t offset = getpagesize();
 	size_t len = 128;

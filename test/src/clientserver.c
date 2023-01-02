@@ -1,3 +1,4 @@
+#include <poll.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -13,8 +14,11 @@
 #define BUFFER_SIZE 1024
 
 pthread_mutex_t STDOUT_MUTEX;
+pthread_t clientThread = 0;
 
-void *server(void *args)
+void *client(void *args);
+
+int server(void)
 {
     int server_fd, client_fd;
     struct sockaddr_in address;
@@ -24,14 +28,14 @@ void *server(void *args)
     if ((server_fd = socket(AF_INET, SOCK_STREAM, 0)) == 0)
     {
         perror("Failed to create server socket.");
-        return (void *) 1;
+        return 1;
     }
 
     /* Allow server socket to resuse port and address. */
     if (setsockopt(server_fd, SOL_SOCKET, SO_REUSEADDR | SO_REUSEPORT, &opt, sizeof(opt)))
     {
         perror("Failed to set server socket options.");
-        return (void *) 2;
+        return 2;
     }
 
     address.sin_family = AF_INET;
@@ -42,23 +46,63 @@ void *server(void *args)
     if (bind(server_fd, (struct sockaddr *)&address, sizeof(address))<0)
     {
         perror("Failed to bind server socket to port.");
-        return (void *) 3;
+        return 3;
     }
 
     /* Listen for 1 client connections on the server. */
     if (listen(server_fd, 1) < 0)
     {
         perror("Failed to listen on port.\n");
-        return (void *) 4;
+        return 4;
     }
 
+    /* Ensure the server prints first in all cases.
+     * The return value of lock/unlock should also be checked, but they are
+     * really expected to succeed.
+     */
     pthread_mutex_lock(&STDOUT_MUTEX);
 
-    /* Accept client connection. */
+    /* Start the client thread here. This ensures that the server port is
+     * already available (see listen() above), so there is no race condition
+     * between the server and the client.
+     */
+    if (0 != pthread_create(&clientThread, NULL, &client, NULL))
+    {
+        pthread_mutex_unlock(&STDOUT_MUTEX);
+        perror("Failed to create thread.");
+        return 5;
+    }
+
+    /* Wait for client connection with timeout. */
+    {
+        struct pollfd fds[1] = {
+            {
+                server_fd,
+                POLLIN,
+            }
+        };
+
+        int res = poll(&fds[0], sizeof(fds) / sizeof(fds[0]), 2000 /* ms */);
+        if (0 == res)
+        {
+            pthread_mutex_unlock(&STDOUT_MUTEX);
+            printf("Timed out while waiting for client\n");
+            return 6;
+        }
+        else if (0 > res)
+        {
+            pthread_mutex_unlock(&STDOUT_MUTEX);
+            perror("Failed to poll server fd");
+            return 7;
+        }
+    }
+
+    /* Accept client connection. This must be non-blocking given poll() returned above. */
     if ((client_fd = accept(server_fd, (struct sockaddr *)&address, (socklen_t*)&addrlen))<0)
     {
+        pthread_mutex_unlock(&STDOUT_MUTEX);
         perror("Failed to accept client connection.");
-        return (void *) 5;
+        return 8;
     }
 
     /* Send message to client connection. */
@@ -72,7 +116,7 @@ void *server(void *args)
     shutdown(client_fd, SHUT_RDWR);
     close(server_fd);
 
-    return (void *) 0;
+    return 0;
 }
 
 void *client(void *args)
@@ -80,8 +124,6 @@ void *client(void *args)
     int sockfd;
     char buffer[BUFFER_SIZE] = {0};
     struct sockaddr_in servaddr;
-
-    sleep(2);
 
     if ((sockfd = socket(AF_INET, SOCK_STREAM, 0)) < 0)
     {
@@ -113,7 +155,7 @@ void *client(void *args)
     pthread_mutex_lock(&STDOUT_MUTEX);
 
     /* Give time for server to print out first. */
-    printf("Message recieved from server: %s", buffer);
+    printf("Message received from server: %s", buffer);
 
     pthread_mutex_unlock(&STDOUT_MUTEX);
 
@@ -123,20 +165,12 @@ void *client(void *args)
 
 int main(int argc, char *argv[])
 {
-    pthread_t clientThread, serverThread;
-    int *clientRes = 0;
-    int *serverRes = 0;
-
+    void *clientRes = 0; // The client thread returns the 'int' code as 'void*'.
     pthread_mutex_init(&STDOUT_MUTEX, NULL);
 
-    pthread_create(&serverThread, NULL, &server, NULL);
-    pthread_create(&clientThread, NULL, &client, NULL);
+    int serverRes = server();
+    if (0 != clientThread) pthread_join(clientThread, &clientRes);
 
-    pthread_join(serverThread, (void *) serverRes);
-    pthread_join(clientThread, (void *) clientRes);
-
-    if(serverRes != 0) return *serverRes;
-    if(clientRes != 0) return *clientRes;
-
-    return 0;
+    if(serverRes != 0) return serverRes;
+    return (int)(uintptr_t)clientRes;
 }

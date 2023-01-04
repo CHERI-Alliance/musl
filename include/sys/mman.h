@@ -111,6 +111,12 @@ extern "C" {
 #define MFD_HUGETLB 0x0004U
 #endif
 
+#define _PROT_MAX_SHIFT       16
+#define PROT_MAX(prot)        ((prot) << _PROT_MAX_SHIFT)
+
+#define PROT_EXTRACT(prot)    ((prot) & (PROT_READ | PROT_WRITE | PROT_EXEC))
+#define PROT_MAX_EXTRACT(prot)    (((prot) >> _PROT_MAX_SHIFT) & (PROT_READ | PROT_WRITE | PROT_EXEC))
+
 #include <bits/mman.h>
 
 void *mmap (void *, size_t, int, int, int, off_t);

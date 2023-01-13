@@ -1,8 +1,10 @@
 #include <sys/mman.h>
 #include <fcntl.h>
 #include <sys/stat.h>
+#include <cap_perms.h>
 #include "syscall.h"
 #include "kstat.h"
+#include "cheri_helpers.h"
 
 const char unsigned *__map_file(const char *pathname, size_t *size)
 {
@@ -12,6 +14,14 @@ const char unsigned *__map_file(const char *pathname, size_t *size)
 	if (fd < 0) return 0;
 	if (!syscall(SYS_fstat, fd, &st)) {
 		map = __mmap(0, st.st_size, PROT_READ, MAP_SHARED, fd, 0);
+#ifdef __CHERI_PURE_CAPABILITY__
+		/* TODO: Remove after mmap implementation. */
+		if(map != MAP_FAILED)
+		{
+			map = __builtin_cheri_bounds_set(map, st.st_size);
+			map = __builtin_cheri_perms_and(map, MUSL_CAP_PROT_MAPFILE);
+		}
+#endif
 		*size = st.st_size;
 	}
 	__syscall(SYS_close, fd);

@@ -4,6 +4,7 @@
 #include <stdarg.h>
 #include <stddef.h>
 #include <stdint.h>
+#include <cap_perms.h>
 
 #ifdef __CHERI_PURE_CAPABILITY__
 
@@ -24,6 +25,12 @@ inline void *restrict_bounds_to_tail(void *cap) {
   size_t len = __builtin_cheri_length_get(cap);
   return __builtin_cheri_bounds_set(cap, len - off);
 }
+
+#define MUSL_CAP_PROT_MAPFILE (READ_CAP_PERMS | __CHERI_CAP_PERMISSION_GLOBAL__)
+#define MUSL_CAP_PROT_THREAD (READ_CAP_PERMS | WRITE_CAP_PERMS | __CHERI_CAP_PERMISSION_GLOBAL__)
+#define MUSL_CAP_PROT_MALLOC (READ_CAP_PERMS | WRITE_CAP_PERMS | ROOT_CAP_PERMS)
+#define MUSL_CAP_PROT_SEM (READ_CAP_PERMS | WRITE_CAP_PERMS | __CHERI_CAP_PERMISSION_GLOBAL__)
+#define MUSL_CAP_PROT_NONE (0)
 
 #else
 

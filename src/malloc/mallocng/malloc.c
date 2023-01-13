@@ -4,6 +4,7 @@
 #include <string.h>
 #include <sys/mman.h>
 #include <errno.h>
+#include "cheri_helpers.h"
 
 #include "meta.h"
 
@@ -106,11 +107,19 @@ struct meta *alloc_meta(void)
 #endif
 		if (!ctx.avail_meta_area_count) {
 			size_t n = 2UL << ctx.meta_alloc_shift;
+#ifdef __CHERI_PURE_CAPABILITY__
+			p = mmap(0, n*pagesize, PROT_NONE | PROT_MAX(PROT_READ | PROT_WRITE),
+				MAP_PRIVATE|MAP_ANON, -1, 0);
+#else
 			p = mmap(0, n*pagesize, PROT_NONE,
 				MAP_PRIVATE|MAP_ANON, -1, 0);
+#endif
 			if (p==MAP_FAILED) return 0;
 #ifdef __CHERI_PURE_CAPABILITY__
 			p = restrict_perms(p);
+			/* TODO: Remove after mmap implementation. */
+			p = __builtin_cheri_bounds_set(p, n*pagesize);
+			p = __builtin_cheri_perms_and(p, MUSL_CAP_PROT_MALLOC);
 #endif
 			ctx.avail_meta_areas = p + pagesize;
 			ctx.avail_meta_area_count = (n-1)*(pagesize>>12);
@@ -282,7 +291,10 @@ static struct meta *alloc_group(int sc, size_t req)
 			return 0;
 		}
 #ifdef __CHERI_PURE_CAPABILITY__
-			p = restrict_perms(p);
+		p = restrict_perms(p);
+		/* TODO: Remove after mmap implementation. */
+		p = __builtin_cheri_bounds_set(p, needed);
+		p = __builtin_cheri_perms_and(p, MUSL_CAP_PROT_MALLOC);
 #endif
 		m->maplen = needed>>12;
 		ctx.mmap_counter++;
@@ -351,6 +363,9 @@ void *malloc_aligned(size_t n, size_t align)
 		if (p==MAP_FAILED) return 0;
 #ifdef __CHERI_PURE_CAPABILITY__
 		p = restrict_perms(p);
+		/* TODO: Remove after mmap implementation. */
+		p = __builtin_cheri_bounds_set(p, ((needed+4095)/4096) * 4096);
+		p = __builtin_cheri_perms_and(p, MUSL_CAP_PROT_MALLOC);
 #endif
 		wrlock();
 		step_seq();

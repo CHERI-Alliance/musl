@@ -13,6 +13,7 @@
 #include <pthread.h>
 #include "lock.h"
 #include "fork_impl.h"
+#include "cheri_helpers.h"
 
 #define malloc __libc_malloc
 #define calloc __libc_calloc
@@ -87,11 +88,16 @@ sem_t *sem_open(const char *name, int flags, ...)
 		if (flags != (O_CREAT|O_EXCL)) {
 			fd = open(name, FLAGS);
 			if (fd >= 0) {
-				if (fstat(fd, &st) < 0 ||
-				    (map = mmap(0, sizeof(sem_t), PROT_READ|PROT_WRITE, MAP_SHARED, fd, 0)) == MAP_FAILED) {
+				map = mmap(0, sizeof(sem_t), PROT_READ | PROT_WRITE, MAP_SHARED, fd, 0);
+				if (fstat(fd, &st) < 0 || map == MAP_FAILED) {
 					close(fd);
 					goto fail;
 				}
+#ifdef __CHERI_PURE_CAPABILITY__
+				/* TODO: Remove after mmap implementation. */
+				map = __builtin_cheri_bounds_set(map, sizeof(sem_t));
+				map = __builtin_cheri_perms_and(map, MUSL_CAP_PROT_SEM);
+#endif
 				close(fd);
 				break;
 			}
@@ -121,12 +127,19 @@ sem_t *sem_open(const char *name, int flags, ...)
 			if (errno == EEXIST) continue;
 			goto fail;
 		}
+
+		map = mmap(0, sizeof(sem_t), PROT_READ|PROT_WRITE, MAP_SHARED, fd, 0);
 		if (write(fd, &newsem, sizeof newsem) != sizeof newsem || fstat(fd, &st) < 0 ||
-		    (map = mmap(0, sizeof(sem_t), PROT_READ|PROT_WRITE, MAP_SHARED, fd, 0)) == MAP_FAILED) {
+		    map == MAP_FAILED) {
 			close(fd);
 			unlink(tmp);
 			goto fail;
 		}
+#ifdef __CHERI_PURE_CAPABILITY__
+		/* TODO: Remove after mmap implementation. */
+		map = __builtin_cheri_bounds_set(map, sizeof(sem_t));
+		map = __builtin_cheri_perms_and(map, MUSL_CAP_PROT_SEM);
+#endif
 		close(fd);
 		e = link(tmp, name) ? errno : 0;
 		unlink(tmp);

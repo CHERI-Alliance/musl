@@ -118,7 +118,8 @@ static inline void *expand_bounds(void *p) {
 }
 
 static inline void *restrict_user_ptr(void *p, size_t len) {
-	return __builtin_cheri_bounds_set(p, len);
+	return __builtin_cheri_perms_and(__builtin_cheri_bounds_set(p, len),
+		__CHERI_CAP_PERMISSION_GLOBAL__ | READ_CAP_PERMS | WRITE_CAP_PERMS);
 }
 
 static inline void *restrict_perms(void *p) {

@@ -7,6 +7,7 @@
 #include "lock.h"
 #include "syscall.h"
 #include "fork_impl.h"
+#include "cheri_helpers.h"
 
 #define ALIGN 16
 
@@ -88,6 +89,13 @@ static void *__simple_malloc(size_t n)
 			}
 			void *mem = __mmap(0, req, PROT_READ|PROT_WRITE,
 				MAP_PRIVATE|MAP_ANONYMOUS, -1, 0);
+#ifdef __CHERI_PURE_CAPABILITY__
+			if (mem != MAP_FAILED) {
+				/* TODO: Remove after mmap implementation. */
+				mem = __builtin_cheri_bounds_set(mem, req);
+				mem = __builtin_cheri_perms_and(mem, MUSL_CAP_PROT_MALLOC);
+			}
+#endif
 			if (mem == MAP_FAILED || !new_area) {
 				UNLOCK(lock);
 				return mem==MAP_FAILED ? 0 : mem;

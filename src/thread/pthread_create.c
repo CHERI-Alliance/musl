@@ -6,7 +6,7 @@
 #include <sys/mman.h>
 #include <string.h>
 #include <stddef.h>
-#include "cap_perms.h"
+#include "cheri_helpers.h"
 
 /* Moved to top of file as it is now required by other functions. */
 #define ROUND(x) (((x)+PAGE_SIZE-1)&-PAGE_SIZE)
@@ -157,7 +157,7 @@ _Noreturn void __pthread_exit(void *result)
 		/* The following call unmaps the thread's stack mapping
 		 * and then exits without touching the stack. */
 #ifdef __CHERI_PURE_CAPABILITY__
-		/* CHERI has seperate TSD region which must be unmapped.
+		/* CHERI has separate TSD region which must be unmapped.
 		 * tsd pointer should never be changed and tsd will always be
 		 * fixed size, therefore unmapping should be easy. */
 		__unmapself(self->tsd, ROUND(libc.tls_size +  __pthread_tsd_size));
@@ -320,7 +320,7 @@ int __pthread_create(pthread_t *restrict res, const pthread_attr_t *restrict att
 			if (map == MAP_FAILED) goto fail;
 			/* TODO: Remove after mmap implementation. */
 			map = __builtin_cheri_bounds_set(map, size);
-			map = __builtin_cheri_perms_and(map, READ_CAP_PERMS | WRITE_CAP_PERMS);
+			map = __builtin_cheri_perms_and(map, MUSL_CAP_PROT_THREAD);
 #else
 			map = __mmap(0, size, PROT_READ|PROT_WRITE, MAP_PRIVATE|MAP_ANON, -1, 0);
 			if (map == MAP_FAILED) goto fail;
@@ -328,11 +328,11 @@ int __pthread_create(pthread_t *restrict res, const pthread_attr_t *restrict att
 		}
 
 #ifdef __CHERI_PURE_CAPABILITY__
-		/* Seperate mapping for tsd so no capability bound overflow from stack. */
+		/* Separate mapping for tsd so no capability bound overflow from stack. */
 		tsd = __mmap(0, ROUND(__pthread_tsd_size + libc.tls_size), PROT_READ|PROT_WRITE, MAP_PRIVATE|MAP_ANON, -1, 0);
 		/* TODO: Remove after mmap implementation. */
         tsd = __builtin_cheri_bounds_set(tsd, ROUND(__pthread_tsd_size + libc.tls_size));
-		tsd = __builtin_cheri_perms_and(map, READ_CAP_PERMS | WRITE_CAP_PERMS);
+		tsd = __builtin_cheri_perms_and(tsd, MUSL_CAP_PROT_THREAD);
 		tsd = tsd + libc.tls_size;
 #else
 		tsd = map + size - __pthread_tsd_size;

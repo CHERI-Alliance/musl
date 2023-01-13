@@ -5,6 +5,7 @@
 #include <string.h>
 #include <sys/mman.h>
 #include <stddef.h>
+#include "cheri_helpers.h"
 
 #include "mallocmap.h"
 
@@ -17,7 +18,7 @@ Quadratic probing is used in case of hash collision
 Tab indices and hash are size_t
 
 Only the key's address is used for calculating the hash - the
- capaility is simply preserved for validation against the provided
+ capability is simply preserved for validation against the provided
  capability once the entry is found.
 
 Lazy deletion is used to avoid overly expensive deletions.
@@ -92,6 +93,11 @@ static int mallocmap_resize(size_t nel, struct __mallocmap_tab *htab)
 		htab->entries = oldtab;
 		return 0;
 	}
+
+#ifdef __CHERI_PURE_CAPABILITY__
+	htab->entries = __builtin_cheri_bounds_set(htab->entries, map_size);
+	htab->entries = __builtin_cheri_perms_and(htab->entries, MUSL_CAP_PROT_MALLOC);
+#endif
 
 	htab->mask = newsize - 1;
 

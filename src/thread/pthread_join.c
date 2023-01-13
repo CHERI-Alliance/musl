@@ -29,7 +29,7 @@ static int __pthread_timedjoin_np(pthread_t t, void **res, const struct timespec
 	if (res) *res = t->result;
 
 #ifdef __CHERI_PURE_CAPABILITY__
-	/* Free tsd as it is allocated seperately on CHERI. 
+	/* Free tsd as it is allocated separately on CHERI.
 	 * Must be freed before map_base otherwise segmentation fault.
 	*/
 	if (t->tsd) __munmap((t->tsd) - libc.tls_size, ROUND(libc.tls_size +  __pthread_tsd_size));

@@ -10,6 +10,7 @@
 #include "pthread_impl.h"
 #include "malloc_impl.h"
 #include "fork_impl.h"
+#include "cheri_helpers.h"
 
 #define malloc __libc_malloc_impl
 #define realloc __libc_realloc
@@ -188,6 +189,13 @@ static void *__expand_heap(size_t *pn)
 	void *area = __mmap(0, n, PROT_READ|PROT_WRITE,
 		MAP_PRIVATE|MAP_ANONYMOUS, -1, 0);
 	if (area == MAP_FAILED) return 0;
+
+#ifdef __CHERI_PURE_CAPABILITY__
+	/* TODO: Remove after mmap implementation. */
+	area = __builtin_cheri_bounds_set(area, n);
+	area = __builtin_cheri_perms_and(area, MUSL_CAP_PROT_MALLOC);
+#endif
+
 	*pn = n;
 	mmap_step++;
 	return area;
@@ -302,7 +310,14 @@ void *malloc(size_t n)
 		size_t len = n + OVERHEAD + PAGE_SIZE - 1 & -PAGE_SIZE;
 		char *base = __mmap(0, len, PROT_READ|PROT_WRITE,
 			MAP_PRIVATE|MAP_ANONYMOUS, -1, 0);
-		if (base == (void *)-1) return 0;
+		if (base == MAP_FAILED) return 0;
+
+#ifdef __CHERI_PURE_CAPABILITY__
+	/* TODO: Remove after mmap implementation. */
+	base = __builtin_cheri_bounds_set(base, len);
+	base = __builtin_cheri_perms_and(base, MUSL_CAP_PROT_MALLOC);
+#endif
+		
 		c = (void *)(base + SIZE_ALIGN - OVERHEAD);
 		c->csize = len - (SIZE_ALIGN - OVERHEAD);
 		c->psize = SIZE_ALIGN - OVERHEAD;

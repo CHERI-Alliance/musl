@@ -4,13 +4,6 @@
 #include "pthread_impl.h"
 #include "atomic.h"
 
-struct ksigevent {
-	union sigval sigev_value;
-	int sigev_signo;
-	int sigev_notify;
-	int sigev_tid;
-};
-
 struct start_args {
 	pthread_barrier_t b;
 	struct sigevent *sev;
@@ -64,7 +57,7 @@ int timer_create(clockid_t clk, struct sigevent *restrict evp, timer_t *restrict
 	pthread_attr_t attr;
 	int r;
 	struct start_args args;
-	struct ksigevent ksev, *ksevp=0;
+	struct sigevent ksev, *ksevp=0;
 	int timerid;
 	sigset_t set;
 
@@ -77,9 +70,9 @@ int timer_create(clockid_t clk, struct sigevent *restrict evp, timer_t *restrict
 			ksev.sigev_signo = evp->sigev_signo;
 			ksev.sigev_notify = evp->sigev_notify;
 			if (evp->sigev_notify == SIGEV_THREAD_ID)
-				ksev.sigev_tid = evp->sigev_notify_thread_id;
+				ksev.sigev_notify_thread_id = evp->sigev_notify_thread_id;
 			else
-				ksev.sigev_tid = 0;
+				ksev.sigev_notify_thread_id = 0;
 			ksevp = &ksev;
 		}
 		if (syscall(SYS_timer_create, clk, ksevp, &timerid) < 0)
@@ -112,7 +105,7 @@ int timer_create(clockid_t clk, struct sigevent *restrict evp, timer_t *restrict
 		ksev.sigev_value.sival_ptr = 0;
 		ksev.sigev_signo = SIGTIMER;
 		ksev.sigev_notify = SIGEV_THREAD_ID;
-		ksev.sigev_tid = td->tid;
+		ksev.sigev_notify_thread_id = td->tid;
 		if (syscall(SYS_timer_create, clk, &ksev, &timerid) < 0)
 			timerid = -1;
 		td->timer_id = timerid;

@@ -4,7 +4,7 @@
 // syscall(nr, u, v, w, x, y, z)
 //         x8  x0 x1 x2 x3 x4 x5
 
-#ifndef LIBSHIM
+#if !defined(__SANITIZE_CHERISEED__)
 
 .global __cp_begin
 .hidden __cp_begin
@@ -36,4 +36,4 @@ __cp_cancel:
 	.size __cp_cancel, .L__cp_cancel_end-__cp_cancel
 	.size __cp_begin, __cp_end-__cp_begin
 
-#endif
+#endif // defined(__SANITIZE_CHERISEED__)

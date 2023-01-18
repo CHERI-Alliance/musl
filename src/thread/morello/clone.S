@@ -26,13 +26,13 @@ __clone:
 	ldr     c4, [c9, #0]
 1:
 
-#ifdef LIBSHIM
+#if defined(__SANITIZE_CHERISEED__)
 	// store child stack pointer
 	str c1, [c1, #-16]!
 
 	// store tls, flags
 	stp c5,c2,[c1,#-32]!
-#endif
+#endif // defined(__SANITIZE_CHERISEED__)
 
 	// store func, arg
 	stp c0,c3,[c1,#-32]!
@@ -51,7 +51,7 @@ __clone:
 	// child
 1:	ldp c1,c0,[csp],#32
 
-#ifdef LIBSHIM
+#if defined(__SANITIZE_CHERISEED__)
 	// for now we have to manually set tls, as the kernel is not going to
 	// set a capability properly
 
@@ -65,7 +65,7 @@ __clone:
 	and x3,x3,0x00080000 // CLONE_SETTLS
 	cbz x3,2f
 	msr ctpidr_el0, c2
-#endif
+#endif // defined(__SANITIZE_CHERISEED__)
 
 2:	blr c1
 

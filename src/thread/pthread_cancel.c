@@ -27,7 +27,7 @@ cancel_pc_t __cancel()
 	return -ECANCELED;
 }
 
-#ifdef LIBSHIM
+#if defined(__SANITIZE_CHERISEED__)
 
 static intptr_t __syscall_cp_asm(volatile int *cp, long nr,
                     syscall_arg_t u, syscall_arg_t v, syscall_arg_t w,
@@ -50,7 +50,7 @@ static bool is_pc_cancellable(pthread_t self, cancel_pc_t pc)
 
 cancel_pc_t __shim_cancel_syscall(void) __attribute__((alias("__cancel")));
 
-#else  // #ifdef LIBSHIM
+#else  // #if defined(__SANITIZE_CHERISEED__)
 
 hidden intptr_t __syscall_cp_asm();
 intptr_t __syscall_cp_asm(volatile int *, long,
@@ -64,7 +64,7 @@ static bool is_pc_cancellable(pthread_t, cancel_pc_t pc)
 	return pc >= (cancel_pc_t)__cp_begin && pc < (cancel_pc_t)__cp_end;
 }
 
-#endif  // #ifdef LIBSHIM
+#endif  // #if defined(__SANITIZE_CHERISEED__)
 
 hidden intptr_t __syscall_cp_c();
 intptr_t __syscall_cp_c(long nr,

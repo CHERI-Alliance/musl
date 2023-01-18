@@ -23,7 +23,7 @@ static int static_dl_iterate_phdr(int(*callback)(struct dl_phdr_info *info, size
 #endif
 	}
 
-#if defined(__CHERI_PURE_CAPABILITY__) && defined(LIBSHIM)
+#if defined(__CHERI_PURE_CAPABILITY__) && defined(__SANITIZE_CHERISEED__)
 	aux_at_phdr = p = __builtin_cheri_address_set(rx_cap, (size_t) aux[AT_PHDR]);
 #else
 	aux_at_phdr = p = (void *)aux[AT_PHDR];

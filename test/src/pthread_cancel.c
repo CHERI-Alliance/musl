@@ -43,7 +43,7 @@
 static sem_t sem;
 static int checkpoint = 0;
 
-#ifdef LIBSHIM
+#if defined(__SANITIZE_CHERISEED__)
 static unsigned long hooked_thread_id = 0;
 
 // __syscall_cp_hook() is specific to libshim integration.
@@ -59,7 +59,7 @@ int __shim_pause_in_cp(void) {
   }
   return 0;
 }
-#endif  // #ifdef LIBSHIM
+#endif  // #if defined(__SANITIZE_CHERISEED__)
 
 // T-1
 // Test asynchronous cancellation
@@ -271,7 +271,7 @@ static int cancel_async_masked() {
   return 0;
 }
 
-#ifdef LIBSHIM
+#if defined(__SANITIZE_CHERISEED__)
 
 // T-8
 // Test deferred cancellation when cancellations are masked.
@@ -303,7 +303,7 @@ static int cancel_deferred_masked() {
   return 0;
 }
 
-#endif  // #ifdef LIBSHIM
+#endif  // #if defined(__SANITIZE_CHERISEED__)
 
 // T-9
 // TBD
@@ -361,13 +361,13 @@ int main(int argc, char **argv) {
     return cancel_deferred_disabled();
   case '7': // pthread-cancel-async-masked
     return cancel_async_masked();
-#ifdef LIBSHIM
+#if defined(__SANITIZE_CHERISEED__)
   case '8': // pthread-cancel-deferred-masked
     return cancel_deferred_masked();
-#else // #ifdef LIBSHIM
+#else // #if defined(__SANITIZE_CHERISEED__)
   case '8':
     return 0;
-#endif // #ifdef LIBSHIM
+#endif // #if defined(__SANITIZE_CHERISEED__)
   case '9': // pthread-cancel-deferred-in-cp-custom
     return cancel_deferred_in_cp_custom();
   }

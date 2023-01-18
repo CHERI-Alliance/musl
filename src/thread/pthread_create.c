@@ -393,7 +393,7 @@ int __pthread_create(pthread_t *restrict res, const pthread_attr_t *restrict att
 	__tl_lock();
 	if (!libc.threads_minus_1++) libc.need_locks = 1;
 
-#ifdef LIBSHIM
+#if defined(__SANITIZE_CHERISEED__)
 	// It is necessary to block SIGCANCEL when using libshim.
 	// This means that when we call clone(), the new thread will also
 	//  initially have SIGCANCEL blocked. This is necessary because
@@ -407,11 +407,11 @@ int __pthread_create(pthread_t *restrict res, const pthread_attr_t *restrict att
 	sigemptyset(&block_cancel);
 	_sigaddset(&block_cancel, SIGCANCEL);
 	sigprocmask(SIG_BLOCK, &block_cancel, &before_block_cancel);
-#endif
+#endif // defined(__SANITIZE_CHERISEED__)
 
 	ret = __clone((c11 ? start_c11 : start), stack, flags, args, &new->tid, TP_ADJ(new), &__thread_list_lock);
 
-#ifdef LIBSHIM
+#if defined(__SANITIZE_CHERISEED__)
 	sigprocmask(SIG_SETMASK, &before_block_cancel, NULL);
 #endif
 

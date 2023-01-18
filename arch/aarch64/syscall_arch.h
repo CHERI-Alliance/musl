@@ -1,7 +1,7 @@
 #define __SYSCALL_LL_E(x) (x)
 #define __SYSCALL_LL_O(x) (x)
 
-#ifdef LIBSHIM
+#if defined(__SANITIZE_CHERISEED__)
 #include <syscall_libshim.h>
 #else
 
@@ -75,7 +75,7 @@ static inline long __syscall6(long n, long a, long b, long c, long d, long e, lo
 	__asm_syscall("r"(x8), "0"(x0), "r"(x1), "r"(x2), "r"(x3), "r"(x4), "r"(x5));
 }
 
-#endif // LIBSHIM
+#endif // defined(__SANITIZE_CHERISEED__)
 
 #define VDSO_USEFUL
 #define VDSO_CGT_SYM "__kernel_clock_gettime"

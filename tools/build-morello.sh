@@ -78,11 +78,10 @@
 # CC=/path/to/morello/llvm/bin/clang \
 #   bash build-morello.sh musl \
 #   /path/to/musl/sources \
-#   /path/to/musl/install /path/to/libshim/sources \
+#   /path/to/musl/install NOSHIM \
 #   aarch64-unknown-linux-musl_purecap
 #
-# Provide last argument to build libshim-based Musl and omit it to build Musl without
-# libshim. Musl will be installed in the "/path/to/musl/install" directory.
+# Musl will be installed in the "/path/to/musl/install" directory.
 # Use `NOSHIM` instead of `/path/to/libshim/sources` for no-libshim build.
 #
 #
@@ -95,12 +94,12 @@
 #
 # END-OF-HOWTO
 
-STAGE=${1} # stage to run: clang, clang-test, clang-test-cheriseed, musl, crt, compiler-rt, musl-test, package
+STAGE=${1} # stage to run: clang, clang-test, musl, crt, compiler-rt, musl-test, package
 
 case ${STAGE} in
   -help|--help|help)
       echo "Usage: ${0} STAGE [ARGS]"
-      echo "Stages: clang, clang-test, clang-test-cheriseed, musl-headers, musl-cheriseed, musl, crt, compiler-rt, musl-test, libc-test, package"
+      echo "Stages: clang, clang-test, musl-headers, musl, crt, compiler-rt, musl-test, libc-test, package"
       echo ""
       sed -n '/^# How to/,${p;/^# END-OF-HOWTO/q}' ${0}
       echo ""
@@ -252,7 +251,7 @@ function build_clang() {
     mkdir -p ${BUILD_PATH}
     pushd ${BUILD_PATH}
     configure_clang ${LLVM_PROJECT} ${HOST_LLVM_BIN_PATH} ${MORELLO_LLVM_PATH}
-    # NM envvar is used by some generators in compiler-rt.
+    # NM envvar is used by some generators in compiler-rt.
     NM=${HOST_LLVM_BIN_PATH}/llvm-nm${HOST_LLVM_SUFFIX} \
         make -j${MORELLO_NPROC:-16}
     make install
@@ -286,28 +285,15 @@ function build_clang_test() {
 }
 
 # Environment variables:
-#  - MORELLO_NPROC: number of parallel jobs (default: 16)
-function test_clang_cheriseed() {
-    local BUILD_PATH=${1}           # path to the LLVM build folder
-    pushd ${BUILD_PATH}
-    python3 ./bin/llvm-lit ../llvm/test/Instrumentation/CHERIseed
-    python3 ./bin/llvm-lit ../clang/test --filter cheriseed
-    # Tests will use libc++, libc++abi and libunwind forced in configure.
-    LD_LIBRARY_PATH=${BUILD_PATH}/lib \
-        make -j${MORELLO_NPROC:-16} check-cheriseed
-    popd
-}
-
-# Environment variables:
 #  - CC: path to Morello clang
 function build_musl_headers() {
     local MUSL_PATH=${1}            # path to Musl sources
     local PREFIX_PATH=${2}          # where to install Musl headers
     local TRIPLE=${3}               # target triple
     if [[ "${TRIPLE}" == "${MORELLO_TRIPLE}" ]]; then
-        local CFGFLAGS="--enable-morello --disable-libshim --disable-shared"
+        local CFGFLAGS="--enable-morello --disable-shared"
     else
-        local CFGFLAGS="--disable-morello --disable-libshim --disable-shared"
+        local CFGFLAGS="--disable-morello --disable-shared"
     fi
     rm -rf ${PREFIX_PATH}
     pushd ${MUSL_PATH}
@@ -354,51 +340,23 @@ function build_compiler_rt() {
     popd
 }
 
-# This works only for kernel version 5.x
-function download_kernel_headers() {
-    local BUILD_PATH=${1}           # folder where kernel headers will be stored
-    local VERSION=${2}              # kernel version
-    local URL=https://cdn.kernel.org/pub/linux/kernel/v5.x/linux-${VERSION}.tar.xz
-    mkdir -p ${BUILD_PATH}
-    pushd ${BUILD_PATH}
-    wget -q ${URL}
-    tar -xf linux-${VERSION}.tar.xz linux-${VERSION}/arch/arm64 linux-${VERSION}/include linux-${VERSION}/scripts linux-${VERSION}/Makefile
-    make -C linux-${VERSION} --silent headers_install ARCH=arm64 INSTALL_HDR_PATH=${BUILD_PATH}/kernel
-    popd
-    rm -rf ${BUILD_PATH}/linux-${VERSION} ${BUILD_PATH}/linux-${VERSION}.tar.xz
-}
-
 # Environment variables:
 #  - CC: path to Morello clang
 #  - MORELLO_NPROC: number of parallel jobs (default: 8)
 function build_musl() {
     local MUSL_PATH=${1}            # path to Musl sources
     local PREFIX_PATH=${2}          # where to install Musl
-    local LIBSHIM_PATH=${3:-NOSHIM} # path to libshim
     local TRIPLE=${4}               # target triple
     if [[ "${TRIPLE}" == "${MORELLO_TRIPLE}" ]]; then
-        if [[ "${LIBSHIM_PATH}" == "NOSHIM" ]]; then
-            local CFGFLAGS="--enable-morello --disable-libshim"
-        else
-            local CFGFLAGS="--enable-morello --enable-libshim --libshim-path=${LIBSHIM_PATH}"
-        fi
+        local CFGFLAGS="--enable-morello"
     else
-        local CFGFLAGS="--disable-morello --disable-libshim"
+        local CFGFLAGS="--disable-morello"
     fi
     rm -rf ${PREFIX_PATH}
     pushd ${MUSL_PATH}
     make distclean
     ./configure --prefix=${PREFIX_PATH} --target=${TRIPLE} ${CFGFLAGS}
-    if [[ "${TRIPLE}" == "${MORELLO_TRIPLE}" ]]; then
-        if [[ "${LIBSHIM_PATH}" != "NOSHIM" ]]; then
-            download_kernel_headers ${MUSL_PATH}/lib 5.19
-            KERNEL_HEADER_INCLUDES="-isystem ${MUSL_PATH}/lib/kernel/include" make -j${MORELLO_NPROC:-8}
-        else
-            make -j${MORELLO_NPROC:-8}
-        fi
-    else
-        make -j${MORELLO_NPROC:-8}
-    fi
+    make -j${MORELLO_NPROC:-8}
     make install
     mkdir -p ${PREFIX_PATH}/share
     cp COPYRIGHT ${PREFIX_PATH}/share/MUSL-LICENSE.txt
@@ -409,43 +367,6 @@ which have additional or alternate licenses:
  - Musl libc: share/MUSL-LICENSE.txt
 EOF
     popd
-    if [[ "${LIBSHIM_PATH}" != "NOSHIM" ]]; then
-        cp ${LIBSHIM_PATH}/LICENSE.txt ${PREFIX_PATH}/share/LIBSHIM-LICENSE.txt
-        cat << EOF >> ${PREFIX_PATH}/NOTICE.txt
- - Libshim: share/LIBSHIM-LICENSE.txt
-EOF
-    fi
-}
-
-# Environment variables:
-#  - CC: path to Morello clang
-#  - MORELLO_NPROC: number of parallel jobs (default: 8)
-function build_musl_cheriseed() {
-    local MUSL_PATH=${1}            # path to Musl sources
-    local PREFIX_PATH=${2}          # where to install Musl
-    local LIBSHIM_PATH=${3}         # path to libshim
-    local TRIPLE=$(uname -m)-linux-musl
-    local CFGFLAGS="--enable-debug --disable-morello --disable-shared --enable-cheriseed --enable-libshim --libshim-path=${LIBSHIM_PATH}"
-    rm -rf ${PREFIX_PATH}
-    pushd ${MUSL_PATH}
-    make distclean
-    ./configure --prefix=${PREFIX_PATH} --target=${TRIPLE} ${CFGFLAGS}
-    download_kernel_headers ${MUSL_PATH}/lib 5.19
-    KERNEL_HEADER_INCLUDES="-isystem ${MUSL_PATH}/lib/kernel/include" make -j${MORELLO_NPROC:-8}
-    make install
-    mkdir -p ${PREFIX_PATH}/share
-    cp COPYRIGHT ${PREFIX_PATH}/share/MUSL-LICENSE.txt
-    wget -q https://www.apache.org/licenses/LICENSE-2.0.txt -O ${PREFIX_PATH}/LICENSE.txt
-    cat << EOF > ${PREFIX_PATH}/NOTICE.txt
-This product embeds and uses the following pieces of software
-which have additional or alternate licenses:
- - Musl libc: share/MUSL-LICENSE.txt
-EOF
-    popd
-    cp ${LIBSHIM_PATH}/LICENSE.txt ${PREFIX_PATH}/share/LIBSHIM-LICENSE.txt
-    cat << EOF >> ${PREFIX_PATH}/NOTICE.txt
- - Libshim: share/LIBSHIM-LICENSE.txt
-EOF
 }
 
 # Environment variables:
@@ -456,15 +377,10 @@ function build_musl_test() {
     local MUSL_PATH=${1}            # path to Musl sources
     local PREFIX_PATH=${2}          # where Musl has been installed
     local TRIPLE=${3}               # target triple
-    local LIBSHIM_PATH=${4:-NOSHIM} # path to libshim
     local SKIP_TEST_RUN=${5:-NO}    # whether to skip running tests
     if [[ "${TRIPLE}" == "${MORELLO_TRIPLE}" ]]; then  # these test only for Morello
         local ARCHFLAGS=${ARCHFLAGS:--march=morello+c64}
-        if [[ "${LIBSHIM_PATH}" == "NOSHIM" ]]; then
-            local CFGFLAGS="--enable-morello --disable-libshim"
-        else
-            local CFGFLAGS="--enable-morello --enable-libshim --libshim-path=${LIBSHIM_PATH}"
-        fi
+        local CFGFLAGS="--enable-morello"
         pushd ${MUSL_PATH}
         make distclean
         ./configure --prefix=${PREFIX_PATH} --target=${TRIPLE} ${CFGFLAGS}
@@ -540,16 +456,8 @@ case ${STAGE} in
       build_clang_test ${@:2};
       exit 0;
       ;;
-  clang-test-cheriseed)
-      test_clang_cheriseed ${@:2};
-      exit 0;
-      ;;
   musl)
       build_musl ${@:2};
-      exit 0;
-      ;;
-  musl-cheriseed)
-      build_musl_cheriseed ${@:2};
       exit 0;
       ;;
   musl-headers)

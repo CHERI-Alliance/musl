@@ -1,4 +1,4 @@
-#ifndef LIBSHIM
+#if !defined(__SANITIZE_CHERISEED__)
 
 .text
 .global __cp_begin
@@ -32,4 +32,4 @@ __cp_end:
 __cp_cancel:
 	jmp __cancel
 
-#endif
+#endif // defined(__SANITIZE_CHERISEED__)

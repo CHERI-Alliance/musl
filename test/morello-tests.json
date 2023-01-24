@@ -2654,5 +2654,10 @@
         "name": "strfcap_specifier_percent",
         "xrc": [0],
         "args": ["%"]
+    },
+    {
+        "app": "${build}/cmpt-blrs-${kind}.exe",
+        "name": "cmpt-blrs",
+        "xrc": [0]
     }
 ]

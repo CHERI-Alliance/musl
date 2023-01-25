@@ -258,11 +258,7 @@ static inline void *enframe(struct meta *g, int idx, size_t n, int ctr, size_t a
 	int off = (p[-3] ? *(uint16_t *)(p-2) + 1 : ctr) & 255;
 
 	if (align > UNIT) {
-#ifdef __CHERI_PURE_CAPABILITY__
 		unsigned char *aligned_p = __builtin_align_up(p, align);
-#else
-		unsigned char *aligned_p = -(uintptr_t)p + (-(uintptr_t)p & (align - 1));
-#endif
 		off = (aligned_p - p) / UNIT;
 	}
 

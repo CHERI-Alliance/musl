@@ -151,6 +151,11 @@ int putc_unlocked(int, FILE *);
 int putchar_unlocked(int);
 ssize_t getdelim(char **__restrict, size_t *__restrict, int, FILE *__restrict);
 ssize_t getline(char **__restrict, size_t *__restrict, FILE *__restrict);
+
+#ifdef __CHERI_PURE_CAPABILITY__
+ssize_t strfcap(char* __restrict, size_t, const char *__restrict, const void*);
+#endif
+
 int renameat(int, const char *, int, const char *);
 char *ctermid(char *);
 #define L_ctermid 20

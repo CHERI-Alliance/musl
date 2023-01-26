@@ -13,7 +13,6 @@
 # Note: be aware of use of the env variables in the below commands.
 # Note: all paths should be absolute.
 #
-#
 # Configure and build Clang
 # -------------------------
 #
@@ -27,7 +26,6 @@
 # For targets use "AArch64" for AArch64-hosted toolchain and "X86;AArch64" for x86-hosted
 # toolchain. Clang will be installed in the "/path/to/morello/llvm" directory.
 #
-#
 # Install Musl headers
 # --------------------
 #
@@ -40,7 +38,6 @@
 #   aarch64-unknown-linux-musl_purecap
 #
 # To install headers for AArch64, use `aarch64-unknown-linux-gnu` triple.
-#
 #
 # Build CRT objects
 # -----------------
@@ -61,8 +58,7 @@
 #
 # This builds Compiler-RT for Morello:
 #
-# CC=/path/to/morello/llvm/bin/clang \
-#   bash build-morello.sh compiler-rt \
+# bash build-morello.sh compiler-rt \
 #   /path/to/llvm-project \
 #   /path/to/morello/llvm \
 #   /path/to/comp-rt/build/directory \
@@ -71,19 +67,16 @@
 #
 # To build Compiler-RT for AArch64, use `aarch64-unknown-linux-gnu` triple.
 #
-#
 # Build Musl libc
 # ---------------
 #
 # CC=/path/to/morello/llvm/bin/clang \
 #   bash build-morello.sh musl \
 #   /path/to/musl/sources \
-#   /path/to/musl/install NOSHIM \
+#   /path/to/musl/install -- \
 #   aarch64-unknown-linux-musl_purecap
 #
 # Musl will be installed in the "/path/to/musl/install" directory.
-# Use `NOSHIM` instead of `/path/to/libshim/sources` for no-libshim build.
-#
 #
 # Compile a hello world app
 # -------------------------
@@ -94,14 +87,13 @@
 #
 # END-OF-HOWTO
 
-STAGE=${1} # stage to run: clang, clang-test, musl, crt, compiler-rt, musl-test, package
+STAGE=${1} # stage to run: clang, clang-test, crt, compiler-rt, musl, etc...
 
 case ${STAGE} in
   -help|--help|help)
       echo "Usage: ${0} STAGE [ARGS]"
-      echo "Stages: clang, clang-test, musl-headers, musl, crt, compiler-rt, musl-test, libc-test, package"
-      echo ""
-      sed -n '/^# How to/,${p;/^# END-OF-HOWTO/q}' ${0}
+      echo "Stages: clang, musl-headers, crt, compiler-rt, musl, libunwind, libcxxabi, libcxx"
+      echo "        clang-test, musl-test, libc-test, package"
       echo ""
       exit 0
       ;;
@@ -113,31 +105,24 @@ set -e
 MORELLO_TRIPLE=aarch64-unknown-linux-musl_purecap
 AARCH64_TRIPLE=aarch64-unknown-linux-gnu
 
-# Environment variables:
-#  - LLVM_TARGETS: AArch64 or X86;AArch64
-#  - LLVM_LIT_ARGS: LIT args for tests (can be unset or empty)
-#  - HOST_LLVM_VERSION: Suffix to apply to toolchain binary names, if any.
-#                       Example: HOST_LLVM_VERSION="14" means clang-14, nm-14, etc.
-#                       Can be unset or empty.
-function configure_clang() {
+function __configure_clang() {
     local LLVM_PROJECT=${1}
     local HOST_LLVM_BIN=${2}
     local MORELLO_HOME=${3}
-    local -r HOST_LLVM_SUFFIX=${HOST_LLVM_VERSION:+-${HOST_LLVM_VERSION}}
     mkdir -p ${MORELLO_HOME}
     cmake -Wno-dev \
-        -DCMAKE_C_COMPILER=${HOST_LLVM_BIN}/clang${HOST_LLVM_SUFFIX} \
+        -DCMAKE_C_COMPILER=${HOST_LLVM_BIN}/clang \
         -DCMAKE_C_COMPILER_WORKS=YES \
-        -DCMAKE_ASM_COMPILER=${HOST_LLVM_BIN}/clang${HOST_LLVM_SUFFIX} \
+        -DCMAKE_ASM_COMPILER=${HOST_LLVM_BIN}/clang \
         -DCMAKE_ASM_COMPILER_WORKS=YES \
-        -DCMAKE_CXX_COMPILER=${HOST_LLVM_BIN}/clang++${HOST_LLVM_SUFFIX} \
+        -DCMAKE_CXX_COMPILER=${HOST_LLVM_BIN}/clang++ \
         -DCMAKE_CXX_COMPILER_WORKS=YES \
-        -DCMAKE_AR=${HOST_LLVM_BIN}/llvm-ar${HOST_LLVM_SUFFIX} \
-        -DCMAKE_RANLIB=${HOST_LLVM_BIN}/llvm-ranlib${HOST_LLVM_SUFFIX} \
-        -DCMAKE_NM=${HOST_LLVM_BIN}/llvm-nm${HOST_LLVM_SUFFIX} \
-        -DCMAKE_LINKER=${HOST_LLVM_BIN}/ld.lld${HOST_LLVM_SUFFIX} \
-        -DCMAKE_OBJDUMP=${HOST_LLVM_BIN}/llvm-objdump${HOST_LLVM_SUFFIX} \
-        -DCMAKE_OBJCOPY=${HOST_LLVM_BIN}/llvm-objcopy${HOST_LLVM_SUFFIX} \
+        -DCMAKE_AR=${HOST_LLVM_BIN}/llvm-ar \
+        -DCMAKE_RANLIB=${HOST_LLVM_BIN}/llvm-ranlib \
+        -DCMAKE_NM=${HOST_LLVM_BIN}/llvm-nm \
+        -DCMAKE_LINKER=${HOST_LLVM_BIN}/ld.lld \
+        -DCMAKE_OBJDUMP=${HOST_LLVM_BIN}/llvm-objdump \
+        -DCMAKE_OBJCOPY=${HOST_LLVM_BIN}/llvm-objcopy \
         -DCMAKE_EXE_LINKER_FLAGS="-fuse-ld=lld" \
         -DCMAKE_SHARED_LINKER_FLAGS="-fuse-ld=lld" \
         -DCMAKE_BUILD_TYPE=Release \
@@ -174,7 +159,7 @@ function configure_clang() {
         ${LLVM_PROJECT}/llvm
 }
 
-function configure_comp_rt() {
+function __configure_comp_rt() {
     local LLVM_PROJECT=${1}         # path to LLVM sources
     local MORELLO_LLVM_PATH=${2}    # path where Morello LLVM has been installed
     local BUILD_PATH=${3}           # path to the build folder
@@ -208,13 +193,12 @@ set(CMAKE_OBJDUMP "${MORELLO_LLVM_PATH}/bin/llvm-objdump" CACHE FILEPATH "" FORC
 set(CMAKE_OBJCOPY "${MORELLO_LLVM_PATH}/bin/llvm-objcopy" CACHE FILEPATH "" FORCE)
 
 set(LLVM_CONFIG_PATH "${MORELLO_LLVM_PATH}/bin/llvm-config" CACHE FILEPATH "" FORCE)
-set(CMAKE_EXE_LINKER_FLAGS "-fuse-ld=lld" CACHE FILEPATH "" FORCE)
-set(CMAKE_SHARED_LINKER_FLAGS "-fuse-ld=lld" CACHE FILEPATH "" FORCE)
 EOF
     cmake -Wno-dev \
         -DCMAKE_TOOLCHAIN_FILE=toolchain.cmake \
         -DCMAKE_BUILD_TYPE=Release \
         -DCMAKE_C_FLAGS="-nostdinc -isystem ${SYSROOT}/include" \
+        -DCMAKE_ASM_FLAGS="-nostdinc -isystem ${SYSROOT}/include" \
         -DCMAKE_EXPORT_COMPILE_COMMANDS=ON \
         -DCMAKE_SKIP_BUILD_RPATH=OFF \
         -DCMAKE_INSTALL_RPATH=\$ORIGIN/../lib \
@@ -232,13 +216,207 @@ EOF
     popd
 }
 
+function __configure_libunwind() {
+    local LLVM_PROJECT=${1}         # path to LLVM sources
+    local MORELLO_LLVM_PATH=${2}    # path where Morello LLVM has been installed
+    local BUILD_PATH=${3}           # path to the build folder
+    local SYSROOT=${4}              # path to sysroot with the required libc headers
+    local TRIPLE=${5}               # triple to target
+    if [[ "${TRIPLE}" == "${MORELLO_TRIPLE}" ]]; then
+        local TFLAGS="-march=morello+c64 -mabi=purecap"
+    else
+        local TFLAGS="-march=armv8"
+    fi
+    mkdir -p ${BUILD_PATH}
+    pushd ${BUILD_PATH}
+    cat << EOF > toolchain.cmake
+set(CMAKE_SYSTEM_NAME Linux)
+set(CMAKE_SYSTEM_PROCESSOR aarch64)
+set(CMAKE_ASM_COMPILER_TARGET "${TRIPLE}")
+set(CMAKE_C_COMPILER_TARGET "${TRIPLE}")
+set(CMAKE_CXX_COMPILER_TARGET "${TRIPLE}")
+
+set(CMAKE_ASM_COMPILER_WORKS 1 CACHE INTERNAL "")
+set(CMAKE_C_COMPILER_WORKS 1 CACHE INTERNAL "")
+set(CMAKE_CXX_COMPILER_WORKS 1 CACHE INTERNAL "")
+
+set(CMAKE_ASM_COMPILER "${MORELLO_LLVM_PATH}/bin/clang" CACHE FILEPATH "" FORCE)
+set(CMAKE_C_COMPILER "${MORELLO_LLVM_PATH}/bin/clang" CACHE FILEPATH "" FORCE)
+set(CMAKE_CXX_COMPILER "${MORELLO_LLVM_PATH}/bin/clang++" CACHE FILEPATH "" FORCE)
+set(CMAKE_AR "${MORELLO_LLVM_PATH}/bin/llvm-ar" CACHE FILEPATH "" FORCE)
+set(CMAKE_RANLIB "${MORELLO_LLVM_PATH}/bin/llvm-ranlib" CACHE FILEPATH "" FORCE)
+set(CMAKE_NM "${MORELLO_LLVM_PATH}/bin/llvm-nm" CACHE FILEPATH "" FORCE)
+set(CMAKE_LINKER "${MORELLO_LLVM_PATH}/bin/ld.lld" CACHE FILEPATH "" FORCE)
+set(CMAKE_OBJDUMP "${MORELLO_LLVM_PATH}/bin/llvm-objdump" CACHE FILEPATH "" FORCE)
+set(CMAKE_OBJCOPY "${MORELLO_LLVM_PATH}/bin/llvm-objcopy" CACHE FILEPATH "" FORCE)
+
+set(LLVM_CONFIG_PATH "${MORELLO_LLVM_PATH}/bin/llvm-config" CACHE FILEPATH "" FORCE)
+set(CMAKE_ASM_FLAGS "--sysroot=${SYSROOT} ${TFLAGS}" CACHE STRING "" FORCE)
+set(CMAKE_C_FLAGS "--sysroot=${SYSROOT} ${TFLAGS}" CACHE STRING "" FORCE)
+set(CMAKE_CXX_FLAGS "--sysroot=${SYSROOT} ${TFLAGS}" CACHE STRING "" FORCE)
+set(CMAKE_EXE_LINKER_FLAGS "-fuse-ld=lld -nostdlib --rtlib=compiler-rt" CACHE STRING "" FORCE)
+set(CMAKE_SHARED_LINKER_FLAGS "-fuse-ld=lld -nostdlib --rtlib=compiler-rt" CACHE STRING "" FORCE)
+EOF
+    cmake -S ${LLVM_PROJECT}/libunwind \
+    -B ${BUILD_PATH}\
+    -Wno-dev \
+    -DCMAKE_TOOLCHAIN_FILE=toolchain.cmake \
+    -DCMAKE_BUILD_TYPE=Release \
+    -DLLVM_TARGETS_TO_BUILD="AArch64" \
+    -DLIBUNWIND_TARGET_TRIPLE=${TRIPLE} \
+    -DLIBUNWIND_SYSROOT=${SYSROOT} \
+    -DLIBUNWIND_ENABLE_STATIC=ON \
+    -DLIBUNWIND_ENABLE_SHARED=OFF \
+    -DLIBUNWIND_ENABLE_THREADS=ON \
+    -DLIBUNWIND_USE_COMPILER_RT=ON \
+    -DCMAKE_INSTALL_PREFIX=${SYSROOT}
+    popd
+}
+
+function __configure_libcxxabi() {
+    local LLVM_PROJECT=${1}         # path to LLVM sources
+    local MORELLO_LLVM_PATH=${2}    # path where Morello LLVM has been installed
+    local BUILD_PATH=${3}           # path to the build folder
+    local SYSROOT=${4}              # path to sysroot with the required libc headers
+    local TRIPLE=${5}              # triple to target
+    local LIBUNWIND_HEADERS=${LLVM_PROJECT}/libunwind/include
+    local LIBCXX_HEADERS=${MORELLO_LLVM_PATH}/include/c++/v1
+    if [[ "${TRIPLE}" == "${MORELLO_TRIPLE}" ]]; then
+        local TFLAGS="-march=morello+c64 -mabi=purecap"
+    else
+        local TFLAGS="-march=armv8"
+    fi
+    mkdir -p ${BUILD_PATH}
+    pushd ${BUILD_PATH}
+    cat << EOF > toolchain.cmake
+set(CMAKE_SYSTEM_NAME Linux)
+set(CMAKE_SYSTEM_PROCESSOR aarch64)
+set(CMAKE_ASM_COMPILER_TARGET "${TRIPLE}")
+set(CMAKE_C_COMPILER_TARGET "${TRIPLE}")
+set(CMAKE_CXX_COMPILER_TARGET "${TRIPLE}")
+
+set(LIBCXXABI_TARGET_TRIPLE "${TRIPLE}" CACHE STRING "" FORCE)
+
+set(CMAKE_ASM_COMPILER_WORKS 1 CACHE INTERNAL "")
+set(CMAKE_C_COMPILER_WORKS 1 CACHE INTERNAL "")
+set(CMAKE_CXX_COMPILER_WORKS 1 CACHE INTERNAL "")
+
+set(CMAKE_ASM_COMPILER "${MORELLO_LLVM_PATH}/bin/clang" CACHE FILEPATH "" FORCE)
+set(CMAKE_C_COMPILER "${MORELLO_LLVM_PATH}/bin/clang" CACHE FILEPATH "" FORCE)
+set(CMAKE_CXX_COMPILER "${MORELLO_LLVM_PATH}/bin/clang++" CACHE FILEPATH "" FORCE)
+set(CMAKE_AR "${MORELLO_LLVM_PATH}/bin/llvm-ar" CACHE FILEPATH "" FORCE)
+set(CMAKE_RANLIB "${MORELLO_LLVM_PATH}/bin/llvm-ranlib" CACHE FILEPATH "" FORCE)
+set(CMAKE_NM "${MORELLO_LLVM_PATH}/bin/llvm-nm" CACHE FILEPATH "" FORCE)
+set(CMAKE_LINKER "${MORELLO_LLVM_PATH}/bin/ld.lld" CACHE FILEPATH "" FORCE)
+set(CMAKE_OBJDUMP "${MORELLO_LLVM_PATH}/bin/llvm-objdump" CACHE FILEPATH "" FORCE)
+set(CMAKE_OBJCOPY "${MORELLO_LLVM_PATH}/bin/llvm-objcopy" CACHE FILEPATH "" FORCE)
+
+set(LLVM_CONFIG_PATH "${MORELLO_LLVM_PATH}/bin/llvm-config" CACHE FILEPATH "" FORCE)
+set(CMAKE_ASM_FLAGS "--sysroot=${SYSROOT} ${TFLAGS}" CACHE STRING "" FORCE)
+set(CMAKE_C_FLAGS "--sysroot=${SYSROOT} ${TFLAGS}" CACHE STRING "" FORCE)
+set(CMAKE_CXX_FLAGS "--sysroot=${SYSROOT} ${TFLAGS}" CACHE STRING "" FORCE)
+set(CMAKE_EXE_LINKER_FLAGS "-fuse-ld=lld -nostdlib --rtlib=compiler-rt" CACHE STRING "" FORCE)
+set(CMAKE_SHARED_LINKER_FLAGS "-fuse-ld=lld -nostdlib --rtlib=compiler-rt" CACHE STRING "" FORCE)
+EOF
+    cmake -S ${LLVM_PROJECT}/libcxxabi \
+    -B ${BUILD_PATH}\
+    -Wno-dev \
+    -DCMAKE_TOOLCHAIN_FILE=toolchain.cmake \
+    -DCMAKE_BUILD_TYPE=Release \
+    -DLIBCXXABI_ENABLE_STATIC=ON \
+    -DLIBCXXABI_ENABLE_SHARED=OFF \
+    -DLIBCXXABI_USE_COMPILER_RT=ON \
+    -DLIBCXXABI_SYSROOT="${SYSROOT}" \
+    -DLIBCXXABI_LIBUNWIND_INCLUDES="${LIBUNWIND_HEADERS}" \
+    -DLIBCXXABI_LIBUNWIND_PATH="${SYSROOT}/lib" \
+    -DLIBCXXABI_LIBCXX_INCLUDES="${LIBCXX_HEADERS}" \
+    -DCMAKE_INSTALL_PREFIX=${SYSROOT}
+    popd
+}
+
+function __configure_libcxx() {
+    local LLVM_PROJECT=${1}         # path to LLVM sources
+    local MORELLO_LLVM_PATH=${2}    # path where Morello LLVM has been installed
+    local BUILD_PATH=${3}           # path to the build folder
+    local SYSROOT=${4}              # path to sysroot with the required libc header
+    local TRIPLE=${5}               # triple to target
+    if [[ "${TRIPLE}" == "${MORELLO_TRIPLE}" ]]; then
+        local TFLAGS="-march=morello+c64 -mabi=purecap"
+    else
+        local TFLAGS="-march=armv8"
+    fi
+    mkdir -p ${BUILD_PATH}
+    pushd ${BUILD_PATH}
+
+    __download_kernel_headers "${BUILD_PATH}/" 5.19
+    cat << EOF > toolchain.cmake
+set(CMAKE_SYSTEM_NAME Linux)
+set(CMAKE_SYSTEM_PROCESSOR aarch64)
+set(CMAKE_ASM_COMPILER_TARGET "${TRIPLE}")
+set(CMAKE_C_COMPILER_TARGET "${TRIPLE}")
+set(CMAKE_CXX_COMPILER_TARGET "${TRIPLE}")
+
+set(CMAKE_ASM_COMPILER_WORKS 1 CACHE INTERNAL "")
+set(CMAKE_C_COMPILER_WORKS 1 CACHE INTERNAL "")
+set(CMAKE_CXX_COMPILER_WORKS 1 CACHE INTERNAL "")
+
+set(LIBCXX_TARGET_TRIPLE "${TARGET}" CACHE STRING "" FORCE)
+
+set(CMAKE_ASM_COMPILER "${MORELLO_LLVM_PATH}/bin/clang" CACHE FILEPATH "" FORCE)
+set(CMAKE_C_COMPILER "${MORELLO_LLVM_PATH}/bin/clang" CACHE FILEPATH "" FORCE)
+set(CMAKE_CXX_COMPILER "${MORELLO_LLVM_PATH}/bin/clang++" CACHE FILEPATH "" FORCE)
+set(CMAKE_AR "${MORELLO_LLVM_PATH}/bin/llvm-ar" CACHE FILEPATH "" FORCE)
+set(CMAKE_RANLIB "${MORELLO_LLVM_PATH}/bin/llvm-ranlib" CACHE FILEPATH "" FORCE)
+set(CMAKE_NM "${MORELLO_LLVM_PATH}/bin/llvm-nm" CACHE FILEPATH "" FORCE)
+set(CMAKE_LINKER "${MORELLO_LLVM_PATH}/bin/ld.lld" CACHE FILEPATH "" FORCE)
+set(CMAKE_OBJDUMP "${MORELLO_LLVM_PATH}/bin/llvm-objdump" CACHE FILEPATH "" FORCE)
+set(CMAKE_OBJCOPY "${MORELLO_LLVM_PATH}/bin/llvm-objcopy" CACHE FILEPATH "" FORCE)
+
+set(LLVM_CONFIG_PATH "${MORELLO_LLVM_PATH}/bin/llvm-config" CACHE FILEPATH "" FORCE)
+set(CMAKE_ASM_FLAGS "--sysroot=${SYSROOT} ${TFLAGS} -isystem ${BUILD_PATH}/kernel/include" CACHE STRING "" FORCE)
+set(CMAKE_C_FLAGS "--sysroot=${SYSROOT} ${TFLAGS} -isystem ${BUILD_PATH}/kernel/include" CACHE STRING "" FORCE)
+set(CMAKE_CXX_FLAGS "--sysroot=${SYSROOT} ${TFLAGS} -isystem ${BUILD_PATH}/kernel/include" CACHE STRING "" FORCE)
+set(CMAKE_EXE_LINKER_FLAGS "-fuse-ld=lld -nostdlib --rtlib=compiler-rt" CACHE STRING "" FORCE)
+set(CMAKE_SHARED_LINKER_FLAGS "-fuse-ld=lld -nostdlib --rtlib=compiler-rt" CACHE STRING "" FORCE)
+EOF
+    cmake -S ${LLVM_PROJECT}/libcxx \
+    -B ${BUILD_PATH}\
+    -Wno-dev \
+    -DCMAKE_TOOLCHAIN_FILE=toolchain.cmake \
+    -DCMAKE_BUILD_TYPE=Release \
+    -DLIBCXX_ENABLE_STATIC=ON \
+    -DLIBCXX_ENABLE_SHARED=OFF \
+    -DLIBCXX_INCLUDE_TESTS=OFF \
+    -DLIBCXX_INCLUDE_BENCHMARKS=OFF \
+    -DLIBCXX_ENABLE_EXPERIMENTAL_LIBRARY=NO \
+    -DLIBCXX_HAS_MUSL_LIBC=ON \
+    -DLIBCXX_ENABLE_EXCEPTIONS=ON \
+    -DLIBCXX_SYSROOT="${SYSROOT}" \
+    -DLIBCXX_CXX_ABI=libcxxabi \
+    -DCMAKE_INSTALL_PREFIX=${SYSROOT} \
+    -DLIBCXX_USE_COMPILER_RT=ON \
+    -DLIBCXX_CXX_ABI_LIBRARY_PATH="${SYSROOT}/lib"
+    popd
+}
+
+function __download_kernel_headers() {
+    local BUILD_PATH=${1}           # folder where kernel headers will be stored
+    local VERSION=${2}              # kernel version
+    # This works only for kernel version 5.x
+    local URL=https://cdn.kernel.org/pub/linux/kernel/v5.x/linux-${VERSION}.tar.xz
+    mkdir -p ${BUILD_PATH}
+    pushd ${BUILD_PATH}
+    wget -q ${URL}
+    tar -xf linux-${VERSION}.tar.xz linux-${VERSION}/arch/arm64 linux-${VERSION}/include linux-${VERSION}/scripts linux-${VERSION}/Makefile
+    make -C linux-${VERSION} --silent headers_install ARCH=arm64 INSTALL_HDR_PATH=${BUILD_PATH}/kernel
+    popd
+    rm -rf ${BUILD_PATH}/linux-${VERSION} ${BUILD_PATH}/linux-${VERSION}.tar.xz
+}
+
 # Environment variables:
 #  - LLVM_TARGETS: AArch64 or X86;AArch64
 #  - LLVM_LIT_ARGS: LIT args for tests (can be unset or empty)
 #  - MORELLO_NPROC: number of parallel jobs (default: 16)
-#  - HOST_LLVM_VERSION: Suffix to apply to toolchain binary names, if any.
-#                       Example: HOST_LLVM_VERSION="14" means clang-14 nm-14, etc.
-#                       Can be unset or empty.
 function build_clang() {
     local LLVM_PROJECT=${1}         # path to LLVM sources
     local HOST_LLVM_PATH=${2}       # path to host LLVM (11.0 or newer)
@@ -246,14 +424,12 @@ function build_clang() {
     local BUILD_PATH=${4}           # path to the build folder
     local TPIP_PATH=${MORELLO_LLVM_PATH}/thirdpartylicences
     local -r HOST_LLVM_BIN_PATH=${HOST_LLVM_PATH}/bin
-    local -r HOST_LLVM_SUFFIX=${HOST_LLVM_VERSION:+-${HOST_LLVM_VERSION}}
     echo "Building clang from ${LLVM_PROJECT} with ${HOST_LLVM_PATH} ..."
     mkdir -p ${BUILD_PATH}
     pushd ${BUILD_PATH}
-    configure_clang ${LLVM_PROJECT} ${HOST_LLVM_BIN_PATH} ${MORELLO_LLVM_PATH}
+    __configure_clang ${LLVM_PROJECT} ${HOST_LLVM_BIN_PATH} ${MORELLO_LLVM_PATH}
     # NM envvar is used by some generators in compiler-rt.
-    NM=${HOST_LLVM_BIN_PATH}/llvm-nm${HOST_LLVM_SUFFIX} \
-        make -j${MORELLO_NPROC:-16}
+    NM=${HOST_LLVM_BIN_PATH}/llvm-nm make -j${MORELLO_NPROC:-16}
     make install
     popd
     mkdir -p ${TPIP_PATH}
@@ -323,7 +499,6 @@ function build_crt() {
 }
 
 # Environment variables:
-#  - CC: path to Morello clang
 #  - MORELLO_NPROC: number of parallel jobs (default: 4)
 function build_compiler_rt() {
     local LLVM_PROJECT=${1}         # path to LLVM sources
@@ -331,11 +506,12 @@ function build_compiler_rt() {
     local BUILD_PATH=${3}           # path to the build folder
     local SYSROOT=${4}              # path to sysroot with the required libc headers
     local TRIPLE=${5}               # expanded target triple
-    local DESTDIR=$(${CC} -print-resource-dir)/lib/${TRIPLE}
+    local DESTDIR=$(${MORELLO_LLVM_PATH}/bin/clang -print-resource-dir)/lib/${TRIPLE}
     rm -rf ${BUILD_PATH}
-    configure_comp_rt ${LLVM_PROJECT} ${MORELLO_LLVM_PATH} ${BUILD_PATH} ${SYSROOT} ${TRIPLE}
+    __configure_comp_rt ${LLVM_PROJECT} ${MORELLO_LLVM_PATH} ${BUILD_PATH} ${SYSROOT} ${TRIPLE}
     pushd ${BUILD_PATH}
-    make -j${MORELLO_NPROC:-4} clang_rt.builtins-aarch64
+    make -j ${MORELLO_NPROC:-4} clang_rt.builtins-aarch64
+    mkdir -p ${DESTDIR}
     cp lib/linux/libclang_rt.builtins-aarch64.a ${DESTDIR}/libclang_rt.builtins.a
     popd
 }
@@ -366,6 +542,58 @@ This product embeds and uses the following pieces of software
 which have additional or alternate licenses:
  - Musl libc: share/MUSL-LICENSE.txt
 EOF
+    popd
+}
+
+# Environment variables:
+#  - MORELLO_NPROC: number of parallel jobs (default: 4)
+function build_libunwind() {
+    local LLVM_PROJECT=${1}         # path to LLVM sources
+    local MORELLO_LLVM_PATH=${2}    # path where Morello LLVM has been installed
+    local BUILD_PATH=${3}           # path to the build folder
+    local SYSROOT=${4}              # path to sysroot with the required libc headers
+    local TRIPLE=${5}               # triple to target
+    rm -rf ${BUILD_PATH}
+    __configure_libunwind ${LLVM_PROJECT} ${MORELLO_LLVM_PATH} ${BUILD_PATH} ${SYSROOT} ${TRIPLE}
+    pushd ${BUILD_PATH}
+    make -j${MORELLO_NPROC:-4}
+    make install
+    popd
+}
+
+# Environment variables:
+#  - MORELLO_NPROC: number of parallel jobs (default: 4)
+function build_libcxxabi() {
+    local LLVM_PROJECT=${1}         # path to LLVM sources
+    local MORELLO_LLVM_PATH=${2}    # path where Morello LLVM has been installed
+    local BUILD_PATH=${3}           # path to the build folder
+    local SYSROOT=${4}              # path to sysroot with the required libc headers
+    local TRIPLE=${5}               # triple to target
+    rm -rf ${BUILD_PATH}
+    __configure_libcxxabi ${LLVM_PROJECT} ${MORELLO_LLVM_PATH} ${BUILD_PATH} ${SYSROOT} ${TRIPLE}
+    pushd ${BUILD_PATH}
+    make -j${MORELLO_NPROC:-4}
+    make install
+    popd
+}
+
+# Environment variables:
+#  - MORELLO_NPROC: number of parallel jobs (default: 4)
+function build_libcxx() {
+    local LLVM_PROJECT=${1}         # path to LLVM sources
+    local MORELLO_LLVM_PATH=${2}    # path where Morello LLVM has been installed
+    local BUILD_PATH=${3}           # path to the build folder
+    local SYSROOT=${4}              # path to sysroot with the required libc headers
+    local TRIPLE=${5}               # triple to target
+    local TARGET_INCLUDE_PATH=${MORELLO_LLVM_PATH}/include/${TRIPLE}/c++/v1
+    rm -rf ${BUILD_PATH}
+    __configure_libcxx ${LLVM_PROJECT} ${MORELLO_LLVM_PATH} ${BUILD_PATH} ${SYSROOT} ${TRIPLE}
+    pushd ${BUILD_PATH}
+    make -j${MORELLO_NPROC:-4}
+    make install
+    # setup config_site required for building c++ applications
+    mkdir -p ${TARGET_INCLUDE_PATH}
+    mv ${BUILD_PATH}/include/c++/v1/__config_site ${TARGET_INCLUDE_PATH}/
     popd
 }
 
@@ -456,10 +684,6 @@ case ${STAGE} in
       build_clang_test ${@:2};
       exit 0;
       ;;
-  musl)
-      build_musl ${@:2};
-      exit 0;
-      ;;
   musl-headers)
       build_musl_headers ${@:2};
       exit 0;
@@ -470,6 +694,22 @@ case ${STAGE} in
       ;;
   compiler-rt)
       build_compiler_rt ${@:2};
+      exit 0;
+      ;;
+  musl)
+      build_musl ${@:2};
+      exit 0;
+      ;;
+  libunwind)
+      build_libunwind ${@:2};
+      exit 0;
+      ;;
+  libcxxabi)
+      build_libcxxabi ${@:2};
+      exit 0;
+      ;;
+  libcxx)
+      build_libcxx ${@:2};
       exit 0;
       ;;
   musl-test)

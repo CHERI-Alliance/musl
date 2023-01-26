@@ -33,8 +33,12 @@ pid_t wait3 (int *, int, struct rusage *);
 pid_t wait4 (pid_t, int *, int, struct rusage *);
 #endif
 
+#ifndef WNOHANG
 #define WNOHANG    1
+#endif
+#ifndef WUNTRACED
 #define WUNTRACED  2
+#endif
 
 #define WSTOPPED   2
 #define WEXITED    4

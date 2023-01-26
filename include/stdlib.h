@@ -86,8 +86,12 @@ size_t __ctype_get_mb_cur_max(void);
  || defined(_XOPEN_SOURCE) || defined(_GNU_SOURCE) \
  || defined(_BSD_SOURCE)
 
+#ifndef WNOHANG
 #define WNOHANG    1
+#endif
+#ifndef WUNTRACED
 #define WUNTRACED  2
+#endif
 
 #define WEXITSTATUS(s) (((s) & 0xff00) >> 8)
 #define WTERMSIG(s) ((s) & 0x7f)

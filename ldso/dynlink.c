@@ -881,7 +881,7 @@ static void *map_library(int fd, struct dso *dso)
 	map = DL_NOMMU_SUPPORT
 		? mmap((void *)addr_min, map_len, PROT_READ|PROT_WRITE|PROT_EXEC,
 			MAP_PRIVATE|MAP_ANONYMOUS, -1, 0)
-		: mmap((void *)addr_min, map_len, prot,
+		: mmap((void *)addr_min, map_len, prot | PROT_MAX(PROT_READ | PROT_WRITE | PROT_EXEC),
 			MAP_PRIVATE, fd, off_start);
 	if (map==MAP_FAILED) goto error;
 	dso->map = map;

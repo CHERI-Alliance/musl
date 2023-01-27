@@ -1032,7 +1032,7 @@
         "name": "syscall-mmap",
         "args": ["2"],
         "xrc": [0],
-        "skip": ["purecap"]
+        "skip": ["mie"]
     },
     {
         "app": "${build}/mmap-${kind}.exe",
@@ -1168,7 +1168,7 @@
         "app": "${build}/getauxptrcheri-${kind}.exe",
         "name": "at-cheri-auxv",
         "xrc": [0],
-        "skip": ["morello", "libshim", "fvp"]
+        "skip": ["morello", "fvp"]
     },
     {
         "app": "${build}/mainargv-${kind}.exe",
@@ -1292,16 +1292,18 @@
         "name": "pthread-cancel-deferred-no-cp",
         "args": ["3"],
         "xrc": [0],
-        "skip": ["flaky"],
-        "ignore": ["fvp"]
+        "skip": ["mie"],
+        "ignore": ["fvp"],
+        "timeout": 30
     },
     {
         "app": "${build}/pthread_cancel-${kind}.exe",
         "name": "pthread-cancel-deferred-in-cp",
         "args": ["4"],
         "xrc": [0],
-        "skip": ["flaky"],
-        "ignore": ["fvp"]
+        "skip": ["mie"],
+        "ignore": ["fvp"],
+        "timeout": 30
     },
     {
         "app": "${build}/pthread_cancel-${kind}.exe",
@@ -1341,15 +1343,17 @@
         "name": "pthread-cancel-deferred-in-cp-custom",
         "args": ["9"],
         "xrc": [0],
-        "skip": ["flaky"],
-        "ignore": ["fvp"]
+        "skip": ["mie"],
+        "ignore": ["fvp"],
+        "timeout": 30
     },
     {
         "app": "${build}/pthread_cleanup-${kind}.exe",
         "name": "pthread-cleanup",
         "xrc": [0],
-        "skip": ["flaky"],
-        "ignore": ["fvp"]
+        "skip": ["mie"],
+        "ignore": ["fvp"],
+        "timeout": 30
     },
     {
         "app": "${build}/printf_plain_text-${kind}.exe",
@@ -1411,7 +1415,7 @@
         "name": "mremap-move-dontunmap",
         "args": ["3"],
         "xrc": [0],
-        "skip": ["morello", "libshim", "fvp"]
+        "skip": ["morello", "fvp"]
     },
     {
         "app": "${build}/mremap-${kind}.exe",
@@ -2274,7 +2278,7 @@
         "name": "signal",
         "xrc": [0],
         "comment": "This test should pass on a real Morello system",
-        "skip": ["dynamic"]
+        "skip": ["mie"]
     },
     {
         "app": "${build}/exit-${kind}.exe",
@@ -2400,7 +2404,7 @@
         "app": "${build}/signal_functions-${kind}.exe",
         "name": "signal_functions",
         "xrc": [0],
-        "skip": ["flaky"]
+        "skip": ["mie"]
     },
     {
         "app": "${build}/syscall_struct_sizes-${kind}.exe",
@@ -2475,7 +2479,8 @@
         "name": "aio",
         "xrc": [0],
         "stdout": ["Hello World"],
-        "skip": ["libshim"]
+        "skip": ["mie"],
+        "timeout": 30
     },
     {
         "app": "${build}/gethost-${kind}.exe",

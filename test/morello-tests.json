@@ -2124,17 +2124,17 @@
     },
     {
         "app": "${build}/openpty-${kind}.exe",
-        "args": ["0"],
+        "args": [],
         "name": "openpty",
         "xrc": [0],
         "skip": ["fvp"]
     },
     {
-        "app": "${build}/openpty-${kind}.exe",
-        "args": ["1"],
+        "app": "${build}/forkpty-${kind}.exe",
+        "args": [],
         "name": "forkpty",
         "xrc": [0],
-        "skip": ["flaky"]
+        "ignore": ["fvp"]
     },
     {
         "app": "${build}/sockatmark-${kind}.exe",

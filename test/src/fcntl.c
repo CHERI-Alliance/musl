@@ -109,6 +109,28 @@ int test_fcntl_fl() {
   return 0;
 }
 
+int test_fcntl_own() {
+  struct f_owner_ex owner;
+
+  int fd = create_tmp_file();
+  if (fd < 0) {
+    fprintf(stderr, "Failed to create temporary file.\n");
+    return 1;
+  }
+
+  int ret = fcntl(fd, F_GETOWN_EX, &owner);
+  if (ret != 0) {
+    fprintf(stderr, "Failed to get file descriptor owner.\n");
+    return 2;
+  }
+
+  if (close(fd)) {
+    fprintf(stderr, "Failed to close file descriptor.\n");
+    return 3;
+  }
+
+  return 0;
+}
 
 int main(int argc, char **argv) {
   if (argc < 2) return -1;
@@ -123,6 +145,8 @@ int main(int argc, char **argv) {
       return test_fcntl_fd();
     case '2': // fcntl_fl
       return test_fcntl_fl();
+    case '3': // fcntl_own
+      return test_fcntl_own();
   }
 
   return -1;

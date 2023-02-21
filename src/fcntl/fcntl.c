@@ -16,13 +16,16 @@ int fcntl(int fd, int cmd, ...)
 		case F_DUPFD_CLOEXEC:
 		case F_SETFD:
 		case F_SETFL:
+		case F_NOTIFY:
+		case F_SETSIG:
 		case F_SETOWN:
-		case F_GETOWN_EX:
-		case F_SETOWN_EX:
+		case F_SETPIPE_SZ:
+		case F_ADD_SEALS:
 		case F_GET_RW_HINT:
 		case F_SET_RW_HINT:
 		case F_GET_FILE_RW_HINT:
 		case F_SET_FILE_RW_HINT:
+		case F_SETLEASE:
 		{
 			va_list ap;
 			va_start(ap, cmd);
@@ -56,11 +59,8 @@ int fcntl(int fd, int cmd, ...)
 		case F_OFD_SETLK:
 		case F_OFD_SETLKW:
 		case F_OFD_GETLK:
-		case F_SETSIG:
-		case F_SETLEASE:
-		case F_NOTIFY:
-		case F_SETPIPE_SZ:
-		case F_ADD_SEALS:
+		case F_GETOWN_EX:
+		case F_SETOWN_EX:
 		{
 			va_list ap;
 			va_start(ap, cmd);

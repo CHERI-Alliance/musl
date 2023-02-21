@@ -928,6 +928,13 @@
         "skip": []
     },
     {
+        "app": "${build}/fcntl-${kind}.exe",
+        "name": "fcntl-own",
+        "xrc": [0],
+        "args": ["3"],
+        "skip": []
+    },
+    {
         "app": "${build}/fscanf-${kind}.exe",
         "name": "fscanf-int",
         "args": ["0"],

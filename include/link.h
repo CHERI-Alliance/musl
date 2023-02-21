@@ -18,8 +18,14 @@ extern "C" {
 
 #include <bits/link.h>
 
+#ifdef __CHERI_PURE_CAPABILITY__
+typedef uintptr_t __elfptr_t;
+#else
+typedef ElfW(Addr) __elfptr_t;
+#endif
+
 struct dl_phdr_info {
-	ElfW(Addr) dlpi_addr;
+	__elfptr_t dlpi_addr;
 	const char *dlpi_name;
 	const ElfW(Phdr) *dlpi_phdr;
 	ElfW(Half) dlpi_phnum;
@@ -40,9 +46,9 @@ struct link_map {
 struct r_debug {
 	int r_version;
 	struct link_map *r_map;
-	ElfW(Addr) r_brk;
+	__elfptr_t r_brk;
 	enum { RT_CONSISTENT, RT_ADD, RT_DELETE } r_state;
-	ElfW(Addr) r_ldbase;
+	__elfptr_t r_ldbase;
 };
 
 int dl_iterate_phdr(int (*)(struct dl_phdr_info *, size_t, void *), void *);

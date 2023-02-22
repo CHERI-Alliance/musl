@@ -86,15 +86,14 @@ static void static_init_tls(uintptr_t *aux)
 	Phdr *phdr, *tls_phdr=0;
 	ptraddr_t base = 0;
 	void *mem;
-#if defined(__CHERI_PURE_CAPABILITY__) && defined(__SANITIZE_CHERISEED__)
-	uintptr_t exec_rx_cap = aux[AT_CHERI_EXEC_RX_CAP];
-#endif
 
-#if defined(__CHERI_PURE_CAPABILITY__) && defined(__SANITIZE_CHERISEED__)
+#if defined(__CHERI_PURE_CAPABILITY__)
+	uintptr_t exec_rx_cap = aux[AT_CHERI_EXEC_RX_CAP];
 	aux_at_phdr = p = __builtin_cheri_address_set(exec_rx_cap, (size_t) aux[AT_PHDR]);
 #else
 	aux_at_phdr = p = (void *)aux[AT_PHDR];
 #endif
+
 	for (n=aux[AT_PHNUM]; n; n--,p+=aux[AT_PHENT]) {
 		phdr = (void *)p;
 		if (phdr->p_type == PT_PHDR)
@@ -112,12 +111,8 @@ static void static_init_tls(uintptr_t *aux)
 
 	if (tls_phdr) {
 		ptraddr_t tls_addr = base + tls_phdr->p_vaddr;
-		/* TODO: remove #if defined(__SANITIZE_CHERISEED__) condition part here and above
-		 *       when kernel provides AT_CHERI_* */
-#if defined(__CHERI_PURE_CAPABILITY__) && defined(__SANITIZE_CHERISEED__)
+#if defined(__CHERI_PURE_CAPABILITY__)
 		main_tls.image = (void *)__builtin_cheri_address_set(exec_rx_cap, tls_addr);
-#elif defined(__CHERI_PURE_CAPABILITY__)
-		main_tls.image = (void *)__builtin_cheri_address_set(aux[AT_PHDR], tls_addr);
 #else
 		main_tls.image = (void *)tls_addr;
 #endif

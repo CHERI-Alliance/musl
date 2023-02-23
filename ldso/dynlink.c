@@ -484,6 +484,7 @@ static void do_relocs(struct dso *dso, size_t *rel, size_t rel_size, size_t stri
 		case REL_GOT:
 		case REL_PLT:
 #if defined(__CHERI_PURE_CAPABILITY__)
+		case REL_CAPINIT:
 			{
 				char *cap_rx = sym_val + addend;
 				char *cap_rw = set_rw_cap(def.dso, cap_rx);

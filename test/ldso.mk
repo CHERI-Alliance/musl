@@ -55,3 +55,11 @@ src/variadic-lib-static.exe: src/lib/variadic-lib.o
 src/variadic-lib-static.exe: private LDFLAGS += src/lib/variadic-lib.o
 src/variadic-lib-dynamic.exe: src/lib/libvariadic-lib.so
 src/variadic-lib-dynamic.exe: private LDLIBS += -lvariadic-lib $(LFLAGS)
+
+# CAPINIT Relocation
+src/capinit.lo src/capinit.o: CFLAGS += -I src/lib
+src/capinit-static.exe: src/lib/capinit-lib.o
+src/capinit-static.exe: private LDFLAGS += src/lib/capinit-lib.o
+
+src/capinit-dynamic.exe: src/lib/libcapinit-lib.so
+src/capinit-dynamic.exe: private LDLIBS += -lcapinit-lib $(LFLAGS)

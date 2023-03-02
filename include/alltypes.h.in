@@ -37,7 +37,22 @@ TYPEDEF unsigned _Int64 fsfilcnt_t;
 TYPEDEF unsigned wint_t;
 TYPEDEF unsigned long wctype_t;
 
+#ifdef __CHERI_PURE_CAPABILITY__
+#ifdef __timer_t_defined
+#undef __timer_t_defined
+#endif
+#ifndef __cheri_timer_t
+#define __cheri_timer_t
+typedef struct timer_t
+{
+    void *ptr;
+    char thread;
+} timer_t;
+#endif
+#else
 TYPEDEF void * timer_t;
+#endif
+
 TYPEDEF int clockid_t;
 TYPEDEF long clock_t;
 STRUCT timeval { time_t tv_sec; suseconds_t tv_usec; };

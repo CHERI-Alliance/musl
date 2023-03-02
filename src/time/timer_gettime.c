@@ -4,10 +4,20 @@
 
 int timer_gettime(timer_t t, struct itimerspec *val)
 {
+#ifdef __CHERI_PURE_CAPABILITY__
+	void *timer;
+	if(t.thread)
+	{
+		pthread_t td = t.ptr;
+		timer = td->timer_id;
+	}
+#else
 	if ((intptr_t)t < 0) {
 		pthread_t td = (void *)((uintptr_t)t << 1);
 		t = (void *)(uintptr_t)(td->timer_id & INT_MAX);
 	}
+#endif
+
 #ifdef SYS_timer_gettime64
 	int r = -ENOSYS;
 	if (sizeof(time_t) > 4)
@@ -24,5 +34,9 @@ int timer_gettime(timer_t t, struct itimerspec *val)
 	}
 	return __syscall_ret(r);
 #endif
+#ifdef __CHERI_PURE_CAPABILITY__
+	return syscall(SYS_timer_gettime, timer, val);
+#else
 	return syscall(SYS_timer_gettime, t, val);
+#endif
 }

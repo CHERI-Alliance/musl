@@ -2659,5 +2659,12 @@
         "app": "${build}/cmpt-blrs-${kind}.exe",
         "name": "cmpt-blrs",
         "xrc": [0]
+    },
+    {
+        "app": "${build}/timer-sigev-${kind}.exe",
+        "name": "timer-sigev",
+        "xrc": [0],
+        "stdout": ["Signal Function Invoked."],
+        "skip": ["mie"]
     }
 ]

@@ -77,7 +77,12 @@ int timer_create(clockid_t clk, struct sigevent *restrict evp, timer_t *restrict
 		}
 		if (syscall(SYS_timer_create, clk, ksevp, &timerid) < 0)
 			return -1;
+#ifdef __CHERI_PURE_CAPABILITY__
+		res->ptr = timerid;
+		res->thread = 0;
+#else
 		*res = (void *)(intptr_t)timerid;
+#endif
 		break;
 	case SIGEV_THREAD:
 		if (!init) {
@@ -111,7 +116,13 @@ int timer_create(clockid_t clk, struct sigevent *restrict evp, timer_t *restrict
 		td->timer_id = timerid;
 		pthread_barrier_wait(&args.b);
 		if (timerid < 0) return -1;
+
+#ifdef __CHERI_PURE_CAPABILITY__
+		res->ptr = td;
+		res->thread = 1;
+#else
 		*res = (void *)(INTPTR_MIN | (uintptr_t)td>>1);
+#endif
 		break;
 	default:
 		errno = EINVAL;

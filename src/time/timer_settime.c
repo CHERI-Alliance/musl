@@ -6,10 +6,20 @@
 
 int timer_settime(timer_t t, int flags, const struct itimerspec *restrict val, struct itimerspec *restrict old)
 {
+#ifdef __CHERI_PURE_CAPABILITY__
+	void *timer;
+	if(t.thread)
+	{
+		pthread_t td = t.ptr;
+		timer= td->timer_id;
+	}
+#else
 	if ((intptr_t)t < 0) {
 		pthread_t td = (void *)((uintptr_t)t << 1);
 		t = (void *)(uintptr_t)(td->timer_id & INT_MAX);
 	}
+#endif
+
 #ifdef SYS_timer_settime64
 	time_t is = val->it_interval.tv_sec, vs = val->it_value.tv_sec;
 	long ins = val->it_interval.tv_nsec, vns = val->it_value.tv_nsec;
@@ -33,5 +43,10 @@ int timer_settime(timer_t t, int flags, const struct itimerspec *restrict val, s
 	}
 	return __syscall_ret(r);
 #endif
+
+#ifdef __CHERI_PURE_CAPABILITY__
+	return syscall(SYS_timer_settime, timer, flags, val, old);
+#else
 	return syscall(SYS_timer_settime, t, flags, val, old);
+#endif
 }

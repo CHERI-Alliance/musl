@@ -2666,5 +2666,10 @@
         "xrc": [0],
         "stdout": ["Signal Function Invoked."],
         "skip": ["mie"]
+    },
+    {
+        "app": "${build}/cmpt-${kind}.exe",
+        "name": "cmpt",
+        "xrc": [0]
     }
 ]

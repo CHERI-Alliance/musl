@@ -8,12 +8,6 @@
 __setjmp:
 _setjmp:
 setjmp:
-#ifdef __SANITIZE_CHERISEED__
-	push %rbp
-	call __cheriseed_address_get
-	mov %rax, %rdi
-	pop %rbp
-#endif
 	mov %rbx,(%rdi)         /* rdi is jmp_buf, move registers onto it */
 	mov %rbp,8(%rdi)
 	mov %r12,16(%rdi)

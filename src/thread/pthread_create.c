@@ -393,27 +393,7 @@ int __pthread_create(pthread_t *restrict res, const pthread_attr_t *restrict att
 	__tl_lock();
 	if (!libc.threads_minus_1++) libc.need_locks = 1;
 
-#if defined(__SANITIZE_CHERISEED__)
-	// It is necessary to block SIGCANCEL when using libshim.
-	// This means that when we call clone(), the new thread will also
-	//  initially have SIGCANCEL blocked. This is necessary because
-	//  when using libshim, CTPIDR_EL0 has an incorrect capability
-	//  immediately after the clone svc returns. We need to make sure
-	//  we run the fix for this before allowing the thread to take
-	//  any incoming SIGCANCELs, otherwise the signal handler will fault
-	//  on the CTPIDR_EL0 capability.
-
-	sigset_t block_cancel, before_block_cancel;
-	sigemptyset(&block_cancel);
-	_sigaddset(&block_cancel, SIGCANCEL);
-	sigprocmask(SIG_BLOCK, &block_cancel, &before_block_cancel);
-#endif // defined(__SANITIZE_CHERISEED__)
-
 	ret = __clone((c11 ? start_c11 : start), stack, flags, args, &new->tid, TP_ADJ(new), &__thread_list_lock);
-
-#if defined(__SANITIZE_CHERISEED__)
-	sigprocmask(SIG_SETMASK, &before_block_cancel, NULL);
-#endif
 
 	/* All clone failures translate to EAGAIN. If explicit scheduling
 	 * was requested, attempt it before unlocking the thread list so

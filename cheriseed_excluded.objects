@@ -1,8 +1,0 @@
-# These sources cannot be instrumented because they
-# contain inline assembly snippets. However, they
-# are still compatible with the pure-capability ABI
-# and so they do not have to be instrumented at all.
-obj/src/math/x86_64/llrintl.o
-obj/src/math/x86_64/llrintl.lo
-obj/src/math/x86_64/lrintl.o
-obj/src/math/x86_64/lrintl.lo

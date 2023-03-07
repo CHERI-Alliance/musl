@@ -43,24 +43,6 @@
 static sem_t sem;
 static int checkpoint = 0;
 
-#if defined(__SANITIZE_CHERISEED__)
-static unsigned long hooked_thread_id = 0;
-
-// __syscall_cp_hook() is specific to libshim integration.
-// Using it it is possible to test for incorrect cancellation point
-// implementation.
-int __shim_pause_in_cp(void) {
-  unsigned long self_id = __builtin_cheri_address_get(pthread_self());
-  if (ALDR(hooked_thread_id) == self_id) {
-    // Don't pause more system calls.
-    ASTR(hooked_thread_id, -1);
-    ASTR(checkpoint, 1);
-    return 1;
-  }
-  return 0;
-}
-#endif  // #if defined(__SANITIZE_CHERISEED__)
-
 // T-1
 // Test asynchronous cancellation
 // In this case the thread being cancelled should ~immediately be terminated
@@ -247,7 +229,7 @@ static int cancel_deferred_disabled() {
 
 // T-7
 // Test asynchronous cancellation when cancellations are masked.
-// This is a musl-libc extension, but it is potentially broken with libshim.
+// This is a musl-libc extension
 void *test_cancel_async_masked(void *arg) {
   pthread_setcanceltype(PTHREAD_CANCEL_ASYNCHRONOUS, NULL);
   pthread_setcancelstate(PTHREAD_CANCEL_MASKED, NULL);
@@ -270,40 +252,6 @@ static int cancel_async_masked() {
   T(thread_ret != PTHREAD_CANCELED, "Thread exit code is not PTHREAD_CANCELED");
   return 0;
 }
-
-#if defined(__SANITIZE_CHERISEED__)
-
-// T-8
-// Test deferred cancellation when cancellations are masked.
-// This is a musl-libc extension, but it is potentially broken with libshim.
-void *test_cancel_deferred_masked(void *arg) {
-  pthread_setcanceltype(PTHREAD_CANCEL_DEFERRED, NULL);
-  pthread_setcancelstate(PTHREAD_CANCEL_MASKED, NULL);
-  T(sem_wait(&sem), "sem_wait failed");
-  errno = 0;
-  // This will stop in sleep() at a cancellation point. It is expected that
-  // the execution can return from sleep().
-  ASTR(hooked_thread_id, __builtin_cheri_address_get(pthread_self()));
-  T(0 == sleep(10),
-    "Shouldn't have slept for so long. This test needs libshim.");
-  return 0;
-}
-
-static int cancel_deferred_masked() {
-  void *thread_ret = 0;
-  ASTR(checkpoint, 0);
-  pthread_t thread;
-  pthread_create(&thread, NULL, test_cancel_deferred_masked, NULL);
-  T(sem_post(&sem), "sem_post failed");
-  T(sleep(1), "sleep failed");
-  T(1 != ALDR(checkpoint), "Thread did something wrong");
-  pthread_cancel(thread);
-  pthread_join(thread, &thread_ret);
-  T(thread_ret != 0, "Thread exit code is not 0. This test needs libshim.");
-  return 0;
-}
-
-#endif  // #if defined(__SANITIZE_CHERISEED__)
 
 // T-9
 // TBD
@@ -361,13 +309,8 @@ int main(int argc, char **argv) {
     return cancel_deferred_disabled();
   case '7': // pthread-cancel-async-masked
     return cancel_async_masked();
-#if defined(__SANITIZE_CHERISEED__)
-  case '8': // pthread-cancel-deferred-masked
-    return cancel_deferred_masked();
-#else // #if defined(__SANITIZE_CHERISEED__)
   case '8':
     return 0;
-#endif // #if defined(__SANITIZE_CHERISEED__)
   case '9': // pthread-cancel-deferred-in-cp-custom
     return cancel_deferred_in_cp_custom();
   }

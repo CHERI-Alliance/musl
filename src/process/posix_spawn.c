@@ -167,13 +167,7 @@ int posix_spawn(pid_t *restrict res, const char *restrict path,
 	char *const argv[restrict], char *const envp[restrict])
 {
 	pid_t pid;
-#ifdef __SANITIZE_CHERISEED__
-	/* CHERIseed uses more stack because it needs to keep capabilities in
-	 * memory. The number '16' has no special meaning, and was picked randomly. */
-	char stack[1024*16+PATH_MAX];
-#else
 	char stack[1024+PATH_MAX];
-#endif
 	int ec=0, cs;
 	struct args args;
 

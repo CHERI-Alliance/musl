@@ -1,10 +1,6 @@
 #define __SYSCALL_LL_E(x) (x)
 #define __SYSCALL_LL_O(x) (x)
 
-#if defined(__SANITIZE_CHERISEED__)
-#include <syscall_libshim.h>
-#else // defined(__SANITIZE_CHERISEED__)
-
 #define __asm_syscall(...) do { \
 	__asm__ __volatile__ ( "svc 0" \
 	: "=C"(x0) : __VA_ARGS__ : "memory", "cc"); \
@@ -74,8 +70,6 @@ static inline intptr_t __syscall6(intptr_t n, intptr_t a, intptr_t b, intptr_t c
 	register intptr_t x5 __asm__("c5") = f;
 	__asm_syscall("C"(x8), "0"(x0), "C"(x1), "C"(x2), "C"(x3), "C"(x4), "C"(x5));
 }
-
-#endif // defined(__SANITIZE_CHERISEED__)
 
 /*
  TODO: eventually we want to support VDSO in musl, however while there is no

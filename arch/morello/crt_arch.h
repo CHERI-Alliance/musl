@@ -5,15 +5,6 @@ __asm__(
 START ":\n"
 "	mov x29, #0\n"
 "	mov x30, #0\n"
-#if defined(__SANITIZE_CHERISEED__)
-"	chktgd csp\n"
-"	b.cs 1f\n"
-"	mov x0, sp\n"
-"	bl __shim_marshal_program_arguments\n"
-"	ldp c0, c1, [csp, #0]\n"    // ARGC, ARGV
-"	ldp c2, c3, [csp, #32]\n"   // ENVP, AUXV
-"1:\n"
-#endif // defined(__SANITIZE_CHERISEED__)
 #ifndef SHARED
 "	mov c20, c0\n"
 "	mov c21, c1\n"

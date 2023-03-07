@@ -40,7 +40,7 @@ static void catcher(int sig, siginfo_t *si, void *ctx) {
 	printf("xsp = %016lx\n", UC_MCONTEXT_SP(uc->uc_mcontext));
 	printf(" pc = %016lx\n", UC_MCONTEXT_PC(uc->uc_mcontext));
 
-#if defined(__aarch64__) && !defined(__SANITIZE_CHERISEED__)
+#if defined(__aarch64__)
 	unsigned long *data = (unsigned long *)uc->uc_mcontext.__reserved;
 	for (int k = 0; k < 256; k+=2) {
 		printf("reserved %03d = %016lx %016lx\n", k, data[k + 1], data[k]);

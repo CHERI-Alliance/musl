@@ -5,19 +5,9 @@
 #include "syscall.h"
 
 // cancel_pc_t is the type of PC: it changes if the sanitizer is enabled.
-#ifdef __SANITIZE_CHERISEED__
-#define cancel_pc_t long
-#else
 #define cancel_pc_t uintptr_t
-#endif
 
 hidden cancel_pc_t __cancel();
-#ifdef __SANITIZE_CHERISEED__
-// In cancel_handler it might happen that the interrupted SP is not
-// 16-bytes aligned. CHERIseed requires correct capability alignment.
-// This attribute ensures that the stack is always re-aligned in __cancel().
-__attribute__((force_align_arg_pointer))
-#endif
 cancel_pc_t __cancel()
 {
 	pthread_t self = __pthread_self();
@@ -26,31 +16,6 @@ cancel_pc_t __cancel()
 	self->canceldisable = PTHREAD_CANCEL_DISABLE;
 	return -ECANCELED;
 }
-
-#if defined(__SANITIZE_CHERISEED__)
-
-static intptr_t __syscall_cp_asm(volatile int *cp, long nr,
-                    syscall_arg_t u, syscall_arg_t v, syscall_arg_t w,
-                    syscall_arg_t x, syscall_arg_t y, syscall_arg_t z)
-{
-	if (*cp)
-		return __cancel();
-	return __shim_syscall(cp, nr, u, v, w, x, y, z);
-}
-
-extern const char __shim_cp_begin[1], __shim_cp_end[1];
-#define __cp_cancel __cancel
-
-static bool is_pc_cancellable(pthread_t self, cancel_pc_t pc)
-{
-	// Only cancel if the system call is cancellable and PC is within the
-	// the cancellable range.
-	return (cancel_pc_t)__shim_cp_begin <= pc && pc < (cancel_pc_t)__shim_cp_end;
-}
-
-cancel_pc_t __shim_cancel_syscall(void) __attribute__((alias("__cancel")));
-
-#else  // #if defined(__SANITIZE_CHERISEED__)
 
 hidden intptr_t __syscall_cp_asm();
 intptr_t __syscall_cp_asm(volatile int *, long,
@@ -63,8 +28,6 @@ static bool is_pc_cancellable(pthread_t, cancel_pc_t pc)
 {
 	return pc >= (cancel_pc_t)__cp_begin && pc < (cancel_pc_t)__cp_end;
 }
-
-#endif  // #if defined(__SANITIZE_CHERISEED__)
 
 hidden intptr_t __syscall_cp_c();
 intptr_t __syscall_cp_c(long nr,

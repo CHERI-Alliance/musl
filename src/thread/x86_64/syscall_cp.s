@@ -1,5 +1,3 @@
-#if !defined(__SANITIZE_CHERISEED__)
-
 .text
 .global __cp_begin
 .hidden __cp_begin
@@ -31,5 +29,3 @@ __cp_end:
 	ret
 __cp_cancel:
 	jmp __cancel
-
-#endif // defined(__SANITIZE_CHERISEED__)

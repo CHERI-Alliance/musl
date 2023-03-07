@@ -61,14 +61,6 @@ fegetround:
 .global fegetenv
 .type fegetenv,@function
 fegetenv:
-#ifdef __SANITIZE_CHERISEED__
-	// Convert capability to raw pointer
-	push %rbp
-	mov %rsp, %rbp
-	call __cheriseed_address_get
-	pop %rbp
-	mov %rax, %rdi
-#endif
 	xor %eax,%eax
 	fnstenv (%rdi)
 	stmxcsr 28(%rdi)
@@ -77,14 +69,6 @@ fegetenv:
 .global fesetenv
 .type fesetenv,@function
 fesetenv:
-#ifdef __SANITIZE_CHERISEED__
-	// Convert capability to raw pointer
-	push %rbp
-	mov %rsp, %rbp
-	call __cheriseed_address_get
-	pop %rbp
-	mov %rax, %rdi
-#endif
 	xor %eax,%eax
 	inc %rdi
 	jz 1f

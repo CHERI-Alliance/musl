@@ -6,5 +6,3 @@
 config.mak
 lib/musl-gcc.specs
 /obj/
-lib/*.txt
-lib/libshim*

@@ -1,10 +1,6 @@
 #define __SYSCALL_LL_E(x) (x)
 #define __SYSCALL_LL_O(x) (x)
 
-#if defined(__SANITIZE_CHERISEED__)
-#include <syscall_libshim.h>
-#else // defined(__SANITIZE_CHERISEED__)
-
 static __inline long __syscall0(long n)
 {
 	unsigned long ret;
@@ -64,8 +60,6 @@ static __inline long __syscall6(long n, long a1, long a2, long a3, long a4, long
 						  "d"(a3), "r"(r10), "r"(r8), "r"(r9) : "rcx", "r11", "memory");
 	return ret;
 }
-
-#endif // defined(__SANITIZE_CHERISEED__)
 
 #define VDSO_USEFUL
 #define VDSO_CGT_SYM "__vdso_clock_gettime"

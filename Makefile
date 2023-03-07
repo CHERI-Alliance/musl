@@ -79,10 +79,6 @@ LDSO_PATHNAME = $(syslibdir)/ld-musl-$(ARCH)$(SUBARCH).so.1
 export CONFIG = $(CURDIR)/config.mak
 
 -include $(CONFIG)
-# Only affect build if --enable-cheriseed was specified during configuration.
-ifneq ($(CFLAGS_CHERISEED),)
--include cheriseed.mak
-endif
 -include $(srcdir)/arch/$(ARCH)/arch.mak
 
 ifeq ($(ARCH),morello)
@@ -170,64 +166,16 @@ obj/%.lo: $(srcdir)/%.S
 obj/%.lo: $(srcdir)/%.c $(GENH) $(IMPH)
 	$(CC_CMD)
 
-ifeq ($(LIBSHIM),yes)
-
-# LIBSHIM_PATH is defined in config.mak
-override LIBSHIM_BUILD = $(LIBSHIM_PATH)/build
-override LIBSHIM_LIB = $(LIBSHIM_BUILD)/libshim.a
-override LIBSHIM_LIBC_PATH = $(shell realpath $(srcdir))/lib/libshim-libc
-override LIBSHIM_OBJECTS := $$(find $(LIBSHIM_BUILD) -type f -name \*.o)
-
-# subst: libshim's generator expects 'aarch64' to be named 'arm64'.
-LIBSHIM_JSON_PATH ?= $(LIBSHIM_PATH)/musl_$(subst aarch64,arm64,$(ARCH)).json
-
-$(LIBSHIM_LIB): $(LIBSHIM_LIBC_PATH) $(LIBSHIM_PATH) FORCE
-	$(MAKE) -C $(LIBSHIM_PATH) LIBC=musl ARCH=$(ARCH) LIBC_PATH=$(LIBSHIM_LIBC_PATH) \
-	CC=$(CC) CXX=$(CC)++ AR=$(AR) RANLIB=$(RANLIB) CFLAGS="$(LIBSHIM_FLAGS)" CXXFLAGS="$(LIBSHIM_FLAGS)" \
-	LIBSHIM_JSON_PATH=$(shell realpath $(LIBSHIM_JSON_PATH)) \
-	DEFINES="-DLIBSHIM_LIBRARY_BUILD=1 -DLIBSHIM_ZERO_DDC=1 -DLIBSHIM_CANCELLATION_POINTS=1"
-
-# install libc headers for libshim build
-$(LIBSHIM_LIBC_PATH)/include/bits/%: $(srcdir)/arch/$(ARCH)/bits/%
-	$(INSTALL) -D -m 644 $< $@
-
-# install libc headers for libshim build
-$(LIBSHIM_LIBC_PATH)/include/bits/%: $(srcdir)/arch/generic/bits/%
-	$(INSTALL) -D -m 644 $< $@
-
-# install libc headers for libshim build
-$(LIBSHIM_LIBC_PATH)/include/bits/%: obj/include/bits/%
-	$(INSTALL) -D -m 644 $< $@
-
-# install libc headers for libshim build
-$(LIBSHIM_LIBC_PATH)/include/%: $(srcdir)/include/%
-	$(INSTALL) -D -m 644 $< $@
-
-# install libc headers for libshim build
-$(LIBSHIM_LIBC_PATH): $(ALL_INCLUDES:include/%=$(LIBSHIM_LIBC_PATH)/include/%)
-
-lib/revisions.txt:
-	@echo "Libshim: `bash $(srcdir)/tools/revision.bash $(LIBSHIM_PATH)`" >> $@
-	@echo "Musl: `bash $(srcdir)/tools/revision.bash $(srcdir)`" >> $@
-
-else # LIBSHIM
-
-override LIBSHIM_LIB =
-override LIBSHIM_OBJECTS =
-
 lib/revisions.txt:
 	echo "Musl: `bash $(srcdir)/tools/revision.bash $(srcdir)`" >> $@
 
-endif # LIBSHIM
+lib/libc.so: $(LOBJS) $(LDSO_OBJS)
+	$(CC) $(CFLAGS_ALL) $(LDFLAGS_ALL) -nostdlib -shared \
+	-Wl,-e,_dlstart -o $@ $(LOBJS) $(LDSO_OBJS) $(LIBCC)
 
-lib/libc.so: $(LOBJS) $(LDSO_OBJS) $(LIBSHIM_LIB)
-	$(CC) $(CFLAGS_ALL) $(LDFLAGS_ALL) \
-	-Wl,--whole-archive $(LIBSHIM_LIB) -Wl,--no-whole-archive \
-	-nostdlib -shared -Wl,-e,_dlstart -o $@ $(LOBJS) $(LDSO_OBJS) $(LIBCC)
-
-lib/libc.a: $(AOBJS) $(LIBSHIM_LIB)
+lib/libc.a: $(AOBJS)
 	rm -f $@
-	$(AR) rc $@ $(AOBJS) $(LIBSHIM_OBJECTS)
+	$(AR) rc $@ $(AOBJS)
 	$(RANLIB) $@
 
 $(EMPTY_LIBS):
@@ -298,18 +246,12 @@ endif
 
 testdir ?= test
 
-ifeq ($(LIBSHIM),yes)
-shimclean:
-	@if [ -d $(LIBSHIM_BUILD) ]; then $(MAKE) -C $(LIBSHIM_PATH) ARCH=$(ARCH) clean; fi
-clean: shimclean
-else
 clean:
-endif
 	rm -rf obj lib
+ifeq ($(ARCH),morello)
 	$(MAKE) -C $(testdir) clean
+endif
 
-# Note that build on custom libshim path will not be cleaned
-# if config.mak configured like that is not present.
 distclean: clean
 	rm -f config.mak
 

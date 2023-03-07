@@ -424,9 +424,7 @@ static int fmt_fp(FILE *f, long double y, int w, int p, int fl, int t)
 // todo: this won't be necessary after this has been fixed
 // https://github.com/CTSRD-CHERI/llvm-project/issues/566
 typedef long cheri_otype_t;
-#if defined(__SANITIZE_CHERISEED__)
-#define CHERI_OTYPE_SENTRY ((cheri_otype_t)0x3fffe)
-#elif defined(__aarch64__)
+#if defined(__aarch64__)
 #define CHERI_OTYPE_SENTRY ((cheri_otype_t)1)
 #else
 #define CHERI_OTYPE_SENTRY ((cheri_otype_t)-2)

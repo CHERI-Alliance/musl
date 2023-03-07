@@ -23,11 +23,7 @@ static int static_dl_iterate_phdr(int(*callback)(struct dl_phdr_info *info, size
 #endif
 	}
 
-#if defined(__CHERI_PURE_CAPABILITY__) && defined(__SANITIZE_CHERISEED__)
-	aux_at_phdr = p = __builtin_cheri_address_set(rx_cap, (size_t) aux[AT_PHDR]);
-#else
 	aux_at_phdr = p = (void *)aux[AT_PHDR];
-#endif
 	for (p=(void *)aux[AT_PHDR],n=aux[AT_PHNUM]; n; n--,p+=aux[AT_PHENT]) {
 		phdr = (void *)p;
 		if (phdr->p_type == PT_PHDR)

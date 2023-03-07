@@ -5,12 +5,6 @@
 .type longjmp,@function
 _longjmp:
 longjmp:
-#ifdef __SANITIZE_CHERISEED__
-	push %rbp
-	call __cheriseed_address_get
-	mov %rax, %rdi
-	pop %rbp
-#endif
 	xor %eax,%eax
 	cmp $1,%esi             /* CF = val ? 0 : 1 */
 	adc %esi,%eax           /* eax = val + !val */

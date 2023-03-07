@@ -65,20 +65,9 @@ void __init_libc(char **envp, auxv_entry *auxv, char *pn)
 static void libc_start_init(void)
 {
 	_init();
-#ifdef __SANITIZE_CHERISEED__
-	// CHERIseed puts raw function pointers into init_array.
-	ptraddr_t *init_addr = (ptraddr_t*)&__init_array_start;
-	ptraddr_t *init_addr_end = (ptraddr_t*)&__init_array_end;
-	void *const pcc = __builtin_cheri_program_counter_get();
-	for (; init_addr < init_addr_end; ++init_addr) {
-		void *init = __builtin_cheri_address_set(pcc, *init_addr);
-		((void (*)(void))init)();
-	}
-#else
 	uintptr_t a = (uintptr_t)&__init_array_start;
 	for (; a<(uintptr_t)&__init_array_end; a+=sizeof(void(*)()))
 		(*(void (**)(void))a)();
-#endif
 }
 
 weak_alias(libc_start_init, __libc_start_init);
@@ -98,13 +87,7 @@ int __libc_start_main(int (*main)(int,char **,char **, char**),
 	/* Barrier against hoisting application code or anything using ssp
 	 * or thread pointer prior to its initialization above. */
 	lsm2_fn *stage2 = libc_start_main_stage2;
-#ifndef __SANITIZE_CHERISEED__
-	// FIXME: CHERIseed: This is broken, the pass can't handle inline asm
-	// which gets a capability. Fix is to be developed.
-	__asm__ ( "" : "+r"(stage2) : : "memory" );
-#else
 	a_barrier();
-#endif
 	return stage2(main, argc, argv, envp);
 }
 

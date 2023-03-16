@@ -543,6 +543,10 @@ static void do_relocs(struct dso *dso, size_t *rel, size_t rel_size, size_t stri
 					cap = __builtin_cheri_perms_and(cap_rx, 0);
 			}
 			cap += addend;
+
+			if(perms == MORELLO_RELA_PERM_RX)
+				cap = __builtin_cheri_seal_entry(cap);
+
 			reloc_addr = set_rw_cap(dso, reloc_addr);
 			*reloc_addr = cap;
 #else

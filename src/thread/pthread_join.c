@@ -28,14 +28,15 @@ static int __pthread_timedjoin_np(pthread_t t, void **res, const struct timespec
 	__tl_sync(t);
 	if (res) *res = t->result;
 
-#ifdef __CHERI_PURE_CAPABILITY__
-	/* Free tsd as it is allocated separately on CHERI.
-	 * Must be freed before map_base otherwise segmentation fault.
-	*/
-	if (t->tsd) __munmap((t->tsd) - libc.tls_size, ROUND(libc.tls_size +  __pthread_tsd_size));
-#endif
-
 	if (t->map_base) __munmap(t->map_base, t->map_size);
+
+#ifdef __CHERI_PURE_CAPABILITY__
+	/*
+	 * Free tsd afterwards as it stores structure required to access thread information.
+	 */
+	if (t->tsd && t->map_base)
+		__munmap((unsigned char *)(t->tsd) - libc.tls_size, ROUND(libc.tls_size +  __pthread_tsd_size));
+#endif
 
 	return 0;
 }

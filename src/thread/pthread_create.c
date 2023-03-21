@@ -341,8 +341,7 @@ int __pthread_create(pthread_t *restrict res, const pthread_attr_t *restrict att
 
 		if (!stack) {
 #ifdef __CHERI_PURE_CAPABILITY__
-			stack = map;
-			stack = stack + size;
+			stack = map + size;
 			stack_limit = map;
 #else
 			stack = tsd - libc.tls_size;

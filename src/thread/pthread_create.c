@@ -330,6 +330,7 @@ int __pthread_create(pthread_t *restrict res, const pthread_attr_t *restrict att
 #ifdef __CHERI_PURE_CAPABILITY__
 		/* Separate mapping for tsd so no capability bound overflow from stack. */
 		tsd = __mmap(0, ROUND(__pthread_tsd_size + libc.tls_size), PROT_READ|PROT_WRITE, MAP_PRIVATE|MAP_ANON, -1, 0);
+		if(tsd == MAP_FAILED) goto tsd_fail;
 		/* TODO: Remove after mmap implementation. */
         tsd = __builtin_cheri_bounds_set(tsd, ROUND(__pthread_tsd_size + libc.tls_size));
 		tsd = __builtin_cheri_perms_and(tsd, MUSL_CAP_PROT_THREAD);
@@ -429,6 +430,9 @@ int __pthread_create(pthread_t *restrict res, const pthread_attr_t *restrict att
 
 	*res = new;
 	return 0;
+
+tsd_fail:
+	__munmap(map, size);
 fail:
 	__release_ptc();
 	return EAGAIN;

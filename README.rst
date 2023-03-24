@@ -1,7 +1,7 @@
 Musl libc for Morello
 =====================
 
-Work-in-progress port to Morello
+Musl C library ported to Morello
 --------------------------------
 
 Disclaimer
@@ -30,7 +30,7 @@ To configure for purecap target, run
 
 Here, ``${MORELLO}`` is directory where Morello LLVM is installed and ``${PREFIX}`` is
 where Musl will be installed. You may use this folder as sysroot for compiling and
-linking purecap Morello applications based on.
+linking purecap Morello applications based on Musl.
 
 To build and install, just run
 
@@ -58,63 +58,9 @@ TBD
 Morello LLVM toolchain
 ----------------------
 
-To build Morello LLVM toolchain, you can use script ``tools/build-morello.sh``. This
-script will work on AArch64 and x86 hosts, but different parameters should be supplied
-to the sub-commands depending on the host platform. Note, that some sub-commands use
-environment variables.
-
-The following input is required:
-
-* ``${LLVM_PROJECT}`` -- absolute path to folder with `LLVM sources`_.
-* ``${MUSL}`` -- absolute path to folder with Musl sources.
-* ``${LLVM}`` -- where host LLVM is installed (LLVM 11.0 or newer is required).
-
-.. _LLVM sources: https://git.morello-project.org/morello/llvm-project
-
-The following folders will be needed (should be different directories):
-
-* ``${BUILD_LLVM}`` -- build folder for clang.
-* ``${BUILD_RT}`` -- build folder for compiler-rt.
-* ``${MORELLO}`` -- where toolchain will be installed.
-* ``${SYSROOT}`` -- where Musl headers will be installed.
-
-Building Clang
-^^^^^^^^^^^^^^
-
-On AArch64 host use this command to build Clang:
-
-.. code-block::
-
-   # clang
-   LLVM_TARGETS='AArch64' ./tools/build-morello.sh clang \
-        ${LLVM_PROJECT} ${LLVM} ${MORELLO} ${BUILD_LLVM}
-
-On x86 host use this command to build Clang:
-
-.. code-block::
-
-   # clang
-   LLVM_TARGETS='AArch64' ./tools/build-morello.sh clang \
-        ${LLVM_PROJECT} ${LLVM} ${MORELLO} ${BUILD_LLVM}
-
-Building Runtime
-^^^^^^^^^^^^^^^^
-
-The following commands will build remaining components of the toolchain:
-
-.. code-block::
-
-   # musl-headers
-   CC=${MORELLO}/bin/clang ./tools/build-morello.sh musl-headers \
-        ${MUSL} ${SYSROOT} aarch64-unknown-linux-musl_purecap
-
-   # CRT
-   CC=${MORELLO}/bin/clang ./tools/build-morello.sh crt \
-        ${LLVM_PROJECT} ${SYSROOT} aarch64-unknown-linux-musl_purecap
-
-   ## Compiler-RT
-   CC=${MORELLO}/bin/clang ./tools/build-morello.sh compiler-rt \
-        ${LLVM_PROJECT} ${MORELLO} ${BUILD_RT} ${SYSROOT} aarch64-unknown-linux-musl_purecap
+See this document for details about how to build Morello LLVM toolchain from source:
+`build-morello-clang.rst <build-morello-clang.rst>`_. It explains how to use the
+`tools/build-morello.sh <tools/build-morello.sh>`_ script.
 
 Original README
 ---------------

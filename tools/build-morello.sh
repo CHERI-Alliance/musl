@@ -522,7 +522,7 @@ function build_compiler_rt() {
 function build_musl() {
     local MUSL_PATH=${1}            # path to Musl sources
     local PREFIX_PATH=${2}          # where to install Musl
-    local TRIPLE=${4}               # target triple
+    local TRIPLE=${4:-${3}}         # target triple
     if [[ "${TRIPLE}" == "${MORELLO_TRIPLE}" ]]; then
         local CFGFLAGS="--enable-morello"
     else
@@ -605,8 +605,8 @@ function build_musl_test() {
     local MUSL_PATH=${1}            # path to Musl sources
     local PREFIX_PATH=${2}          # where Musl has been installed
     local TRIPLE=${3}               # target triple
-    local SKIP_TEST_RUN=${5:-NO}    # whether to skip running tests
-    if [[ "${TRIPLE}" == "${MORELLO_TRIPLE}" ]]; then  # these test only for Morello
+    local SKIP_TEST_RUN=${5:-${4:-NO}} # whether to skip running tests
+    if [[ "${TRIPLE}" == "${MORELLO_TRIPLE}" ]]; then  # these tests are only for Morello
         local ARCHFLAGS=${ARCHFLAGS:--march=morello+c64}
         local CFGFLAGS="--enable-morello"
         pushd ${MUSL_PATH}

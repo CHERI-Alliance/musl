@@ -11,6 +11,10 @@ int timer_gettime(timer_t t, struct itimerspec *val)
 		pthread_t td = t.ptr;
 		timer = td->timer_id;
 	}
+	else
+	{
+		timer = t.ptr;
+	}
 #else
 	if ((intptr_t)t < 0) {
 		pthread_t td = (void *)((uintptr_t)t << 1);

@@ -424,29 +424,35 @@ function build_clang() {
     local BUILD_PATH=${4}           # path to the build folder
     local TPIP_PATH=${MORELLO_LLVM_PATH}/thirdpartylicences
     local -r HOST_LLVM_BIN_PATH=${HOST_LLVM_PATH}/bin
-    echo "Building clang from ${LLVM_PROJECT} with ${HOST_LLVM_PATH} ..."
     mkdir -p ${BUILD_PATH}
     pushd ${BUILD_PATH}
     __configure_clang ${LLVM_PROJECT} ${HOST_LLVM_BIN_PATH} ${MORELLO_LLVM_PATH}
-    # NM envvar is used by some generators in compiler-rt.
-    NM=${HOST_LLVM_BIN_PATH}/llvm-nm make -j${MORELLO_NPROC:-16}
+    make -j${MORELLO_NPROC:-16}
     make install
     popd
     mkdir -p ${TPIP_PATH}
-    cp ${LLVM_PROJECT}/llvm/LICENSE.TXT ${TPIP_PATH}/LLVM-LICENSE.TXT
-    cp ${LLVM_PROJECT}/clang/LICENSE.TXT ${TPIP_PATH}/CLANG-LICENSE.TXT
-    cp ${LLVM_PROJECT}/lldb/LICENSE.TXT ${TPIP_PATH}/LLDB-LICENSE.TXT
-    cp ${LLVM_PROJECT}/lld/LICENSE.TXT ${TPIP_PATH}/LLD-LICENSE.TXT
-    cp ${LLVM_PROJECT}/libcxx/LICENSE.TXT ${TPIP_PATH}/LIBCXX-LICENSE.TXT
-    cp ${LLVM_PROJECT}/libcxxabi/LICENSE.TXT ${TPIP_PATH}/LIBCXXABI-LICENSE.TXT
-    cp ${LLVM_PROJECT}/libunwind/LICENSE.TXT ${TPIP_PATH}/LIBUNWIND-LICENSE.TXT
-    cp ${LLVM_PROJECT}/compiler-rt/LICENSE.TXT ${TPIP_PATH}/COMPILER-RT-LICENSE.TXT
-    cp ${LLVM_PROJECT}/libclc/LICENSE.TXT ${TPIP_PATH}/LIBCLC-LICENSE.TXT
-    cp ${LLVM_PROJECT}/openmp/LICENSE.TXT ${TPIP_PATH}/OPENMP-LICENSE.TXT
-    cp ${LLVM_PROJECT}/parallel-libs/acxxel/LICENSE.TXT ${TPIP_PATH}/PARALLEL-LIBS-ACXXEL-LICENSE.TXT
-    cp ${LLVM_PROJECT}/polly/LICENSE.TXT ${TPIP_PATH}/POLLY-LICENSE.TXT
-    cp ${LLVM_PROJECT}/pstl/LICENSE.TXT ${TPIP_PATH}/PSTL-LICENSE.TXT
-    cp ${LLVM_PROJECT}/clang-tools-extra/LICENSE.TXT ${TPIP_PATH}/CLANG-TOOLS-EXTRA-LICENSE.TXT
+    declare -a files=(
+        llvm/LICENSE.TXT,LLVM-LICENSE.TXT
+        clang/LICENSE.TXT,CLANG-LICENSE.TXT
+        lldb/LICENSE.TXT,LLDB-LICENSE.TXT
+        lld/LICENSE.TXT,LLD-LICENSE.TXT
+        libcxx/LICENSE.TXT,LIBCXX-LICENSE.TXT
+        libcxxabi/LICENSE.TXT,LIBCXXABI-LICENSE.TXT
+        libunwind/LICENSE.TXT,LIBUNWIND-LICENSE.TXT
+        compiler-rt/LICENSE.TXT,COMPILER-RT-LICENSE.TXT
+        libclc/LICENSE.TXT,LIBCLC-LICENSE.TXT
+        openmp/LICENSE.TXT,OPENMP-LICENSE.TXT
+        parallel-libs/acxxel/LICENSE.TXT,PARALLEL-LIBS-ACXXEL-LICENSE.TXT
+        polly/LICENSE.TXT,POLLY-LICENSE.TXT
+        pstl/LICENSE.TXT,PSTL-LICENSE.TXT
+        clang-tools-extra/LICENSE.TXT,CLANG-TOOLS-EXTRA-LICENSE.TXT
+    )
+    for t in ${files[@]}; do
+        IFS="," read src dst <<< "${t}"
+        if [ -f "${LLVM_PROJECT}/${src}" ]; then
+            cp ${LLVM_PROJECT}/${src} ${TPIP_PATH}/${dst}
+        fi
+    done
 }
 
 # Environment variables:
@@ -651,25 +657,34 @@ function build_package() {
     local CWD=$(pwd)
     local PDIR=$(dirname ${MORELLO_LLVM_PATH})
     local PNAME=$(basename ${MORELLO_LLVM_PATH})
+    local TPIP_PATH=${MORELLO_LLVM_PATH}/thirdpartylicences
     wget -q https://www.apache.org/licenses/LICENSE-2.0.txt -O ${MORELLO_LLVM_PATH}/LICENSE.txt
     cat << EOF > ${MORELLO_LLVM_PATH}/NOTICE.txt
 This product embeds and uses the following pieces of software which have
 additional or alternate licenses:
- - LLVM: thirdpartylicences/LLVM-LICENSE.TXT
- - Clang: thirdpartylicences/CLANG-LICENSE.TXT
- - lldb: thirdpartylicences/LLDB-LICENSE.TXT
- - lld: thirdpartylicences/LLD-LICENSE.TXT
- - libc++: thirdpartylicences/LIBCXX-LICENSE.TXT
- - libc++abi: thirdpartylicences/LIBCXXABI-LICENSE.TXT
- - libunwind: thirdpartylicences/LIBUNWIND-LICENSE.TXT
- - libclc: thirdpartylicences/LIBCLC-LICENSE.TXT
- - openmp: thirdpartylicences/OPENMP-LICENSE.TXT
- - parallel-libs: thirdpartylicences/PARALLEL-LIBS-ACXXEL-LICENSE.TXT
- - polly: thirdpartylicences/POLLY-LICENSE.TXT
- - pstl: thirdpartylicences/PSTL-LICENSE.TXT
- - clang-tools-extra: thirdpartylicences/CLANG-TOOLS-EXTRA-LICENSE.TXT
- - compiler-rt: thirdpartylicences/COMPILER-RT-LICENSE.TXT
 EOF
+    declare -a files=(
+        LLVM,LLVM-LICENSE.TXT
+        Clang,CLANG-LICENSE.TXT
+        lldb,LLDB-LICENSE.TXT
+        lld,LLD-LICENSE.TXT
+        libc++,LIBCXX-LICENSE.TXT
+        libc++abi,LIBCXXABI-LICENSE.TXT
+        libunwind,LIBUNWIND-LICENSE.TXT
+        libclc,LIBCLC-LICENSE.TXT
+        openmp,OPENMP-LICENSE.TXT
+        parallel-libs,PARALLEL-LIBS-ACXXEL-LICENSE.TXT
+        polly,POLLY-LICENSE.TXT
+        pstl,PSTL-LICENSE.TXT
+        clang-tools-extra,CLANG-TOOLS-EXTRA-LICENSE.TXT
+        compiler-rt,COMPILER-RT-LICENSE.TXT
+    )
+    for t in ${files[@]}; do
+        IFS="," read name file <<< "${t}"
+        if [ -f "${TPIP_PATH}/${file}" ]; then
+            echo " - ${name}: ${file}" >> ${MORELLO_LLVM_PATH}/NOTICE.txt
+        fi
+    done
     pushd ${PDIR}
     tar --transform 's|^'${PNAME}'|'${BUNDLE}'|' -czf ${CWD}/${BUNDLE}-clang.tar.gz ${PNAME}
     popd

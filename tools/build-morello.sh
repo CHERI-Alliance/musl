@@ -340,6 +340,7 @@ function __configure_libcxx() {
     local BUILD_PATH=${3}           # path to the build folder
     local SYSROOT=${4}              # path to sysroot with the required libc header
     local TRIPLE=${5}               # triple to target
+    local KERNEL_BRANCH=${6}        # (optional default: latest) version of kernel headers to download
     if [[ "${TRIPLE}" == "${MORELLO_TRIPLE}" ]]; then
         local TFLAGS="-march=morello+c64 -mabi=purecap"
     else
@@ -348,7 +349,7 @@ function __configure_libcxx() {
     mkdir -p ${BUILD_PATH}
     pushd ${BUILD_PATH}
 
-    __download_kernel_headers "${BUILD_PATH}/" 5.19
+    __download_kernel_headers "${BUILD_PATH}/" ${KERNEL_BRANCH}
     cat << EOF > toolchain.cmake
 set(CMAKE_SYSTEM_NAME Linux)
 set(CMAKE_SYSTEM_PROCESSOR aarch64)
@@ -373,9 +374,9 @@ set(CMAKE_OBJDUMP "${MORELLO_LLVM_PATH}/bin/llvm-objdump" CACHE FILEPATH "" FORC
 set(CMAKE_OBJCOPY "${MORELLO_LLVM_PATH}/bin/llvm-objcopy" CACHE FILEPATH "" FORCE)
 
 set(LLVM_CONFIG_PATH "${MORELLO_LLVM_PATH}/bin/llvm-config" CACHE FILEPATH "" FORCE)
-set(CMAKE_ASM_FLAGS "--sysroot=${SYSROOT} ${TFLAGS} -isystem ${BUILD_PATH}/kernel/include" CACHE STRING "" FORCE)
-set(CMAKE_C_FLAGS "--sysroot=${SYSROOT} ${TFLAGS} -isystem ${BUILD_PATH}/kernel/include" CACHE STRING "" FORCE)
-set(CMAKE_CXX_FLAGS "--sysroot=${SYSROOT} ${TFLAGS} -isystem ${BUILD_PATH}/kernel/include" CACHE STRING "" FORCE)
+set(CMAKE_ASM_FLAGS "--sysroot=${SYSROOT} ${TFLAGS} -isystem ${BUILD_PATH}/kernel-headers/usr/include" CACHE STRING "" FORCE)
+set(CMAKE_C_FLAGS "--sysroot=${SYSROOT} ${TFLAGS} -isystem ${BUILD_PATH}/kernel-headers/usr/include" CACHE STRING "" FORCE)
+set(CMAKE_CXX_FLAGS "--sysroot=${SYSROOT} ${TFLAGS} -isystem ${BUILD_PATH}/kernel-headers/usr/include" CACHE STRING "" FORCE)
 set(CMAKE_EXE_LINKER_FLAGS "-fuse-ld=lld -nostdlib --rtlib=compiler-rt" CACHE STRING "" FORCE)
 set(CMAKE_SHARED_LINKER_FLAGS "-fuse-ld=lld -nostdlib --rtlib=compiler-rt" CACHE STRING "" FORCE)
 EOF
@@ -400,17 +401,16 @@ EOF
 }
 
 function __download_kernel_headers() {
-    local BUILD_PATH=${1}           # folder where kernel headers will be stored
-    local VERSION=${2}              # kernel version
-    # This works only for kernel version 5.x
-    local URL=https://cdn.kernel.org/pub/linux/kernel/v5.x/linux-${VERSION}.tar.xz
-    mkdir -p ${BUILD_PATH}
+    local BUILD_PATH=${1}               # folder where kernel headers will be stored
+    local BRANCH=${2}                   # branch of kernel headers to download
+    local TAR=$(python -c "print('${KERNEL_BRANCH}'.replace('/', '-'))")
+    local URL="https://git.morello-project.org/morello/morello-linux-headers/-/archive/$BRANCH/morello-linux-headers-$TAR.tar.gz"
+    mkdir -p ${BUILD_PATH}/kernel-headers
     pushd ${BUILD_PATH}
     wget -q ${URL}
-    tar -xf linux-${VERSION}.tar.xz linux-${VERSION}/arch/arm64 linux-${VERSION}/include linux-${VERSION}/scripts linux-${VERSION}/Makefile
-    make -C linux-${VERSION} --silent headers_install ARCH=arm64 INSTALL_HDR_PATH=${BUILD_PATH}/kernel
+    tar -xf morello-linux-headers-$TAR.tar.gz -C kernel-headers --strip-components 1
+    rm -rf morello-linux-headers-$TAR.tar.gz
     popd
-    rm -rf ${BUILD_PATH}/linux-${VERSION} ${BUILD_PATH}/linux-${VERSION}.tar.xz
 }
 
 # Environment variables:
@@ -586,14 +586,15 @@ function build_libcxxabi() {
 # Environment variables:
 #  - MORELLO_NPROC: number of parallel jobs (default: 4)
 function build_libcxx() {
-    local LLVM_PROJECT=${1}         # path to LLVM sources
-    local MORELLO_LLVM_PATH=${2}    # path where Morello LLVM has been installed
-    local BUILD_PATH=${3}           # path to the build folder
-    local SYSROOT=${4}              # path to sysroot with the required libc headers
-    local TRIPLE=${5}               # triple to target
+    local LLVM_PROJECT=${1}                      # path to LLVM sources
+    local MORELLO_LLVM_PATH=${2}                 # path where Morello LLVM has been installed
+    local BUILD_PATH=${3}                        # path to the build folder
+    local SYSROOT=${4}                           # path to sysroot with the required libc headers
+    local TRIPLE=${5}                            # triple to target
+    local KERNEL_BRANCH=${6:-"morello/master"}   # (optional default: latest) version of kernel headers to download
     local TARGET_INCLUDE_PATH=${MORELLO_LLVM_PATH}/include/${TRIPLE}/c++/v1
     rm -rf ${BUILD_PATH}
-    __configure_libcxx ${LLVM_PROJECT} ${MORELLO_LLVM_PATH} ${BUILD_PATH} ${SYSROOT} ${TRIPLE}
+    __configure_libcxx ${LLVM_PROJECT} ${MORELLO_LLVM_PATH} ${BUILD_PATH} ${SYSROOT} ${TRIPLE} ${KERNEL_BRANCH}
     pushd ${BUILD_PATH}
     make -j${MORELLO_NPROC:-4}
     make install

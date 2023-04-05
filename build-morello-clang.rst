@@ -264,6 +264,7 @@ Parameters:
 * ``SYSROOT=/path/to/sysroot/for/target`` path where Musl binaries have been installed for the current target.
 * ``TRIPLE=aarch64-unknown-linux-musl_purecap`` for Morello Purecap target.
 * ``TRIPLE=aarch64-unknown-linux-gnu`` for AArch64 target.
+* ``KERNEL_BRANCH=morello/master`` target branch of kernel headers.
 
 The value of ``TRIPLE`` should correspond to the value of ``SYSROOT``.
 

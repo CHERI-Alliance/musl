@@ -2671,5 +2671,11 @@
         "app": "${build}/cmpt-${kind}.exe",
         "name": "cmpt",
         "xrc": [0]
+    },
+    {
+        "app": "${build}/cmpt-xor-${kind}.exe",
+        "name": "cmpt-xor",
+        "xrc": [0],
+        "stdin": "1"
     }
 ]

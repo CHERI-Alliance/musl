@@ -3,6 +3,7 @@
 #include <stdlib.h>
 #include <stdarg.h>
 #include <stddef.h>
+#include <stdbool.h>
 #include <string.h>
 #include <unistd.h>
 #include <stdint.h>
@@ -392,7 +393,86 @@ static void do_reloc(struct dso *dso, char **reloc_addr, char *value) {
 	*reloc_addr = value;
 }
 
+
+struct morello_segments{
+	Phdr **writeable;
+	Phdr **relro;
+	size_t writeable_num;
+	size_t relro_num;
+};
+
+static void get_writeable_segments(struct dso *dso, struct morello_segments *segments)
+{
+	Phdr *ph = dso->phdr;
+	size_t phcnt = dso->phnum;
+
+	segments->writeable_num = 0;
+	segments->relro_num = 0;
+
+	while (phcnt--) {
+		if ((ph->p_flags & PF_W) && ph->p_type == PT_LOAD) {
+			segments->writeable[segments->writeable_num] = ph;
+			segments->writeable_num++;
+		} else if (ph->p_type == PT_GNU_RELRO) {
+			segments->relro[segments->relro_num] = ph;
+			segments->relro_num++;
+		}
+		ph++;
+	}
+}
+
+/*
+ * Check if symbol is in a writable segment. This means the symbol should occur
+ * within the bounds of a PT_LOAD segment that has writable permissions but is
+ * outside of the bounds of a RELRO segment.
+ */
+static bool is_sym_in_writeable_segment(struct morello_segments *segments, Elf64_Sym *sym)
+{
+	Phdr *phdr = NULL;
+	Elf64_Addr seg_start = 0;
+	Elf64_Addr seg_end = 0;
+
+	/*
+	 * RELRO (Relocation Read-Only)
+	 * RELRO headers can be done first as there should be fewer of them in the ELF header.
+	 */
+	for (int i = 0; i < segments->relro_num; i++) {
+		phdr = segments->relro[i];
+		if (phdr) {
+			seg_start = phdr->p_vaddr;
+			seg_end = seg_start + phdr->p_memsz;
+			if(seg_start <= sym->st_value && sym->st_value < seg_end) {
+				return false;
+			}
+		} else {
+			break;
+		}
+	}
+
+	/*
+	 * Finally check against writable sections as it does not occur in RELRO.
+	 */
+	for (int i = 0; i < segments->writeable_num; i++) {
+		phdr = segments->writeable[i];
+		if (phdr) {
+			seg_start = phdr->p_vaddr;
+			seg_end = seg_start + phdr->p_memsz;
+			if(seg_start <= sym->st_value && sym->st_value < seg_end) {
+				return true;
+			}
+		} else {
+			break;
+		}
+	}
+	return false;
+}
+
+#ifdef __CHERI_PURE_CAPABILITY__
+static void do_relocs(struct dso *dso, struct morello_segment *segments, size_t *rel,
+		size_t rel_size, size_t stride)
+#else
 static void do_relocs(struct dso *dso, size_t *rel, size_t rel_size, size_t stride)
+#endif
 {
 	unsigned char *base_rx = dso->base;
 	Sym *syms = dso->syms;
@@ -486,22 +566,39 @@ static void do_relocs(struct dso *dso, size_t *rel, size_t rel_size, size_t stri
 #if defined(__CHERI_PURE_CAPABILITY__)
 		case REL_CAPINIT:
 			{
+				/* Relocation address can provide a hint about the capability size. */
+				size_t length;
+
+				/* Symbol is weak and cannot be resolved, so skip it. */
+				if (sym_val == NULL)
+					break;
+
+				/* Symbol is a resolved indirect function which has been resolved already. */
+				if (ELF64_ST_TYPE(def.sym->st_info) == STT_GNU_IFUNC)
+					break;
+
 				char *cap_rx = sym_val + addend;
 				char *cap_rw = set_rw_cap(def.dso, cap_rx);
 				char *cap;
+
 				if (!def.sym && !def.dso) {
 					cap = __builtin_cheri_perms_and(cap_rx, 0);
 				} else if (def.sym && ELF64_ST_TYPE(def.sym->st_info) == STT_FUNC) {
 					cap = __builtin_cheri_perms_and(cap_rx,
 						__CHERI_CAP_PERMISSION_GLOBAL__ | EXEC_CAP_PERMS | READ_CAP_PERMS);
 					cap = __builtin_cheri_seal_entry(cap);
-				} else if ((def.dso && def.dso->phdr->p_flags & PF_W) || dso == &ldso) {
+				} else if (dso == &ldso || is_sym_in_writeable_segment(&segments, def.sym)) {
 					cap = __builtin_cheri_perms_and(cap_rw,
 						__CHERI_CAP_PERMISSION_GLOBAL__ | READ_CAP_PERMS | WRITE_CAP_PERMS);
+					length = def.sym->st_size;
+					cap = __builtin_cheri_bounds_set(cap, length);
 				} else {
 					cap = __builtin_cheri_perms_and(cap_rx,
 						__CHERI_CAP_PERMISSION_GLOBAL__ | READ_CAP_PERMS);
+					length = def.sym->st_size;
+					cap = __builtin_cheri_bounds_set(cap, length);
 				}
+
 				reloc_addr = set_rw_cap(dso, reloc_addr);
 				*reloc_addr = cap;
 			}
@@ -639,11 +736,40 @@ static void redo_lazy_relocs()
 {
 	struct dso *p = lazy_head, *next;
 	lazy_head = 0;
+
+#ifdef __CHERI_PURE_CAPABILITY__
+	struct dso *current;
+	size_t max_length = 0;
+	struct morello_segments segments;
+
+	/*
+	 * Find largest program header count and use it to create an array
+	 * of program headers.
+	 */
+	for (current = p; current; current = current->next)
+	{
+		if (max_length < current->phnum) {
+			max_length = current->phnum;
+		}
+	}
+
+	Phdr writeable[max_length];
+	Phdr relro[max_length];
+
+	segments.writeable = &writeable;
+	segments.relro = &relro;
+#endif
+
 	for (; p; p=next) {
 		next = p->lazy_next;
 		size_t size = p->lazy_cnt*3*sizeof(size_t);
 		p->lazy_cnt = 0;
+#ifdef __CHERI_PURE_CAPABILITY__
+		get_writeable_segments(p, &segments);
+		do_relocs(p, &segments, p->lazy, size, 3);
+#else
 		do_relocs(p, p->lazy, size, 3);
+#endif
 		if (p->lazy_cnt) {
 			p->lazy_next = lazy_head;
 			lazy_head = p;
@@ -1463,6 +1589,7 @@ static void revert_syms(struct dso *old_tail)
 	syms_tail = old_tail;
 }
 
+#ifndef __CHERI_PURE_CAPABILITY__
 static void do_mips_relocs(struct dso *p, size_t *got)
 {
 	size_t i, j, rel[2];
@@ -1486,19 +1613,55 @@ static void do_mips_relocs(struct dso *p, size_t *got)
 		do_relocs(p, rel, sizeof rel, 2);
 	}
 }
+#endif
 
 static void reloc_all(struct dso *p)
 {
+#ifdef __CHERI_PURE_CAPABILITY__
+	struct dso *current;
+	size_t max_length = 0;
+	struct morello_segments segments;
+
+	/*
+	 * Find largest program header count and use it to create an array
+	 * of program headers.
+	 */
+	for (current = p; current; current = current->next)
+	{
+		if (max_length < current->phnum) {
+			max_length = current->phnum;
+		}
+	}
+
+	Phdr writeable[max_length];
+	Phdr relro[max_length];
+
+	segments.writeable = &writeable;
+	segments.relro = &relro;
+#endif
+
 	dynv_entry dyn_null = {0}, *dyn[DYN_CNT];
 	for (; p; p=p->next) {
 		if (p->relocated) continue;
 		decode_dyn_vec(p->dynv, dyn, DYN_CNT, &dyn_null);
+
+#ifdef __CHERI_PURE_CAPABILITY__
+		/*
+		 * Fetch writeable segments here to cache and speed up relocations.
+		 */
+		get_writeable_segments(p, &segments);
+		do_relocs(p, &segments, laddr(p, DYN_VAL(dyn[DT_JMPREL])), DYN_PTR(dyn[DT_PLTRELSZ]),
+			2+(DYN_VAL(dyn[DT_PLTREL])==DT_RELA));
+		do_relocs(p, &segments, laddr(p, DYN_VAL(dyn[DT_REL])), DYN_VAL(dyn[DT_RELSZ]), 2);
+		do_relocs(p, &segments, laddr(p, DYN_VAL(dyn[DT_RELA])), DYN_VAL(dyn[DT_RELASZ]), 3);
+#else
 		if (NEED_MIPS_GOT_RELOCS)
 			do_mips_relocs(p, laddr(p, DYN_VAL(dyn[DT_PLTGOT])));
 		do_relocs(p, laddr(p, DYN_VAL(dyn[DT_JMPREL])), DYN_PTR(dyn[DT_PLTRELSZ]),
 			2+(DYN_VAL(dyn[DT_PLTREL])==DT_RELA));
 		do_relocs(p, laddr(p, DYN_VAL(dyn[DT_REL])), DYN_VAL(dyn[DT_RELSZ]), 2);
 		do_relocs(p, laddr(p, DYN_VAL(dyn[DT_RELA])), DYN_VAL(dyn[DT_RELASZ]), 3);
+#endif
 
 		if (head != &ldso && p->relro_start != p->relro_end &&
 		    mprotect(laddr(p, p->relro_start), p->relro_end-p->relro_start, PROT_READ)

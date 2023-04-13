@@ -6,25 +6,30 @@ extern weak hidden const size_t _DYNAMIC[];
 
 static int static_dl_iterate_phdr(int(*callback)(struct dl_phdr_info *info, size_t size, void *data), void *data)
 {
-	unsigned char *p, *aux_at_phdr;
-	void * rx_cap;
+	void *p, *aux_at_phdr;
+	void *rx_cap = 0;
 	ElfW(Phdr) *phdr, *tls_phdr=0;
 	size_t base = 0;
 	size_t n;
 	struct dl_phdr_info info;
-	size_t i, aux[AUX_CNT] = {0};
+	size_t i;
+	uintptr_t aux[AUX_CNT] = {0};
 
 	for (i=0; libc.auxv[i].a_type; i++) {
-		if (libc.auxv[i].a_type<AUX_CNT)
+		if (libc.auxv[i].a_type < AUX_CNT)
+#ifdef __CHERI_PURE_CAPABILITY__
+			aux[libc.auxv[i].a_type] = libc.auxv[i].a_un.a_ptr;
+#else
 			aux[libc.auxv[i].a_type] = libc.auxv[i].a_un.a_val;
-#ifdef __CHERI_PURE_CAPABLIITY__
-		if (libc.auxv[i].a_type==AT_CHERI_EXEC_RX_CAP)
-			rx_cap = libc.auxv[i].a_un.a_ptr;
 #endif
 	}
 
-	aux_at_phdr = p = (void *)aux[AT_PHDR];
-	for (p=(void *)aux[AT_PHDR],n=aux[AT_PHNUM]; n; n--,p+=aux[AT_PHENT]) {
+#ifdef __CHERI_PURE_CAPABILITY__
+	rx_cap = aux[AT_CHERI_EXEC_RX_CAP];
+#endif
+
+	aux_at_phdr = aux[AT_PHDR];
+	for (p = aux_at_phdr, n = aux[AT_PHNUM]; n; n--, p += aux[AT_PHENT]) {
 		phdr = (void *)p;
 		if (phdr->p_type == PT_PHDR)
 			base = aux_at_phdr - phdr->p_vaddr;

@@ -7,29 +7,43 @@ extern weak hidden const size_t _DYNAMIC[];
 static int static_dl_iterate_phdr(int(*callback)(struct dl_phdr_info *info, size_t size, void *data), void *data)
 {
 	void *p, *aux_at_phdr;
-	void *rx_cap = 0;
 	ElfW(Phdr) *phdr, *tls_phdr=0;
 	size_t base = 0;
 	size_t n;
 	struct dl_phdr_info info;
 	size_t i;
-	uintptr_t aux[AUX_CNT] = {0};
+	uintptr_t aux_at_phent;
+	uintptr_t aux_at_phnum;
 
 	for (i=0; libc.auxv[i].a_type; i++) {
-		if (libc.auxv[i].a_type < AUX_CNT)
+		switch (libc.auxv[i].a_type)
+		{
 #ifdef __CHERI_PURE_CAPABILITY__
-			aux[libc.auxv[i].a_type] = libc.auxv[i].a_un.a_ptr;
+		case AT_PHDR:
+			aux_at_phdr = libc.auxv[i].a_un.a_ptr;
+			break;
+		case AT_PHENT:
+			aux_at_phent = libc.auxv[i].a_un.a_ptr;
+			break;
+		case AT_PHNUM:
+			aux_at_phnum = libc.auxv[i].a_un.a_ptr;
+			break;
 #else
-			aux[libc.auxv[i].a_type] = libc.auxv[i].a_un.a_val;
+		case AT_PHDR:
+			aux_at_phdr = libc.auxv[i].a_un.a_val;
+			break;
+		case AT_PHENT:
+			aux_at_phent = libc.auxv[i].a_un.a_val;
+			break;
+		case AT_PHNUM:
+			aux_at_phnum = libc.auxv[i].a_un.a_val;
+			break;
 #endif
+		}
+
 	}
 
-#ifdef __CHERI_PURE_CAPABILITY__
-	rx_cap = aux[AT_CHERI_EXEC_RX_CAP];
-#endif
-
-	aux_at_phdr = aux[AT_PHDR];
-	for (p = aux_at_phdr, n = aux[AT_PHNUM]; n; n--, p += aux[AT_PHENT]) {
+	for (p = aux_at_phdr, n = aux_at_phnum; n; n--, p += aux_at_phent) {
 		phdr = (void *)p;
 		if (phdr->p_type == PT_PHDR)
 			base = aux_at_phdr - phdr->p_vaddr;
@@ -40,8 +54,8 @@ static int static_dl_iterate_phdr(int(*callback)(struct dl_phdr_info *info, size
 	}
 	info.dlpi_addr  = base;
 	info.dlpi_name  = "/proc/self/exe";
-	info.dlpi_phdr  = (void *)aux[AT_PHDR];
-	info.dlpi_phnum = aux[AT_PHNUM];
+	info.dlpi_phdr  = aux_at_phdr;
+	info.dlpi_phnum = aux_at_phdr;
 	info.dlpi_adds  = 0;
 	info.dlpi_subs  = 0;
 	if (tls_phdr) {

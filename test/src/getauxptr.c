@@ -1,4 +1,5 @@
 #include <sys/auxv.h>
+#include <stdio.h>
 #include <errno.h>
 
 int main (int argc, char *argv[]) {
@@ -15,6 +16,20 @@ int main (int argc, char *argv[]) {
     long y = getauxval(AT_BASE);
     if (y) return 5;
     if (errno != ENOENT) return 6;
+
+    long arg_length = getauxval(AT_ARGC);
+    if(arg_length != argc)
+    {
+        printf("Error: getauxval did not return correct arg count.\n");
+        return 6;
+    }
+
+    void *arg = getauxptr(AT_ARGV);
+    if(arg != argv)
+    {
+        printf("Error: getauxptr did not return correct arg address.\n");
+        return 7;
+    }
 
     return 0;
 }

@@ -88,3 +88,7 @@ void *memset(void *dest, int c, size_t n)
 
 	return dest;
 }
+
+#if defined(__CHERI_PURE_CAPABILITY__)
+weak_alias(memset, memset_c);
+#endif

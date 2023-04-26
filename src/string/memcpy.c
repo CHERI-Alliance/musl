@@ -122,3 +122,7 @@ void *memcpy(void *restrict dest, const void *restrict src, size_t n)
 	for (; n; n--) *d++ = *s++;
 	return dest;
 }
+
+#if defined(__CHERI_PURE_CAPABILITY__)
+weak_alias(memcpy, memcpy_c);
+#endif

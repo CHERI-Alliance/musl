@@ -40,3 +40,7 @@ void *memmove(void *dest, const void *src, size_t n)
 
 	return dest;
 }
+
+#if defined(__CHERI_PURE_CAPABILITY__)
+weak_alias(memmove, memmove_c);
+#endif

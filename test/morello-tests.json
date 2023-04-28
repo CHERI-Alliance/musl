@@ -2677,5 +2677,50 @@
         "name": "cmpt-xor",
         "xrc": [0],
         "stdin": "1"
+    },
+    {
+        "app": "${build}/printcap_extended-${kind}.exe",
+        "name": "printcap-extended-csp",
+        "args": ["0"],
+        "xrc": [0],
+        "stdout": ["0x[0-9a-f]+\\s\\[[rwxRWEMLSusICV123]*,0x[0-9a-f]+-0x[0-9a-f]+\\]"]
+    },
+    {
+        "app": "${build}/printcap_extended-${kind}.exe",
+        "name": "printcap-extended-pcc",
+        "args": ["1"],
+        "xrc": [0],
+        "stdout": ["0x[0-9a-f]+\\s\\[[rwxRWEMLSusICV123]*,0x[0-9a-f]+-0x[0-9a-f]+\\]"]
+    },
+    {
+        "app": "${build}/printcap_extended-${kind}.exe",
+        "name": "printcap-extended-local",
+        "args": ["2"],
+        "xrc": [0],
+        "stdout": ["0x[0-9a-f]+\\s\\[[rwxRWEMLSusICV123]*,0x[0-9a-f]+-0x[0-9a-f]+\\]\\s\\(local\\)"]
+    },
+    {
+        "app": "${build}/printcap_extended-${kind}.exe",
+        "name": "printcap-extended-sentry",
+        "args": ["3"],
+        "xrc": [0],
+        "stdout": ["0x[0-9a-f]+\\s\\[[rwxRWEMLSusICV123]*,0x[0-9a-f]+-0x[0-9a-f]+\\]\\s\\(sentry\\)",
+                   "0x[0-9a-f]+\\s\\[[rwxRWEMLSusICV123]*,0x[0-9a-f]+-0x[0-9a-f]+\\]\\s\\(invalid,sentry\\)",
+                   "0x[0-9a-f]+\\s\\[[rwxRWEMLSusICV123]*,0x[0-9a-f]+-0x[0-9a-f]+\\]\\s\\(local,invalid,sentry\\)"]
+    },
+    {
+        "app": "${build}/printcap_extended-${kind}.exe",
+        "name": "printcap-extended-auxv",
+        "args": ["4"],
+        "xrc": [0],
+        "stdout": ["0x[0-9a-f]+\\s\\[[rwxRWEMLSusICV123]*,0x[0-9a-f]+-0x[0-9a-f]+\\]",
+                   "0x[0-9a-f]+\\s\\[[rwxRWEMLSusICV123]*,0x[0-9a-f]+-0x[0-9a-f]+\\]"]
+    },
+    {
+        "app": "${build}/printcap_extended-${kind}.exe",
+        "name": "printcap-extended-null",
+        "args": ["5"],
+        "xrc": [0],
+        "stdout": ["0x0", "0x0"]
     }
 ]

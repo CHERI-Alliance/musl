@@ -10,6 +10,7 @@
 #include <inttypes.h>
 #include <math.h>
 #include <float.h>
+#include "cheri_helpers.h"
 
 /* Some useful macros */
 
@@ -419,7 +420,7 @@ static int fmt_fp(FILE *f, long double y, int w, int p, int fl, int t)
 }
 
 #ifdef __CHERI__
-#define CAP_BUFFER_SIZE 90
+#define CAP_BUFFER_SIZE 85
 
 // todo: this won't be necessary after this has been fixed
 // https://github.com/CTSRD-CHERI/llvm-project/issues/566
@@ -430,14 +431,16 @@ typedef long cheri_otype_t;
 #define CHERI_OTYPE_SENTRY ((cheri_otype_t)-2)
 #endif
 
-static int fmt_cap(FILE *f, const void *cap) {
+static int fmt_cap(FILE *f, const void *cap, unsigned fmt) {
 	char buf[CAP_BUFFER_SIZE];
 	char *z = buf + sizeof(buf);
 	_Bool tag = __builtin_cheri_tag_get(cap);
+	size_t perms = __builtin_cheri_perms_get(cap);
 	if (!tag && __builtin_cheri_equal_exact(cap, (uintcap_t)(ptraddr_t)cap)) {
 		// null-dervived capability
 		goto value;
 	}
+
 	/* Attributes */
 	const cheri_otype_t type = __builtin_cheri_type_get(cap);
 	const _Bool is_sealed = __builtin_cheri_sealed_get(cap);
@@ -458,12 +461,8 @@ static int fmt_cap(FILE *f, const void *cap) {
 		*--z = 'e';
 		*--z = 's';
 	}
-	if (tag) {
-		if (is_sealed) {
-			*--z = '(';
-			*--z = ' ';
-		}
-	} else {
+
+	if (!tag) {
 		if (is_sealed) {
 			*--z = ',';
 		} else {
@@ -476,9 +475,28 @@ static int fmt_cap(FILE *f, const void *cap) {
 		*--z = 'v';
 		*--z = 'n';
 		*--z = 'i';
+	}
+
+	if (fmt) {
+		if (!(perms & __CHERI_CAP_PERMISSION_GLOBAL__)) {
+			if (is_sealed || type == CHERI_OTYPE_SENTRY) {
+				*--z = ',';
+			} else {
+				*--z = ')';
+			}
+			*--z = 'l';
+			*--z = 'a';
+			*--z = 'c';
+			*--z = 'o';
+			*--z = 'l';
+		}
+	}
+
+	if (!tag || is_sealed || (fmt && !(perms & __CHERI_CAP_PERMISSION_GLOBAL__))) {
 		*--z = '(';
 		*--z = ' ';
 	}
+
 	*--z = ']';
 	/* Bounds */
 	size_t lower_bound = __builtin_cheri_base_get(cap);
@@ -498,6 +516,65 @@ static int fmt_cap(FILE *f, const void *cap) {
 	}
 	*--z = 'x';
 	*--z = '0';
+
+	*--z = ',';
+	/*
+	 * Extended Permissions
+	 * fmt allows for additional formats to be specified and multiple formats to
+	 * be chained together.
+	 */
+	if (fmt) {
+		if (perms & __CHERI_CAP_PERMISSION_USER3__) {
+			*--z = '3';
+		}
+
+		if (perms & __CHERI_CAP_PERMISSION_USER2__) {
+			*--z = '2';
+		}
+
+		if (perms & __CHERI_CAP_PERMISSION_USER1__) {
+			*--z = '1';
+		}
+
+		if (perms & __CHERI_CAP_PERMISSION_VMEM__) {
+			*--z = 'V';
+		}
+
+#ifdef __ARM_CAP_PERMISSION_COMPARTMENT_ID__
+		if (perms & __ARM_CAP_PERMISSION_COMPARTMENT_ID__) {
+			*--z = 'C';
+		}
+#endif
+
+#ifdef __ARM_CAP_PERMISSION_BRANCH_SEALED_PAIR__
+		if (perms & __ARM_CAP_PERMISSION_BRANCH_SEALED_PAIR__) {
+			*--z = 'I';
+		}
+#endif
+
+		if (perms & __CHERI_CAP_PERMISSION_PERMIT_SEAL__) {
+			*--z = 's';
+		} 
+
+		if (perms & __CHERI_CAP_PERMISSION_PERMIT_UNSEAL__) {
+			*--z = 'u';
+		}
+
+		if (perms & __CHERI_CAP_PERMISSION_ACCESS_SYSTEM_REGISTERS__) {
+			*--z = 'S';
+		}
+
+		if (perms & __CHERI_CAP_PERMISSION_PERMIT_STORE_LOCAL__) {
+			*--z = 'L';
+		}
+
+#ifdef __ARM_CAP_PERMISSION_MUTABLE_LOAD__
+		if (perms & __ARM_CAP_PERMISSION_MUTABLE_LOAD__) {
+			*--z = 'M';
+		}
+#endif
+	}
+
 	/* Permissions */
 	unsigned perms_macros[] =  {
 #ifdef __ARM_CAP_PERMISSION_EXECUTIVE__
@@ -513,8 +590,6 @@ static int fmt_cap(FILE *f, const void *cap) {
 		'E',
 #endif
 		'W', 'R', 'x', 'w', 'r'};
-	size_t perms = __builtin_cheri_perms_get(cap);
-	*--z = ',';
 	for (int i = 0; i < (sizeof(perms_char_rep) / sizeof(perms_char_rep[0])); i++) {
 		if ((perms & perms_macros[i]) != 0) {
 			*--z = perms_char_rep[i];
@@ -549,7 +624,7 @@ static int getint(char **s) {
 static int printf_core(FILE *f, const char *fmt, va_list *ap, union arg *nl_arg, int *nl_type)
 {
 	char *a, *z, *s=(char *)fmt;
-	unsigned l10n=0, fl;
+	volatile unsigned l10n=0, fl;
 	int w, p, xp;
 	union arg arg;
 	int argpos;
@@ -673,7 +748,7 @@ static int printf_core(FILE *f, const char *fmt, va_list *ap, union arg *nl_arg,
 		case 'p':
 #ifdef __CHERI__
 			if (fl & ALT_FORM) {
-				l = fmt_cap(f, arg.p);
+				l = fmt_cap(f, arg.p, fl & MARK_POS);
 				continue;
 			}
 #endif

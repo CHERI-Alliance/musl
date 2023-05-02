@@ -14,6 +14,17 @@
 ".type " name ",%function\n" \
 name ":\n"
 
+typedef struct
+{
+	void* code;
+	void* data;
+	cmpt_target_t* target;
+	void* map;
+	size_t map_size;
+	//NOTE: Change this size calculation if cmpt_data_t definition changes
+	char __padding[sizeof(cmpt_t) - 4*sizeof(void*) - sizeof(size_t)];
+} cmpt_data_t;
+
 void trampoline_start(void);
 void trampoline_end(void);
 
@@ -48,9 +59,10 @@ void trampoline_code()
 	);
 }
 
-int create_cmpt(cmpt_t* cmpt, const char* data, const size_t data_size, cmpt_target_t* target)
+int create_cmpt(cmpt_t* cmpt_handle, const char* data, const size_t data_size, cmpt_target_t* target)
 {
 	//Max otype is 2^15-1 so keep lowest 14 bits to ensure otype never greater, +4 to prevent otype of 1, 2 or 3 and explicitly prevent 15-bit overflow
+	cmpt_data_t *cmpt = (cmpt_data_t*)cmpt_handle;
 	size_t seal_otype = ((((size_t)target) & 0x3fffLU) + 4LU) & 0x7fffLU;
 	void* root_seal_cap =   __builtin_cheri_offset_set(getauxptr(AT_CHERI_SEAL_CAP), seal_otype);
 	void* root_unseal_cap = __builtin_cheri_offset_set(getauxptr(AT_CHERI_SEAL_CAP), 1);
@@ -102,20 +114,23 @@ int create_cmpt(cmpt_t* cmpt, const char* data, const size_t data_size, cmpt_tar
 	return 0;
 }
 
-int destroy_cmpt(cmpt_t* cmpt)
+int destroy_cmpt(cmpt_t* cmpt_handle)
 {
-	cmpt->code = NULL;
-	cmpt->data = NULL;
+	cmpt_data_t* cmpt = (cmpt_data_t*)cmpt_handle;
 	void* map = cmpt->map;
 	size_t map_otype = (size_t)__builtin_cheri_type_get(map);
 	void* root_unseal_cap = __builtin_cheri_offset_set(getauxptr(AT_CHERI_SEAL_CAP), map_otype);
 	map = __builtin_cheri_unseal(map, root_unseal_cap);
 	int failure = munmap(map, cmpt->map_size);
+
+	memset(cmpt_handle, 0, sizeof(cmpt_t));
+
 	return failure;
 }
 
-bool is_cmpt_valid(const cmpt_t* cmpt)
+bool is_cmpt_valid(const cmpt_t* cmpt_handle)
 {
+	cmpt_data_t* cmpt = (cmpt_data_t*)cmpt_handle;
 	bool code_tag = __builtin_cheri_tag_get(cmpt->code);
 	bool data_tag = __builtin_cheri_tag_get(cmpt->data);
 	size_t code_otype = (size_t)__builtin_cheri_type_get(cmpt->code);

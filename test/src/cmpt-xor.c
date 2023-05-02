@@ -16,7 +16,7 @@ typedef struct
 static void print_cap(void* cap, const char* name)
 {
 	char out[256] = {};
-	strfcap(out, 256, "0x%v:%B | %C | Otype: %s | Perms: %P", cap);
+	strfcap(out, 256, "0x%v:%B | %l | %C | Otype: %s | Perms: %P", cap);
 	printf("CAP %s | %s\n", name, out);
 }
 
@@ -76,14 +76,17 @@ int main(void)
 	//Setup secure storage
 
 	printf("Creating encryption key capability cmpt\n");
-	cmpt_t key_cmpt = {};
+	cmpt_t key_cmpt;
 	create_cmpt(&key_cmpt, encryption_key_buf, 1, xor_msg_data);
 	free(encryption_key_buf);
 
-	print_cap(key_cmpt.code, "CMPT CODE");
-	print_cap(key_cmpt.data, "CMPT DATA");
-	print_cap(key_cmpt.map, "CMPT MEM");
-	printf("CMPT mem size %lx\n", key_cmpt.map_size);
+	void **key_cmpt_code = &key_cmpt.__opaque[0];
+	void **key_cmpt_data = &key_cmpt.__opaque[1];
+	void **key_cmpt_mem = &key_cmpt.__opaque[3];
+
+	print_cap(*key_cmpt_mem, "CMPT MEM");
+	print_cap(*key_cmpt_code, "CMPT CODE");
+	print_cap(*key_cmpt_data, "CMPT DATA");
 
 	if(!is_cmpt_valid(&key_cmpt))
 	{
@@ -98,8 +101,8 @@ int main(void)
 	if(!is_cmpt_valid(&key_cmpt))
 	{
 		printf("Error: Key cmpt not valid after first call to xor_msg_data\n");
-		print_cap(key_cmpt.code, "ERROR KEY CODE");
-		print_cap(key_cmpt.data, "ERROR KEY DATA");
+		print_cap(*key_cmpt_code, "ERROR KEY CODE");
+		print_cap(*key_cmpt_data, "ERROR KEY DATA");
 		return 3;
 	}
 
@@ -135,8 +138,8 @@ int main(void)
 	if(is_cmpt_valid(&key_cmpt))
 	{
 		printf("Error: Key cmpt valid after destruction\n");
-		print_cap(key_cmpt.code, "ERROR KEY CODE");
-		print_cap(key_cmpt.data, "ERROR KEY DATA");
+		print_cap(*key_cmpt_code, "ERROR KEY CODE");
+		print_cap(*key_cmpt_data, "ERROR KEY DATA");
 		return 6;
 	}
 	return 0;

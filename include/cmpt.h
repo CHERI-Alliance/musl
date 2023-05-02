@@ -13,12 +13,9 @@ typedef void (cmpt_target_t)(void* secret, void* arg);
 
 typedef struct
 {
-	void* code;
-	void* data;
-	cmpt_target_t* target;
-	void* map;
-	size_t map_size;
+	void *__opaque[8];
 } cmpt_t;
+
 
 int create_cmpt(cmpt_t* dst, const char* data, const size_t data_size, cmpt_target_t target);
 int destroy_cmpt(cmpt_t*);

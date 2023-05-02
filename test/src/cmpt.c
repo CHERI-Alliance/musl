@@ -53,7 +53,7 @@ int main(int argc, char** argv)
 	int protection_candidate_data = PROTECTED_DATA_VALUE;
 	char* protection_candidate = (char*)&protection_candidate_data;
 
-	cmpt_t sealed_cmpt = {};
+	cmpt_t sealed_cmpt;
 	int create_cmpt_ret = create_cmpt(&sealed_cmpt, protection_candidate, sizeof(protection_candidate_data), use_sealed_data);
 
 	if(create_cmpt_ret != 0)
@@ -62,16 +62,18 @@ int main(int argc, char** argv)
 		return create_cmpt_ret;
 	}
 
-	print_cap(sealed_cmpt.code, "PAIR CODE");
-	print_cap(sealed_cmpt.data, "PAIR DATA");
+	void *sealed_cmpt_code = sealed_cmpt.__opaque[0];
+	void *sealed_cmpt_data = sealed_cmpt.__opaque[1];
+	print_cap(sealed_cmpt_code, "PAIR CODE");
+	print_cap(sealed_cmpt_code, "PAIR DATA");
 
-	bool cmpt_code_tag = __builtin_cheri_tag_get(sealed_cmpt.code);
-	bool cmpt_data_tag = __builtin_cheri_tag_get(sealed_cmpt.data);
-	bool cmpt_code_sealed = __builtin_cheri_sealed_get(sealed_cmpt.code);
-	bool cmpt_data_sealed = __builtin_cheri_sealed_get(sealed_cmpt.data);
-	bool cmpt_otypes_match = __builtin_cheri_type_get(sealed_cmpt.code) == __builtin_cheri_type_get(sealed_cmpt.data);
-	size_t cmpt_code_perms = __builtin_cheri_perms_get(sealed_cmpt.code);
-	size_t cmpt_data_perms = __builtin_cheri_perms_get(sealed_cmpt.data);
+	bool cmpt_code_tag = __builtin_cheri_tag_get(sealed_cmpt_code);
+	bool cmpt_data_tag = __builtin_cheri_tag_get(sealed_cmpt_data);
+	bool cmpt_code_sealed = __builtin_cheri_sealed_get(sealed_cmpt_code);
+	bool cmpt_data_sealed = __builtin_cheri_sealed_get(sealed_cmpt_data);
+	bool cmpt_otypes_match = __builtin_cheri_type_get(sealed_cmpt_code) == __builtin_cheri_type_get(sealed_cmpt_data);
+	size_t cmpt_code_perms = __builtin_cheri_perms_get(sealed_cmpt_code);
+	size_t cmpt_data_perms = __builtin_cheri_perms_get(sealed_cmpt_data);
 
 	//Caps should have/be:
 	//	- Valid tags

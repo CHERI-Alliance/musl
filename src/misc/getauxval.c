@@ -1,5 +1,6 @@
-#include "aux_helper.h"
+#include <sys/auxv.h>
 #include <errno.h>
+#include "aux_helper.h"
 #include "libc.h"
 
 unsigned long __getauxval(unsigned long item)
@@ -7,8 +8,8 @@ unsigned long __getauxval(unsigned long item)
 #ifdef __CHERI__
 	// error if asking for a pointer from getauxval()
 	switch (item) {
-			AUX_PTR_CASES
-				goto error;
+	AUX_NONVAL_CASES
+		goto error;
 	}
 #endif
 

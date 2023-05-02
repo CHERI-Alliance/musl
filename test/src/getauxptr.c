@@ -13,7 +13,7 @@ int main (int argc, char *argv[]) {
     if (x) return 3;
     if (errno != ENOENT) return 4;
 
-    long y = getauxval(AT_BASE);
+    long y = getauxval(AT_PHDR);
     if (y) return 5;
     if (errno != ENOENT) return 6;
 

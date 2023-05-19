@@ -137,7 +137,8 @@ hidden void _dlstart_c(uintptr_t *sp, size_t *dynv_raw)
 	base_rx = AUX_PTR(aux[AT_BASE]);
 #ifdef __CHERI_PURE_CAPABILITY__
 	if (is_interpreter)
-		base_rx = __builtin_cheri_address_set(rx_cap, base_rx);
+		base_rx = __builtin_cheri_address_set(rx_cap,
+						      AUX_VAL(aux[AT_BASE]));
 #endif
 
 	if (!base_rx) {

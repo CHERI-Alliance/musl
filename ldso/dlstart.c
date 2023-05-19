@@ -26,8 +26,6 @@
 #else
 #define AUX_PTR(p) ((p)->a_un.a_val)
 #endif
-#define DYN_VAL(p) (p.d_un.d_val)
-#define DYN_PTR(p) (p.d_un.d_ptr)
 #define DYN_TAG(p) ((p).d_tag)
 #define DYN_VAL(p) ((p).d_un.d_val)
 #define DYN_PTR(p) ((p).d_un.d_ptr)

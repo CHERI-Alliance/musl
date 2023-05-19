@@ -45,7 +45,7 @@ typedef struct {
 
 __attribute__((used))
 inline static void
-__morello_init_static(int, char **, char **, auxv_entry *auxv)
+__morello_init_static(int argc, char **argv, char **envp, auxv_entry *auxv)
 {
 	cap_relocs_entry *__cap_relocs_start = NULL;
 	cap_relocs_entry *__cap_relocs_end = NULL;

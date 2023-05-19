@@ -41,11 +41,7 @@ static void error(const char *, ...);
 
 #define AUX_TYPE(p) ((p)->a_type)
 #define AUX_VAL(p) ((p)->a_un.a_val)
-#ifdef __CHERI_PURE_CAPABILITY__
 #define AUX_PTR(p) ((p)->a_un.a_ptr)
-#else
-#define AUX_PTR(p) ((p)->a_un.a_val)
-#endif
 #define DYN_TAG(p) ((p)->d_tag)
 #define DYN_VAL(p) ((p)->d_un.d_val)
 #define DYN_PTR(p) ((p)->d_un.d_ptr)

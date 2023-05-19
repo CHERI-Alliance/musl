@@ -18,27 +18,15 @@ static int static_dl_iterate_phdr(int(*callback)(struct dl_phdr_info *info, size
 	for (i=0; libc.auxv[i].a_type; i++) {
 		switch (libc.auxv[i].a_type)
 		{
-#ifdef __CHERI_PURE_CAPABILITY__
 		case AT_PHDR:
 			aux_at_phdr = libc.auxv[i].a_un.a_ptr;
 			break;
 		case AT_PHENT:
-			aux_at_phent = libc.auxv[i].a_un.a_ptr;
+			aux_at_phent = (uintptr_t)libc.auxv[i].a_un.a_ptr;
 			break;
 		case AT_PHNUM:
-			aux_at_phnum = libc.auxv[i].a_un.a_ptr;
+			aux_at_phnum = (uintptr_t)libc.auxv[i].a_un.a_ptr;
 			break;
-#else
-		case AT_PHDR:
-			aux_at_phdr = libc.auxv[i].a_un.a_val;
-			break;
-		case AT_PHENT:
-			aux_at_phent = libc.auxv[i].a_un.a_val;
-			break;
-		case AT_PHNUM:
-			aux_at_phnum = libc.auxv[i].a_un.a_val;
-			break;
-#endif
 		}
 
 	}

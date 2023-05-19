@@ -27,13 +27,8 @@ void __init_libc(char **envp, auxv_entry *auxv, char *pn)
 	__environ = envp;
 	libc.auxv = auxv;
 	for (i=0; auxv[i].a_type != AT_NULL; i++) {
-		if (auxv[i].a_type<AUX_CNT) {
-#ifdef __CHERI_PURE_CAPABILITY__
+		if (auxv[i].a_type<AUX_CNT)
 			aux[auxv[i].a_type] = auxv[i].a_un.a_ptr;
-#else
-			aux[auxv[i].a_type] = auxv[i].a_un.a_val;
-#endif
-		}
 	}
 	__hwcap = aux[AT_HWCAP];
 	if (aux[AT_SYSINFO]) __sysinfo = aux[AT_SYSINFO];

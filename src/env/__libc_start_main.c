@@ -3,6 +3,8 @@
 #include <fcntl.h>
 #include <signal.h>
 #include <unistd.h>
+#include <string.h>
+#include <stdio.h>
 #include "syscall.h"
 #include "atomic.h"
 #include "libc.h"
@@ -46,7 +48,17 @@ void __init_libc(char **envp, auxv_entry *auxv, char *pn)
 	__init_ssp((void *)aux[AT_RANDOM]);
 
 	if (aux[AT_UID]==aux[AT_EUID] && aux[AT_GID]==aux[AT_EGID]
-		&& !aux[AT_SECURE]) return;
+		&& !aux[AT_SECURE])
+	{
+#ifdef __CHERI_PURE_CAPABILITY__
+		memset(aux, 0, sizeof(aux));
+#endif
+		return;
+	}
+
+#ifdef __CHERI_PURE_CAPABILITY__
+	memset(aux, 0, sizeof(aux));
+#endif
 
 	struct pollfd pfd[3] = { {.fd=0}, {.fd=1}, {.fd=2} };
 	int r =

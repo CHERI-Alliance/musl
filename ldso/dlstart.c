@@ -161,25 +161,25 @@ hidden void _dlstart_c(uintptr_t *sp, size_t *dynv_raw)
 	 * it's simply inlined here. */
 	if (NEED_MIPS_GOT_RELOCS) {
 		size_t local_cnt = 0;
-		size_t *got = base_rx + DYN_VAL(dyn[DT_PLTGOT]);
+		size_t *got = (void *)(base_rx + DYN_VAL(dyn[DT_PLTGOT]));
 		for (i=0; dynv[i].d_tag; i++) if (dynv[i].d_tag==DT_MIPS_LOCAL_GOTNO)
 			local_cnt = dynv[i].d_tag;
 		for (i=0; i<local_cnt; i++) got[i] += (size_t)base_rx;
 	}
 
-	rel_ptr = base_rx+DYN_VAL(dyn[DT_REL]);
+	rel_ptr = (void *)(base_rx + DYN_VAL(dyn[DT_REL]));
 	rel_count = DYN_VAL(dyn[DT_RELSZ]) / sizeof(Rel_t);
 	for (; rel_count; rel_count--, rel_ptr++) {
 		if (!IS_RELATIVE(rel_ptr->r_info, 0)) continue;
-		size_t **rel_addr = base_rx + rel_ptr->r_offset;
-		*rel_addr = base_rx + (size_t)*rel_addr;
+		size_t **rel_addr = (void *)(base_rx + rel_ptr->r_offset);
+		*rel_addr = (void *)(base_rx + (size_t)*rel_addr);
 	}
 
-	rela_ptr = base_rx+DYN_VAL(dyn[DT_RELA]);
+	rela_ptr = (void *)(base_rx + DYN_VAL(dyn[DT_RELA]));
 	rel_count = DYN_VAL(dyn[DT_RELASZ]) / sizeof(Rela_t);
 	for (; rel_count; rel_count--, rela_ptr++) {
 		if (!IS_RELATIVE(rela_ptr->r_info, 0)) continue;
-		char **rel_addr = base_rx + rela_ptr->r_offset;
+		char **rel_addr = (void *)(base_rx + rela_ptr->r_offset);
 #if !defined(__CHERI_PURE_CAPABILITY__)
 		*rel_addr = base_rx + rela_ptr->r_addend;
 #else

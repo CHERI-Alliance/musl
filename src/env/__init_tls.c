@@ -97,7 +97,7 @@ static void static_init_tls(uintptr_t *aux)
 	for (n=aux[AT_PHNUM]; n; n--,p+=aux[AT_PHENT]) {
 		phdr = (void *)p;
 		if (phdr->p_type == PT_PHDR)
-			base = aux_at_phdr - phdr->p_vaddr;
+			base = (ptraddr_t)(aux_at_phdr - phdr->p_vaddr);
 		if (phdr->p_type == PT_DYNAMIC && _DYNAMIC)
 			base = (size_t)_DYNAMIC - phdr->p_vaddr;
 		if (phdr->p_type == PT_TLS)

@@ -16,7 +16,7 @@
 #if defined(MUSL_USE_COMPILER_BUILTINS)
 static inline uintptr_t __get_tp()
 {
-	return __builtin_thread_pointer();
+	return (uintptr_t)__builtin_thread_pointer();
 }
 #endif
 

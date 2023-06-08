@@ -20,7 +20,7 @@ CFLAGS += -g -fno-builtin-mempcpy
 CFLAGS += -Wall -Wpedantic -Werror
 CFLAGS += -Wno-gnu-empty-initializer -Wno-gnu-folding-constant -Wno-gnu-statement-expression
 
-LDFLAGS += --target=$(TRIPLE) --sysroot=$(SYSROOT) -march=morello+c64
+LDFLAGS += --target=$(TRIPLE) --sysroot=$(SYSROOT) -march=morello
 LDFLAGS += ${TEST_LDFLAGS}
 LDFLAGS += -g -fuse-ld=lld
 LDLIBS += -lc

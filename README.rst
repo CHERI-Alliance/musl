@@ -47,7 +47,7 @@ Compile and link application:
 .. code-block::
 
    ${MORELLO_HOME}/bin/clang \
-        -march=morello+c64 --target=aarch64-linux-musl_purecap \
+        -march=morello --target=aarch64-linux-musl_purecap \
         --sysroot ${PREFIX} hello.c -o hello -static
 
 Running unit tests

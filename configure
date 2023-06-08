@@ -327,7 +327,7 @@ if test "$cc_family" = clang ; then
 if test $target; then
 # testing for flags should be in the target environment
 if test "$target" = aarch64-linux-musl_purecap ; then
-tryflag CFLAGS_TRY "--target=$target -march=morello+c64" || exit 1
+tryflag CFLAGS_TRY "--target=$target -march=morello" || exit 1
 else
 tryflag CFLAGS_TRY "--target=$target" || exit 1
 fi
@@ -484,8 +484,8 @@ test "$debug" = yes && CFLAGS_AUTO="-g ${CFLAGS_AUTO}"
 test "$morello" = yes
 if test "$morello" = yes ; then
     if test "$ARCH" = "aarch64" ; then
-        tryflag CFLAGS_MORELLO "-march=morello+c64 -mabi=purecap"
-        tryflag LDFLAGS_MORELLO "-march=morello+c64 -mabi=purecap"
+        tryflag CFLAGS_MORELLO "-march=morello -mabi=purecap"
+        tryflag LDFLAGS_MORELLO "-march=morello -mabi=purecap"
         ARCH=morello
     else
         fail "$0: Morello can only be enabled for AArch64 target"

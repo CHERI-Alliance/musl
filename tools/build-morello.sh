@@ -82,7 +82,7 @@
 # -------------------------
 #
 # /path/to/morello/llvm/bin/clang --target=aarch64-linux-musl_purecap \
-#   -march=morello+c64 --sysroot /path/to/musl/install \
+#   -march=morello --sysroot /path/to/musl/install \
 #   hello.c -o hello [--static]
 #
 # END-OF-HOWTO
@@ -166,7 +166,7 @@ function __configure_comp_rt() {
     local SYSROOT=${4}              # path to sysroot with the required libc headers
     local TRIPLE=${5}               # triple to target
     if [[ "${TRIPLE}" == "${MORELLO_TRIPLE}" ]]; then
-        local TFLAGS="-march=morello+c64 -mabi=purecap"
+        local TFLAGS="-march=morello -mabi=purecap"
     else
         local TFLAGS="-march=armv8"
     fi
@@ -223,7 +223,7 @@ function __configure_libunwind() {
     local SYSROOT=${4}              # path to sysroot with the required libc headers
     local TRIPLE=${5}               # triple to target
     if [[ "${TRIPLE}" == "${MORELLO_TRIPLE}" ]]; then
-        local TFLAGS="-march=morello+c64 -mabi=purecap"
+        local TFLAGS="-march=morello -mabi=purecap"
     else
         local TFLAGS="-march=armv8"
     fi
@@ -282,7 +282,7 @@ function __configure_libcxxabi() {
     local LIBUNWIND_HEADERS=${LLVM_PROJECT}/libunwind/include
     local LIBCXX_HEADERS=${MORELLO_LLVM_PATH}/include/c++/v1
     if [[ "${TRIPLE}" == "${MORELLO_TRIPLE}" ]]; then
-        local TFLAGS="-march=morello+c64 -mabi=purecap"
+        local TFLAGS="-march=morello -mabi=purecap"
     else
         local TFLAGS="-march=armv8"
     fi
@@ -342,7 +342,7 @@ function __configure_libcxx() {
     local TRIPLE=${5}               # triple to target
     local KERNEL_BRANCH=${6}        # (optional default: latest) version of kernel headers to download
     if [[ "${TRIPLE}" == "${MORELLO_TRIPLE}" ]]; then
-        local TFLAGS="-march=morello+c64 -mabi=purecap"
+        local TFLAGS="-march=morello -mabi=purecap"
     else
         local TFLAGS="-march=armv8"
     fi
@@ -495,7 +495,7 @@ function build_crt() {
     local DESTDIR=$(${CC} -print-resource-dir)/lib/${TRIPLE}
     local INCLUDE=${SYSROOT}/include
     if [[ "${TRIPLE}" == "${MORELLO_TRIPLE}" ]]; then
-        local XFLAGS="--target=${TRIPLE} -march=morello+c64 -mabi=purecap -nostdinc -isystem ${INCLUDE}"
+        local XFLAGS="--target=${TRIPLE} -march=morello -mabi=purecap -nostdinc -isystem ${INCLUDE}"
     else
         local XFLAGS="--target=${TRIPLE} -nostdinc -isystem ${INCLUDE}"
     fi
@@ -614,7 +614,7 @@ function build_musl_test() {
     local TRIPLE=${3}               # target triple
     local SKIP_TEST_RUN=${5:-${4:-NO}} # whether to skip running tests
     if [[ "${TRIPLE}" == "${MORELLO_TRIPLE}" ]]; then  # these tests are only for Morello
-        local ARCHFLAGS=${ARCHFLAGS:--march=morello+c64}
+        local ARCHFLAGS=${ARCHFLAGS:--march=morello}
         local CFGFLAGS="--enable-morello"
         pushd ${MUSL_PATH}
         make distclean
@@ -638,7 +638,7 @@ function build_libc_test() {
     local LIBC_TEST_PATH=${3}       # path to libc-test suite sources
     local SKIP_TEST_RUN=${4:-NO}    # whether to skip running tests
     if [[ "${TRIPLE}" == "${MORELLO_TRIPLE}" ]]; then
-        local ARCHFLAGS=${ARCHFLAGS:--march=morello+c64}
+        local ARCHFLAGS=${ARCHFLAGS:--march=morello}
     else
         local ARCHFLAGS=${ARCHFLAGS:--march=armv8-a}
     fi

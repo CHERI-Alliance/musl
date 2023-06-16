@@ -6,14 +6,13 @@ extern weak hidden const size_t _DYNAMIC[];
 
 static int static_dl_iterate_phdr(int(*callback)(struct dl_phdr_info *info, size_t size, void *data), void *data)
 {
-	void *p, *aux_at_phdr;
+	void *aux_at_phdr;
 	ElfW(Phdr) *phdr, *tls_phdr=0;
-	size_t base = 0;
+	uintptr_t base = 0;
 	size_t n;
 	struct dl_phdr_info info;
 	size_t i;
-	uintptr_t aux_at_phent;
-	uintptr_t aux_at_phnum;
+	size_t aux_at_phent, aux_at_phnum;
 
 	for (i=0; libc.auxv[i].a_type; i++) {
 		switch (libc.auxv[i].a_type)
@@ -22,28 +21,31 @@ static int static_dl_iterate_phdr(int(*callback)(struct dl_phdr_info *info, size
 			aux_at_phdr = libc.auxv[i].a_un.a_ptr;
 			break;
 		case AT_PHENT:
-			aux_at_phent = (uintptr_t)libc.auxv[i].a_un.a_ptr;
+			aux_at_phent = libc.auxv[i].a_un.a_val;
 			break;
 		case AT_PHNUM:
-			aux_at_phnum = (uintptr_t)libc.auxv[i].a_un.a_ptr;
+			aux_at_phnum = libc.auxv[i].a_un.a_val;
 			break;
 		}
-
 	}
 
-	for (p = aux_at_phdr, n = aux_at_phnum; n; n--, p += aux_at_phent) {
-		phdr = (void *)p;
+	for (phdr = aux_at_phdr, n = aux_at_phnum; n; n--) {
 		if (phdr->p_type == PT_PHDR)
-			base = aux_at_phdr - phdr->p_vaddr;
+			base = (uintptr_t)((char *)aux_at_phdr - phdr->p_vaddr);
 		if (phdr->p_type == PT_DYNAMIC && _DYNAMIC)
 			base = (size_t)_DYNAMIC - phdr->p_vaddr;
 		if (phdr->p_type == PT_TLS)
 			tls_phdr = phdr;
+		/*
+		 * We need to advance by the amount of bytes advertised in
+		 * the AUX vector, not just by the size of our PHDR struct.
+		 */
+		phdr = (ElfW(Phdr) *)((char *)phdr + aux_at_phent);
 	}
 	info.dlpi_addr  = base;
 	info.dlpi_name  = "/proc/self/exe";
 	info.dlpi_phdr  = aux_at_phdr;
-	info.dlpi_phnum = aux_at_phdr;
+	info.dlpi_phnum = aux_at_phnum;
 	info.dlpi_adds  = 0;
 	info.dlpi_subs  = 0;
 	if (tls_phdr) {

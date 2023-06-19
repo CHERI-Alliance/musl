@@ -1027,7 +1027,7 @@ static void *map_library(int fd, struct dso *dso)
 			dso->phentsize = eh->e_phentsize;
 		}
 		this_min = ph->p_vaddr & -PAGE_SIZE;
-		this_max = ph->p_vaddr+ph->p_memsz+PAGE_SIZE-1 & -PAGE_SIZE;
+		this_max = ALIGN(ph->p_vaddr+ph->p_memsz, PAGE_SIZE);
 		off_start = ph->p_offset & -PAGE_SIZE;
 		prot = (((ph->p_flags&PF_R) ? PROT_READ : 0) |
 			((ph->p_flags&PF_W) ? PROT_WRITE: 0) |
@@ -1037,10 +1037,10 @@ static void *map_library(int fd, struct dso *dso)
 			if (mmap_fixed(base+this_min, this_max-this_min, prot, MAP_PRIVATE|MAP_FIXED, fd, off_start) == MAP_FAILED)
 				goto error;
 		if (ph->p_memsz > ph->p_filesz && (ph->p_flags&PF_W)) {
-			size_t *brk = base+ph->p_vaddr+ph->p_filesz;
-			size_t pgbrk = (size_t)brk+PAGE_SIZE-1 & -PAGE_SIZE;
-			memset(brk, 0, pgbrk-(size_t)brk & PAGE_SIZE-1);
-			if (pgbrk-(size_t)base < this_max && mmap_fixed((void *)pgbrk, (size_t)base+this_max-pgbrk, prot, MAP_PRIVATE|MAP_FIXED|MAP_ANONYMOUS, -1, 0) == MAP_FAILED)
+			unsigned char *brk = base+ph->p_vaddr+ph->p_filesz;
+			unsigned char *pgbrk = (unsigned char *)ALIGN((uintptr_t)brk, PAGE_SIZE);
+			memset(brk, 0, pgbrk - brk & PAGE_SIZE-1);
+			if ((pgbrk - base) < this_max && mmap_fixed(pgbrk, base+this_max-pgbrk, prot, MAP_PRIVATE|MAP_FIXED|MAP_ANONYMOUS, -1, 0) == MAP_FAILED)
 				goto error;
 		}
 	}

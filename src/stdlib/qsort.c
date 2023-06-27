@@ -24,6 +24,7 @@
 /* Smoothsort, an adaptive variant of Heapsort.  Memory usage: O(1).
    Run time: Worst case O(n log n), close to O(n) in the mostly-sorted case. */
 
+#define _BSD_SOURCE
 #include <stdint.h>
 #include <stdlib.h>
 #include <string.h>
@@ -33,11 +34,11 @@
 
 #include "cheri_helpers.h"
 
-typedef int (*cmpfun)(const void *, const void *);
+typedef int (*cmpfun)(const void *, const void *, void *);
 
-inline int cmpwrapper(cmpfun cmp, const void *a, const void *b, size_t width) {
+inline int cmpwrapper(cmpfun cmp, const void *a, const void *b, void *arg, size_t width) {
   return (*cmp)(RESTRICT_BNDS_IF_CHERI(a, width),
-                RESTRICT_BNDS_IF_CHERI(b, width));
+                RESTRICT_BNDS_IF_CHERI(b, width), arg);
 }
 
 static inline int pntz(size_t p[2]) {
@@ -95,7 +96,7 @@ static inline void shr(size_t p[2], int n)
 	p[1] >>= n;
 }
 
-static void sift(unsigned char *head, size_t width, cmpfun cmp, int pshift, size_t lp[])
+static void sift(unsigned char *head, size_t width, cmpfun cmp, void *arg, int pshift, size_t lp[])
 {
 	unsigned char *rt, *lf;
 	unsigned char *ar[14 * sizeof(size_t) + 1];
@@ -106,11 +107,10 @@ static void sift(unsigned char *head, size_t width, cmpfun cmp, int pshift, size
 		rt = head - width;
 		lf = head - width - lp[pshift - 2];
 
-		if(cmpwrapper(cmp, ar[0], lf, width) >= 0 &&
-		   cmpwrapper(cmp, ar[0], rt, width) >= 0) {
+		if(cmp(ar[0], lf, arg) >= 0 && cmp(ar[0], rt, arg) >= 0) {
 			break;
 		}
-		if(cmpwrapper(cmp, lf, rt, width) >= 0) {
+		if(cmpwrapper(cmp, lf, rt, arg, width) >= 0) {
 			ar[i++] = lf;
 			head = lf;
 			pshift -= 1;
@@ -123,7 +123,7 @@ static void sift(unsigned char *head, size_t width, cmpfun cmp, int pshift, size
 	cycle(width, ar, i);
 }
 
-static void trinkle(unsigned char *head, size_t width, cmpfun cmp, size_t pp[2], int pshift, int trusty, size_t lp[])
+static void trinkle(unsigned char *head, size_t width, cmpfun cmp, void *arg, size_t pp[2], int pshift, int trusty, size_t lp[])
 {
 	unsigned char *stepson,
 	              *rt, *lf;
@@ -138,14 +138,13 @@ static void trinkle(unsigned char *head, size_t width, cmpfun cmp, size_t pp[2],
 	ar[0] = head;
 	while(p[0] != 1 || p[1] != 0) {
 		stepson = head - lp[pshift];
-		if(cmpwrapper(cmp, stepson, ar[0], width) <= 0) {
+		if(cmpwrapper(cmp, stepson, ar[0], arg, width) <= 0) {
 			break;
 		}
 		if(!trusty && pshift > 1) {
 			rt = head - width;
 			lf = head - width - lp[pshift - 2];
-			if(cmpwrapper(cmp, rt, stepson, width) >= 0 ||
-			   cmpwrapper(cmp, lf, stepson, width) >= 0) {
+			if(cmpwrapper(cmp, rt, stepson, arg, width) >= 0 || cmpwrapper(cmp, lf, stepson, arg, width) >= 0) {
 				break;
 			}
 		}
@@ -159,11 +158,11 @@ static void trinkle(unsigned char *head, size_t width, cmpfun cmp, size_t pp[2],
 	}
 	if(!trusty) {
 		cycle(width, ar, i);
-		sift(head, width, cmp, pshift, lp);
+		sift(head, width, cmp, arg, pshift, lp);
 	}
 }
 
-void qsort(void *base, size_t nel, size_t width, cmpfun cmp)
+void __qsort_r(void *base, size_t nel, size_t width, cmpfun cmp, void *arg)
 {
 	size_t lp[12*sizeof(size_t)];
 	size_t i, size = width * nel;
@@ -182,16 +181,16 @@ void qsort(void *base, size_t nel, size_t width, cmpfun cmp)
 
 	while(head < high) {
 		if((p[0] & 3) == 3) {
-			sift(head, width, cmp, pshift, lp);
+			sift(head, width, cmp, arg, pshift, lp);
 			shr(p, 2);
 			pshift += 2;
 		} else {
 			if(lp[pshift - 1] >= high - head) {
-				trinkle(head, width, cmp, p, pshift, 0, lp);
+				trinkle(head, width, cmp, arg, p, pshift, 0, lp);
 			} else {
-				sift(head, width, cmp, pshift, lp);
+				sift(head, width, cmp, arg, pshift, lp);
 			}
-			
+
 			if(pshift == 1) {
 				shl(p, 1);
 				pshift = 0;
@@ -200,12 +199,12 @@ void qsort(void *base, size_t nel, size_t width, cmpfun cmp)
 				pshift = 1;
 			}
 		}
-		
+
 		p[0] |= 1;
 		head += width;
 	}
 
-	trinkle(head, width, cmp, p, pshift, 0, lp);
+	trinkle(head, width, cmp, arg, p, pshift, 0, lp);
 
 	while(pshift != 1 || p[0] != 1 || p[1] != 0) {
 		if(pshift <= 1) {
@@ -217,11 +216,13 @@ void qsort(void *base, size_t nel, size_t width, cmpfun cmp)
 			pshift -= 2;
 			p[0] ^= 7;
 			shr(p, 1);
-			trinkle(head - lp[pshift] - width, width, cmp, p, pshift + 1, 1, lp);
+			trinkle(head - lp[pshift] - width, width, cmp, arg, p, pshift + 1, 1, lp);
 			shl(p, 1);
 			p[0] |= 1;
-			trinkle(head - width, width, cmp, p, pshift, 1, lp);
+			trinkle(head - width, width, cmp, arg, p, pshift, 1, lp);
 		}
 		head -= width;
 	}
 }
+
+weak_alias(__qsort_r, qsort_r);

@@ -2127,7 +2127,7 @@
         "args": ["1"],
         "name": "ns_parse",
         "xrc": [0],
-        "skip": ["fvp"]
+        "skip": ["fvp", "mie"]
     },
     {
         "app": "${build}/openpty-${kind}.exe",

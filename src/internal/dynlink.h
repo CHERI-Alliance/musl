@@ -100,7 +100,11 @@ struct fdpic_dummy_loadmap {
 #define DT_DEBUG_INDIRECT 0
 #endif
 
-#define DYN_CNT 32
+#ifndef DT_DEBUG_INDIRECT_REL
+#define DT_DEBUG_INDIRECT_REL 0
+#endif
+
+#define DYN_CNT 37
 
 #if defined(__CHERI_PURE_CAPABILITY__)
 typedef void (*stage2_func)(unsigned char *, unsigned char *, size_t *, int, char **, char **, uintptr_t *);

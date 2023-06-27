@@ -212,6 +212,21 @@ hidden void _dlstart_c(uintptr_t *sp, size_t *dynv_raw)
 		*rel_addr = cap;
 #endif
 	}
+
+	rel = (void *)(base_rx+DYN_VAL(dyn[DT_RELR]));
+	rel_size = DYN_VAL(dyn[DT_RELRSZ]);
+	size_t *relr_addr = 0;
+	for (; rel_size; rel++, rel_size-=sizeof(size_t)) {
+		if ((rel[0]&1) == 0) {
+			relr_addr = (void *)(base_rx + rel[0]);
+			*relr_addr++ += (size_t)base_rx;
+		} else {
+			for (size_t i=0, bitmap=rel[0]; bitmap>>=1; i++)
+				if (bitmap&1)
+					relr_addr[i] += (size_t)base_rx;
+			relr_addr += 8*sizeof(size_t)-1;
+		}
+	}
 #endif
 
 	stage2_func dls2;

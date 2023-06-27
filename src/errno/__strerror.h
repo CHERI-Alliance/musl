@@ -103,4 +103,11 @@ E(ENOMEDIUM,    "No medium found")
 E(EMEDIUMTYPE,  "Wrong medium type")
 E(EMULTIHOP,    "Multihop attempted")
 
+#ifdef ERESERVATION
 E(ERESERVATION, "Bad memory reservation")
+#endif
+
+E(ENOKEY,       "Required key not available")
+E(EKEYEXPIRED,  "Key has expired")
+E(EKEYREVOKED,  "Key has been revoked")
+E(EKEYREJECTED, "Key was rejected by service")

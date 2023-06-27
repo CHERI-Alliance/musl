@@ -66,8 +66,13 @@ static void cancel_handler(int sig, siginfo_t *si, void *ctx)
 
 	_sigaddset(&uc->uc_sigmask, SIGCANCEL);
 
-	if (self->cancelasync || is_pc_cancellable(self, pc)) {
-		uc->uc_mcontext.MC_PC = (cancel_pc_t)__cp_cancel;
+	if (self->cancelasync) {
+		pthread_sigmask(SIG_SETMASK, &uc->uc_sigmask, 0);
+		__cancel();
+	}
+
+	if (is_pc_cancellable(self, pc)) {
+		uc->uc_mcontext.MC_PC = (uintptr_t)__cp_cancel;
 #ifdef CANCEL_GOT
 		uc->uc_mcontext.MC_GOT = CANCEL_GOT;
 #endif
@@ -87,7 +92,7 @@ void __testcancel()
 static void init_cancellation()
 {
 	struct sigaction sa = {
-		.sa_flags = SA_SIGINFO | SA_RESTART,
+		.sa_flags = SA_SIGINFO | SA_RESTART | SA_ONSTACK,
 		.sa_sigaction = cancel_handler
 	};
 	memset(&sa.sa_mask, -1, _NSIG/8);

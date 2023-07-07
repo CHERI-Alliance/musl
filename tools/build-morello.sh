@@ -545,7 +545,7 @@ function build_musl() {
     rm -rf ${PREFIX_PATH}
     pushd ${MUSL_PATH}
     make distclean
-    ./configure --prefix=${PREFIX_PATH} --target=${TRIPLE} ${CFGFLAGS}
+    ./configure --prefix=${PREFIX_PATH} --target=${TRIPLE} ${CFGFLAGS} --enable-debug
     make -j${MORELLO_NPROC:-8}
     make install
     mkdir -p ${PREFIX_PATH}/share
@@ -651,7 +651,7 @@ function build_libc_test() {
     pushd ${LIBC_TEST_PATH}
     make clean
     make -j${MORELLO_NPROC:-8} build \
-        SYSROOT=${PREFIX_PATH} TRIPLE=${TRIPLE} ARCHFLAGS=${ARCHFLAGS}
+        SYSROOT=${PREFIX_PATH} TRIPLE=${TRIPLE} ARCHFLAGS=${ARCHFLAGS} MORELLO_STATIC_CFLAGS="-Wl,--local-caprelocs=elf"
     if [[ "${SKIP_TEST_RUN}" == "NO" ]]; then
         make -k run SYSROOT=${PREFIX_PATH} TRIPLE=${TRIPLE} ARCHFLAGS=${ARCHFLAGS}
     fi

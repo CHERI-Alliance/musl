@@ -44,6 +44,7 @@ LDFLAGS_AUTO =
 LIBCC = -lgcc
 CPPFLAGS =
 CFLAGS =
+CFLAGS_MORELLO_STATIC =
 CFLAGS_AUTO = -Os -pipe
 CFLAGS_C99FSE = -std=c99 -ffreestanding -nostdinc
 
@@ -149,13 +150,13 @@ else
 endif
 
 obj/%.o: $(srcdir)/%.s
-	$(AS_CMD)
+	$(AS_CMD) $(CFLAGS_MORELLO_STATIC)
 
 obj/%.o: $(srcdir)/%.S
-	$(CC_CMD)
+	$(CC_CMD) $(CFLAGS_MORELLO_STATIC)
 
 obj/%.o: $(srcdir)/%.c $(GENH) $(IMPH)
-	$(CC_CMD)
+	$(CC_CMD) $(CFLAGS_MORELLO_STATIC)
 
 obj/%.lo: $(srcdir)/%.s
 	$(AS_CMD)
@@ -175,7 +176,7 @@ lib/libc.so: $(LOBJS) $(LDSO_OBJS)
 
 lib/libc.a: $(AOBJS)
 	rm -f $@
-	$(AR) rc $@ $(AOBJS)
+	$(AR) rc $@ $(AOBJS) 
 	$(RANLIB) $@
 
 $(EMPTY_LIBS):

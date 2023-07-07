@@ -20,7 +20,7 @@ CFLAGS += -g -fno-builtin-mempcpy
 CFLAGS += -Wall -Wpedantic -Werror
 CFLAGS += -Wno-gnu-empty-initializer -Wno-gnu-folding-constant -Wno-gnu-statement-expression
 
-LDFLAGS += --target=$(TRIPLE) --sysroot=$(SYSROOT) -march=morello
+LDFLAGS += --target=$(TRIPLE) --sysroot=$(SYSROOT) $(LDFLAGS_MORELLO)
 LDFLAGS += ${TEST_LDFLAGS}
 LDFLAGS += -g -fuse-ld=lld
 LDLIBS += -lc
@@ -71,9 +71,9 @@ src/lib/lib%.so: src/lib/%.c
 include ldso.mk
 
 %-static.exe: %.o $(addprefix $(MUSLLIB)/,$(MUSL_BITS_STATIC))
-	$(CC) $(LDFLAGS) $< -o $@ $(LDLIBS) -static
+	$(CC) $(LDFLAGS) $< -o $@ $(LDLIBS) -static $(CFLAGS_MORELLO_STATIC)
 
-%-dynamic.exe: %.lo $(addprefix $(MUSLLIB)/,$(MUSL_BITS_STATIC))
+%-dynamic.exe: %.lo $(addprefix $(MUSLLIB)/,$(MUSL_BITS_DYNAMIC))
 	$(CC) $(LDFLAGS) $< -o $@ $(LDLIBS) -Wl,--dynamic-linker,$(MUSLLIB)/libc.so
 
 run-%: src/%.exe

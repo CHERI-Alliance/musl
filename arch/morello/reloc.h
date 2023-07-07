@@ -29,7 +29,7 @@
 	"mov csp,%1 ; br %0" : : "r"(pc), "r"(sp) : "memory" )
 
 typedef struct {
-	unsigned long address;
-	unsigned long length : 56;
-	unsigned long perms : 8;
+	uint64_t address;
+	uint64_t length : 56;
+	uint64_t perms : 8;
 } morello_reloc_cap_t;

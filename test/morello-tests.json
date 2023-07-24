@@ -2722,5 +2722,11 @@
         "args": ["5"],
         "xrc": [0],
         "stdout": ["0x0", "0x0"]
+    },
+    {
+        "app": "${build}/stt_tls_symboltest-${kind}.exe",
+        "name": "stt_tls_symboltest",
+        "xrc": [0],
+        "stdout": ["44"]
     }
 ]

@@ -63,3 +63,8 @@ src/capinit-static.exe: private LDFLAGS += src/lib/capinit-lib.o
 
 src/capinit-dynamic.exe: src/lib/libcapinit-lib.so
 src/capinit-dynamic.exe: private LDLIBS += -lcapinit-lib $(LFLAGS)
+
+# stt-tls-symbol Library
+src/stt_tls_symboltest.lo src/stt_tls_symboltest.o: CFLAGS += -I src/lib
+src/stt_tls_symboltest-dynamic.exe: src/lib/libstt-tls-symbol-lib.so
+src/stt_tls_symboltest-dynamic.exe: private LDLIBS += -lstt-tls-symbol-lib $(LFLAGS)

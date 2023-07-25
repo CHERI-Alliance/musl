@@ -2673,6 +2673,25 @@
         "xrc": [0]
     },
     {
+        "app": "${build}/wchar_fileio-${kind}.exe",
+        "name": "wchar_file",
+        "args": ["0"],
+        "xrc": [0]
+    },
+    {
+        "app": "${build}/wchar_fileio-${kind}.exe",
+        "name": "wchar_std",
+        "args": ["1"],
+        "stdin": "ç",
+        "xrc": [0]
+    },
+    {
+        "app": "${build}/wchar_fileio-${kind}.exe",
+        "name": "wstr_file",
+        "args": ["2"],
+        "xrc": [0]
+    },
+    {
         "app": "${build}/cmpt-xor-${kind}.exe",
         "name": "cmpt-xor",
         "xrc": [0],

@@ -127,8 +127,22 @@ static int test_remap(int test_type)
 			perror("mremap");
 			return 2;
 		}
-		// Here, 'mem' is not suppose to be unmapped.
-		check = CHECK_MEM_TAGS(new_mem, mem, new_mem_size);
+		// Allocate another region to use as a reference
+		ref_mem = malloc(mem_size);
+		memset(ref_mem, 0, mem_size);
+		// Check that the PTEs for the old region no longer exist - expecting to see all 0s
+		if (memcmp(mem, ref_mem, mem_size)) {
+			perror("mremap - Old region should read all 0s!");
+			return 3;
+		}
+		// Check that the tags associated with the old region were cleared
+		if (CHECK_MEM_TAGS(mem, ref_mem, mem_size)) {
+			perror("mremap - Tags associated with old region should be 0!");
+			return 4;
+		}
+		ASSIGN_CAPS((int**)ref_mem);
+		// Check that the tags in the remapped memory match those in the reference memory
+		check = CHECK_MEM_TAGS(new_mem, ref_mem, new_mem_size);
 		break;
 	case TEST_SHOULD_SEGFAULT:
 		new_addr = mmap(NULL, new_mem_size, PROT_READ | PROT_WRITE, MAP_PRIVATE | MAP_ANONYMOUS,

@@ -1422,7 +1422,7 @@
         "name": "mremap-move-dontunmap",
         "args": ["3"],
         "xrc": [0],
-        "skip": ["morello", "fvp"]
+        "skip": ["mie"]
     },
     {
         "app": "${build}/mremap-${kind}.exe",

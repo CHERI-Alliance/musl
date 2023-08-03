@@ -2141,7 +2141,8 @@
         "args": [],
         "name": "forkpty",
         "xrc": [0],
-        "ignore": ["fvp"]
+	"skip": ["fvp"],
+	"timeout": 30
     },
     {
         "app": "${build}/sockatmark-${kind}.exe",

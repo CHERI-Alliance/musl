@@ -36,7 +36,7 @@ int main(int argc, char *argv[])
             printf("parent: created child process %d\n", pid);
             printf("parent: name = %s\n", name);
             int status;
-            waitpid(pid, &status, WNOHANG);
+            waitpid(pid, &status, 0);
             res = WEXITSTATUS(status);
             printf("parent: child exited with status %d\n", res);
             char buffer[64];

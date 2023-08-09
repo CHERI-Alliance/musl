@@ -399,6 +399,7 @@ EOF
     -DLIBCXX_SYSROOT="${SYSROOT}" \
     -DLIBCXX_CXX_ABI="libcxxabi" \
     -DLIBCXX_ENABLE_ABI_LINKER_SCRIPT=OFF \
+    -DLIBCXX_INSTALL_INCLUDE_TARGET_DIR="${MORELLO_LLVM_PATH}/include/${TRIPLE}/c++/v1" \
     -DCMAKE_INSTALL_PREFIX=${SYSROOT} \
     -DLIBCXX_TARGET_INFO="libcxx.test.target_info.LinuxLocalTI" \
     -DLIBCXX_TEST_COMPILER_FLAGS="--sysroot=${SYSROOT} ${TFLAGS} -isystem ${BUILD_PATH}/kernel-headers/usr/include" \
@@ -601,13 +602,11 @@ function build_libcxx() {
     local KERNEL_BRANCH=${6:-"morello/master"}   # (optional default: latest) version of kernel headers to download
     local TARGET_INCLUDE_PATH=${MORELLO_LLVM_PATH}/include/${TRIPLE}/c++/v1
     rm -rf ${BUILD_PATH}
+    mkdir -p ${TARGET_INCLUDE_PATH}
     __configure_libcxx ${LLVM_PROJECT} ${MORELLO_LLVM_PATH} ${BUILD_PATH} ${SYSROOT} ${TRIPLE} ${KERNEL_BRANCH}
     pushd ${BUILD_PATH}
     make -j${MORELLO_NPROC:-4}
     make install
-    # setup config_site required for building c++ applications
-    mkdir -p ${TARGET_INCLUDE_PATH}
-    mv ${BUILD_PATH}/include/c++/v1/__config_site ${TARGET_INCLUDE_PATH}/
     popd
 }
 

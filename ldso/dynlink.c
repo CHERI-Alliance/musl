@@ -701,16 +701,16 @@ static void do_relocs(struct dso *dso, size_t *rel, size_t rel_size, size_t stri
 				- (size_t)reloc_addr;
 			break;
 		case REL_FUNCDESC:
-			*reloc_addr = def.sym ? (size_t)(def.dso->funcdescs
+			*reloc_addr = def.sym ? (void *)(def.dso->funcdescs
 				+ (def.sym - def.dso->syms)) : 0;
 			break;
 		case REL_FUNCDESC_VAL:
 			if ((sym->st_info&0xf) == STT_SECTION) *reloc_addr += (size_t)sym_val;
 			else *reloc_addr = sym_val;
-			reloc_addr[1] = def.sym ? (size_t)def.dso->got : 0;
+			reloc_addr[1] = def.sym ? def.dso->got : 0;
 			break;
 		case REL_DTPMOD:
-			*reloc_addr = def.dso->tls_id;
+			*reloc_addr = (void *)def.dso->tls_id;
 			break;
 		case REL_DTPOFF:
 			*reloc_addr = tls_val + addend - DTP_OFFSET;
@@ -1931,7 +1931,7 @@ static void dl_debug_state(void)
 
 weak_alias(dl_debug_state, _dl_debug_state);
 
-void __init_tls(uintptr_t *)
+void __init_tls(uintptr_t *p)
 {
 }
 

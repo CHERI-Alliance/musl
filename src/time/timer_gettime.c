@@ -9,7 +9,7 @@ int timer_gettime(timer_t t, struct itimerspec *val)
 	if(t.thread)
 	{
 		pthread_t td = t.ptr;
-		timer = td->timer_id;
+		timer = (void *)td->timer_id;
 	}
 	else
 	{

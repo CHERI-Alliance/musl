@@ -80,7 +80,7 @@ int timer_create(clockid_t clk, struct sigevent *restrict evp, timer_t *restrict
 		if (syscall(SYS_timer_create, clk, ksevp, &timerid) < 0)
 			return -1;
 #ifdef __CHERI_PURE_CAPABILITY__
-		res->ptr = timerid;
+		res->ptr = (void *)(intptr_t)timerid;
 		res->thread = 0;
 #else
 		*res = (void *)(intptr_t)timerid;

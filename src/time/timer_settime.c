@@ -11,7 +11,7 @@ int timer_settime(timer_t t, int flags, const struct itimerspec *restrict val, s
 	if(t.thread)
 	{
 		pthread_t td = t.ptr;
-		timer = td->timer_id;
+		timer = (void *)td->timer_id;
 	}
 	else
 	{

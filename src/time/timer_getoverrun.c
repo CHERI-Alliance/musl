@@ -10,7 +10,7 @@ int timer_getoverrun(timer_t t)
 	if(t.thread)
 	{
 		pthread_t td = t.ptr;
-		timer = td->timer_id;
+		timer = (void *)td->timer_id;
 	}
 	else
 	{

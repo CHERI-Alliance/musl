@@ -496,8 +496,8 @@ test "$debug" = yes && CFLAGS_AUTO="-g ${CFLAGS_AUTO}"
 test "$morello" = yes
 if test "$morello" = yes ; then
     if test "$ARCH" = "aarch64" ; then
-        tryflag CFLAGS_MORELLO "-march=morello -mabi=purecap"
-        tryflag LDFLAGS_MORELLO "-march=morello -mabi=purecap"
+        tryflag CFLAGS_MORELLO "-Wno-deprecated -march=morello+c64 -mabi=purecap"
+        tryldflag LDFLAGS_MORELLO "-Wno-deprecated -march=morello+c64 -mabi=purecap"
         ARCH=morello
     else
         fail "$0: Morello can only be enabled for AArch64 target"
@@ -509,7 +509,7 @@ if test "$morello" = yes ; then
 
     # Caprelocs can only be enabled in morello
     if test "$caprelocs" = no; then
-        CFLAGS_MORELLO_STATIC="-Wl,--local-caprelocs=elf"
+        tryldflag CFLAGS_MORELLO_STATIC "-Wl,--local-caprelocs=elf"
     fi
 fi
 

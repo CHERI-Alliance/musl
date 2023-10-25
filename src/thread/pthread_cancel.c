@@ -24,7 +24,7 @@ intptr_t __syscall_cp_asm(volatile int *, long,
 
 extern hidden const char __cp_begin[1], __cp_end[1], __cp_cancel[1];
 
-static bool is_pc_cancellable(pthread_t, cancel_pc_t pc)
+static bool is_pc_cancellable(cancel_pc_t pc)
 {
 	return pc >= (cancel_pc_t)__cp_begin && pc < (cancel_pc_t)__cp_end;
 }
@@ -71,7 +71,7 @@ static void cancel_handler(int sig, siginfo_t *si, void *ctx)
 		__cancel();
 	}
 
-	if (is_pc_cancellable(self, pc)) {
+	if (is_pc_cancellable(pc)) {
 		uc->uc_mcontext.MC_PC = (uintptr_t)__cp_cancel;
 #ifdef CANCEL_GOT
 		uc->uc_mcontext.MC_GOT = CANCEL_GOT;

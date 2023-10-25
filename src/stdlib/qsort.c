@@ -36,7 +36,7 @@
 
 typedef int (*cmpfun)(const void *, const void *, void *);
 
-inline int cmpwrapper(cmpfun cmp, const void *a, const void *b, void *arg, size_t width) {
+static inline int cmpwrapper(cmpfun cmp, const void *a, const void *b, void *arg, size_t width) {
   return (*cmp)(RESTRICT_BNDS_IF_CHERI(a, width),
                 RESTRICT_BNDS_IF_CHERI(b, width), arg);
 }

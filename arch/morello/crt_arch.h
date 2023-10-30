@@ -142,21 +142,20 @@ __morello_init_static(int argc, char **argv, char **envp, auxv_entry *auxv)
 {
 	void *rw = NULL, *rx = NULL;
 	size_t phnum = 0, phent = 0;
-	void *ph_addr = NULL;
-	Elf64_Phdr *ph;
+	Elf64_Phdr *ph = NULL;
 	for (; auxv->a_type; auxv++) {
 		if (auxv->a_type == AT_CHERI_EXEC_RW_CAP) {
 			rw = auxv->a_un.a_ptr; // used to derive read-only and rw objects
 		} else if (auxv->a_type == AT_CHERI_EXEC_RX_CAP) {
 			rx = auxv->a_un.a_ptr; // used to derive function pointers
 		} else if (auxv->a_type == AT_PHDR) {
-			ph_addr = auxv->a_un.a_ptr;
+			ph = auxv->a_un.a_ptr;
 		} else if (auxv->a_type == AT_PHNUM) {
 			phnum = auxv->a_un.a_val;
 		} else if (auxv->a_type == AT_PHENT) {
 			phent = auxv->a_un.a_val;
 		}
-		if (rw && rx && ph_addr && phnum && phent) {
+		if (rw && rx && ph && phnum && phent) {
 			break;
 		}
 	}
@@ -165,8 +164,7 @@ __morello_init_static(int argc, char **argv, char **envp, auxv_entry *auxv)
 		if (ph->p_type == PT_INTERP) {
 			return;
 		}
-		ph_addr += phent;
-		ph = ph_addr;
+		ph = (void *)((char *)ph + phent);
 	}
 
 	__do_morello_cap_relocs(rw, rx);

@@ -45,17 +45,18 @@ void *__vdsosym(const char *vername, const char *name)
 	size_t i;
 	for (i=0; libc.auxv[i].a_type != AT_SYSINFO_EHDR; i++)
 		if (!libc.auxv[i].a_type) return 0;
-	if (!libc.auxv[i].a_un.a_val) return 0;
-	Ehdr *eh = (void *)libc.auxv[i].a_un.a_val;
+	if (!libc.auxv[i].a_un.a_ptr) return 0;
+	Ehdr *eh = (void *)libc.auxv[i].a_un.a_ptr;
 	Phdr *ph = (void *)((char *)eh + eh->e_phoff);
-	size_t *dynv=0, base=-1;
+	size_t *dynv=0;
+	uintptr_t base=-1;
 	for (i=0; i<eh->e_phnum; i++, ph=(void *)((char *)ph+eh->e_phentsize)) {
 		if (ph->p_type == PT_LOAD)
-			base = (size_t)eh + ph->p_offset - ph->p_vaddr;
+			base = (uintptr_t)eh + ph->p_offset - ph->p_vaddr;
 		else if (ph->p_type == PT_DYNAMIC)
 			dynv = (void *)((char *)eh + ph->p_offset);
 	}
-	if (!dynv || base==(size_t)-1) return 0;
+	if (!dynv || base==(uintptr_t)-1) return 0;
 
 	char *strings = 0;
 	Sym *syms = 0;

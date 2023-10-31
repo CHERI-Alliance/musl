@@ -71,10 +71,8 @@ static inline intptr_t __syscall6(intptr_t n, intptr_t a, intptr_t b, intptr_t c
 	__asm_syscall("C"(x8), "0"(x0), "C"(x1), "C"(x2), "C"(x3), "C"(x4), "C"(x5));
 }
 
-/*
- TODO: eventually we want to support VDSO in musl, however while there is no
- support for this in the kernel we will just use normal syscalls
-*/
-#undef VDSO_USEFUL
+#define VDSO_USEFUL
+#define VDSO_CGT_SYM "__kernel_clock_gettime"
+#define VDSO_CGT_VER "LINUX_2.6.39"
 
 #define IPC_64 0

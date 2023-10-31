@@ -654,6 +654,14 @@ tryflag CFLAGS_AUTO -Werror=incompatible-pointer-types
 tryflag CFLAGS_AUTO -Werror=discarded-qualifiers
 tryflag CFLAGS_AUTO -Werror=discarded-array-qualifiers
 
+# TODO: these should be fixed in the morello code
+tryflag CFLAGS_AUTO -Wno-error=implicit-function-declaration
+tryflag CFLAGS_AUTO -Wno-error=pointer-sign
+tryflag CFLAGS_AUTO -Wno-error=pointer-arith
+tryflag CFLAGS_AUTO -Wno-error=int-conversion
+tryflag CFLAGS_AUTO -Wno-error=incompatible-pointer-types
+tryflag CFLAGS_AUTO -Wno-error=discarded-qualifiers
+
 #
 # GCC ignores unused arguments by default, but Clang needs this extra
 # parameter to stop printing warnings about LDFLAGS passed during

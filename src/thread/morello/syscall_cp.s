@@ -17,7 +17,7 @@
 __syscall_cp_asm:
 __cp_begin:
 	ldr w0,[c0]
-	cbnz w0,__cp_cancel
+	cbnz w0,1f // __cp_cancel
 	mov c8,c1
 	mov c0,c2
 	mov c1,c3
@@ -28,6 +28,7 @@ __cp_begin:
 	svc 0
 __cp_end:
 	ret
+1:
 __cp_cancel:
 	b __cancel
 .L__cp_cancel_end:

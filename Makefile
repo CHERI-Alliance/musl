@@ -82,11 +82,6 @@ export CONFIG = $(CURDIR)/config.mak
 -include $(CONFIG)
 -include $(srcdir)/arch/$(ARCH)/arch.mak
 
-ifeq ($(ARCH),morello)
-AOBJS := $(filter-out %/lite_malloc.o,$(AOBJS))
-LOBJS := $(filter-out %/lite_malloc.lo,$(LOBJS))
-endif
-
 ifeq ($(ARCH),)
 
 all:

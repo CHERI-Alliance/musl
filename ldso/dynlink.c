@@ -79,19 +79,15 @@ struct dso {
 	 *
 	 */
 	unsigned char *base;
-	/**
-	 * Non CHERI: Unused
-	 *
-	 * CHERI: rw capability encompassing all writable load segments.
-	 * Address is considered unset and is set with set_rw_cap macro when used.
-	 *
-	 */
-	unsigned char *rw_capability;
 #endif
 	char *name;
 	size_t *dynv;
 	struct dso *next, *prev;
 
+#ifdef __CHERI_PURE_CAPABILITY__
+	/* CHERI: rw capability encompassing all writable load segments.  */
+	unsigned char *rw_capability;
+#endif
 	Phdr *phdr;
 	int phnum;
 	size_t phentsize;

@@ -52,6 +52,10 @@ rm -vf ${BUNDLE_NAME}*.tar.gz
 bash ${MUSL_PATH}/tools/build-morello.sh package ${MORELLO_LLVM_PATH} ${BUNDLE_NAME}
 popd
 
+# Collect artefacts
+mv ${CLANG_WORKSPACE}/*clang*.tar.gz .
+mv ${CLANG_WORKSPACE}/llvm-test-results-*.xml .
+
 # Build Musl
 rm -rf ${AARCH64_SYSROOT} ${PURECAP_SYSROOT}
 bash ${MUSL_PATH}/tools/build-morello.sh musl ${MUSL_PATH} ${AARCH64_SYSROOT} -- aarch64-unknown-linux-gnu

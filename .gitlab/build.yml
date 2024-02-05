@@ -10,24 +10,24 @@ variables:
   LLVM_BRANCH: "morello/dev"
   LLVM_VERSION: "dev"
 
-build-musl-aarch64-llvm:
+build-musl-aarch64:
   image: ${CI_REGISTRY}/morello/morello-ci-restricted-containers/morello-morelloie:latest.arm64
+  tags:
+    - arm64
   stage: build
   script:
     - /bin/bash .gitlab/build-aarch64-llvm.sh
-  tags:
-    - arm64
   artifacts:
     when: always
     paths:
-      - "test/*.xml"
-      - "test/morello-musl-tests-purecap.tar.gz"
+      - "*-results.xml"
+      - "*.tar.gz"
     expire_in: 15 days
     reports:
       junit:
-        - ${CI_PROJECT_DIR}/test/*.xml
+        - "*-results.xml"
 
-build-musl-x86-llvm:
+build-musl-x86:
   image: ${CI_REGISTRY}/morello/morello-ci-restricted-containers/morello-morelloie:latest.amd64
   stage: build
   script:
@@ -35,6 +35,8 @@ build-musl-x86-llvm:
 
 build-toolchain-aarch64:
   image: ${CI_REGISTRY}/morello/morello-ci-restricted-containers/morello-morelloie:latest.arm64
+  tags:
+    - arm64_fast
   variables:
     LLVM_TARGETS: "AArch64"
     LLVM_TEST_REPORT: "llvm-test-results-aarch64.xml"
@@ -44,8 +46,6 @@ build-toolchain-aarch64:
   needs: []
   script:
     - /bin/bash .gitlab/build-toolchain.sh
-  tags:
-    - arm64_fast
   rules:
     - if: '$CI_PIPELINE_SOURCE == "push" && $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH'
     - if: '$CI_PIPELINE_SOURCE == "web"'
@@ -53,8 +53,8 @@ build-toolchain-aarch64:
   artifacts:
     when: always
     paths:
-      - "clang/*clang*.tar.gz"
-      - "clang/*.xml"
+      - "*clang*.tar.gz"
+      - "llvm-test-results-*.xml"
     expire_in: 15 days
 
 build-toolchain-x86:
@@ -75,17 +75,17 @@ build-toolchain-x86:
   artifacts:
     when: always
     paths:
-      - "clang/*clang*.tar.gz"
-      - "clang/*.xml"
+      - "*clang*.tar.gz"
+      - "llvm-test-results-*.xml"
     expire_in: 15 days
 
 test-morello-examples:
   image: ${CI_REGISTRY}/morello/morello-ci-restricted-containers/morello-morelloie:latest.arm64
+  tags:
+    - arm64
   variables:
     MORELLO_EXAMPLES_BRANCH: "main"
   stage: test
   needs: []
   script:
     - /bin/bash .gitlab/test-morello-examples.sh
-  tags:
-    - arm64

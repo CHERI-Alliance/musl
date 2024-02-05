@@ -51,5 +51,8 @@ export TEST_RUNNER_TAGS='morello purecap'
 make -C test bundle-tests
 pushd test
 gzip morello-musl-tests.tar
-mv morello-musl-tests.tar.gz morello-musl-tests-purecap.tar.gz
 popd
+
+# Collect artefacts
+mv test/morello-musl-tests.tar.gz morello-musl-tests-purecap.tar.gz
+mv test/*-results.xml .

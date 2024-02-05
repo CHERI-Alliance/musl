@@ -2,8 +2,6 @@
 
 set -xe
 
-sudo apt install -q=2 --yes --no-install-recommends --no-install-suggests wget
-
 export MORELLOIE_PREFIX=${HOME}/morelloie
 export MORELLOIE=${MORELLOIE_PREFIX}/bin/morelloie
 export LLVM_PREFIX=${HOME}/llvm

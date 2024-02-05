@@ -2,8 +2,6 @@
 
 set -xe
 
-sudo apt install -q=2 --yes --no-install-recommends --no-install-suggests wget patchelf
-
 export MORELLOIE_PREFIX=${HOME}/morelloie
 export MORELLOIE=${MORELLOIE_PREFIX}/bin/morelloie
 

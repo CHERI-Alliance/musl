@@ -2,8 +2,6 @@
 
 set -xe
 
-sudo apt install -q=2 --yes --no-install-recommends --no-install-suggests wget
-
 # Env vars for AArch64-hosted build
 export MUSL_PATH=${PWD}
 export CLANG_WORKSPACE=${PWD}/clang

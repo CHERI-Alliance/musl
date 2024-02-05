@@ -32,18 +32,18 @@ ${MORELLO_LLVM_PATH}/bin/clang --version
 # Run Clang tests
 LD_LIBRARY_PATH=${BUILD_PATH}/lib bash ${MUSL_PATH}/tools/build-morello.sh clang-test ${BUILD_PATH}
 
-# Install Musl headers
+# Use new compiler
 export CC=${MORELLO_LLVM_PATH}/bin/clang
+
+# Install Musl headers
 bash ${MUSL_PATH}/tools/build-morello.sh musl-headers ${MUSL_PATH} ${AARCH64_SYSROOT} aarch64-unknown-linux-gnu
 bash ${MUSL_PATH}/tools/build-morello.sh musl-headers ${MUSL_PATH} ${PURECAP_SYSROOT} aarch64-unknown-linux-musl_purecap
 
 # Build CRT objects
-export CC=${MORELLO_LLVM_PATH}/bin/clang
 bash ${MUSL_PATH}/tools/build-morello.sh crt ${LLVM_PROJECT_PATH} ${AARCH64_SYSROOT} aarch64-unknown-linux-gnu
 bash ${MUSL_PATH}/tools/build-morello.sh crt ${LLVM_PROJECT_PATH} ${PURECAP_SYSROOT} aarch64-unknown-linux-musl_purecap
 
 # Build compiler-rt
-export CC=${MORELLO_LLVM_PATH}/bin/clang
 bash ${MUSL_PATH}/tools/build-morello.sh compiler-rt ${LLVM_PROJECT_PATH} ${MORELLO_LLVM_PATH} ${BUILD_PATH}-rt ${AARCH64_SYSROOT} aarch64-unknown-linux-gnu
 bash ${MUSL_PATH}/tools/build-morello.sh compiler-rt ${LLVM_PROJECT_PATH} ${MORELLO_LLVM_PATH} ${BUILD_PATH}-rt ${PURECAP_SYSROOT} aarch64-unknown-linux-musl_purecap
 
@@ -53,3 +53,23 @@ echo ${LLVM_VERSION} > ${MORELLO_LLVM_PATH}/VERSION.txt
 rm -vf ${BUNDLE_NAME}*.tar.gz
 bash ${MUSL_PATH}/tools/build-morello.sh package ${MORELLO_LLVM_PATH} ${BUNDLE_NAME}
 popd
+
+# Build Musl
+rm -rf ${AARCH64_SYSROOT} ${PURECAP_SYSROOT}
+bash ${MUSL_PATH}/tools/build-morello.sh musl ${MUSL_PATH} ${AARCH64_SYSROOT} -- aarch64-unknown-linux-gnu
+bash ${MUSL_PATH}/tools/build-morello.sh musl ${MUSL_PATH} ${PURECAP_SYSROOT} -- aarch64-unknown-linux-musl_purecap
+
+# Build Musl Purecap tests but don't run them
+bash ${MUSL_PATH}/tools/build-morello.sh musl-test ${MUSL_PATH} ${PURECAP_SYSROOT} aarch64-unknown-linux-musl_purecap -- YES
+
+# Build libunwind
+bash ${MUSL_PATH}/tools/build-morello.sh libunwind ${LLVM_PROJECT_PATH} ${MORELLO_LLVM_PATH} ${BUILD_PATH}-libunwind ${AARCH64_SYSROOT} aarch64-unknown-linux-gnu
+bash ${MUSL_PATH}/tools/build-morello.sh libunwind ${LLVM_PROJECT_PATH} ${MORELLO_LLVM_PATH} ${BUILD_PATH}-libunwind ${PURECAP_SYSROOT} aarch64-unknown-linux-musl_purecap
+
+# Build libcxxabi
+bash ${MUSL_PATH}/tools/build-morello.sh libcxxabi ${LLVM_PROJECT_PATH} ${MORELLO_LLVM_PATH} ${BUILD_PATH}-libcxxabi ${AARCH64_SYSROOT} aarch64-unknown-linux-gnu
+bash ${MUSL_PATH}/tools/build-morello.sh libcxxabi ${LLVM_PROJECT_PATH} ${MORELLO_LLVM_PATH} ${BUILD_PATH}-libcxxabi ${PURECAP_SYSROOT} aarch64-unknown-linux-musl_purecap
+
+# Build libcxx
+bash ${MUSL_PATH}/tools/build-morello.sh libcxx ${LLVM_PROJECT_PATH} ${MORELLO_LLVM_PATH} ${BUILD_PATH}-libcxx ${AARCH64_SYSROOT} aarch64-unknown-linux-gnu
+bash ${MUSL_PATH}/tools/build-morello.sh libcxx ${LLVM_PROJECT_PATH} ${MORELLO_LLVM_PATH} ${BUILD_PATH}-libcxx ${PURECAP_SYSROOT} aarch64-unknown-linux-musl_purecap

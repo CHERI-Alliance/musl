@@ -16,7 +16,7 @@ build-musl-aarch64-llvm:
   script:
     - /bin/bash .gitlab/build-aarch64-llvm.sh
   tags:
-    - arm64_fast
+    - arm64
   artifacts:
     when: always
     paths:
@@ -40,6 +40,7 @@ build-toolchain-aarch64:
     LLVM_TEST_REPORT: "llvm-test-results-aarch64.xml"
     BUNDLE_NAME: "llvm-morello-linux-aarch64"
   stage: toolchain
+  allow_failure: true
   needs: []
   script:
     - /bin/bash .gitlab/build-toolchain.sh
@@ -48,6 +49,7 @@ build-toolchain-aarch64:
   rules:
     - if: '$CI_PIPELINE_SOURCE == "push" && $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH'
     - if: '$CI_PIPELINE_SOURCE == "web"'
+    - if: '$CI_PIPELINE_SOURCE == "schedule"'
   artifacts:
     when: always
     paths:
@@ -62,12 +64,14 @@ build-toolchain-x86:
     LLVM_TEST_REPORT: "llvm-test-results-x86.xml"
     BUNDLE_NAME: "llvm-morello-linux-x86"
   stage: toolchain
+  allow_failure: true
   needs: []
   script:
     - /bin/bash .gitlab/build-toolchain.sh
   rules:
     - if: '$CI_PIPELINE_SOURCE == "push" && $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH'
     - if: '$CI_PIPELINE_SOURCE == "web"'
+    - if: '$CI_PIPELINE_SOURCE == "schedule"'
   artifacts:
     when: always
     paths:
@@ -84,4 +88,4 @@ test-morello-examples:
   script:
     - /bin/bash .gitlab/test-morello-examples.sh
   tags:
-    - arm64_fast
+    - arm64

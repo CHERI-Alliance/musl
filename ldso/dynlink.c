@@ -1318,6 +1318,7 @@ static struct dso *load_library(const char *name, struct dso *needed_by)
 	size_t alloc_size;
 	int n_th = 0;
 	int is_self = 0;
+	uintptr_t align_mask, align_end_subtract;
 
 	if (!*name) {
 		errno = EINVAL;
@@ -1494,8 +1495,14 @@ static struct dso *load_library(const char *name, struct dso *needed_by)
 			& (p->tls.align-1);
 		p->tls.offset = tls_offset;
 #endif
-		p->new_dtv = p->name + strlen(p->name) + sizeof(size_t);
-		p->new_dtv = (uintptr_t *) (p->new_dtv - ((uintptr_t)(p->new_dtv) & (sizeof(size_t)-1)));
+		/* get end of string plus alignment (extra nul byte accounted for) */
+		p->new_dtv = p->name + strlen(p->name) + sizeof(uintptr_t);
+		/* mask lower bits for right ptr size type */
+		align_mask = sizeof(uintptr_t)-1;
+		/* how much we will have to subtrace from ptr to align the end */
+		align_end_subtract = (uintptr_t)p->new_dtv & align_mask;
+		/* aligned ptr rounded up to alignment after name string */
+		p->new_dtv = (uintptr_t) (((unsigned char *)p->new_dtv) - align_end_subtract);
 		p->new_tls = (void *)(p->new_dtv + n_th*(tls_cnt+1));
 		if (tls_tail) tls_tail->next = &p->tls;
 		else libc.tls_head = &p->tls;

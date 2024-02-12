@@ -3169,6 +3169,7 @@ enum
 #define R_MORELLO_IRELATIVE 59396
 #define R_MORELLO_TLSDESC 59397
 
+
 #define DT_NIOS2_GP             0x70000002
 
 #define R_NIOS2_NONE		0
@@ -3312,6 +3313,18 @@ enum
 #define R_RISCV_SET16           55
 #define R_RISCV_SET32           56
 #define R_RISCV_32_PCREL        57
+#define R_RISCV_IRELATIVE       58
+
+#define R_RISCV_CHERI_CAPTAB_PCREL_HI20        192
+#define R_RISCV_CHERI_CAPABILITY               193
+// 194 reserved for R_RISCV_CHERI_CAPABILITY_CALL
+#define R_RISCV_CHERI_SIZE                     195
+#define R_RISCV_CHERI_TPREL_CINCOFFSET         196
+#define R_RISCV_CHERI_TLS_IE_CAPTAB_PCREL_HI20 197
+#define R_RISCV_CHERI_TLS_GD_CAPTAB_PCREL_HI20 198
+#define R_RISCV_CHERI_CJAL                     199
+#define R_RISCV_CHERI_CCALL                    200
+#define R_RISCV_CHERI_RVC_CJUMP                201
 
 #ifdef __cplusplus
 }

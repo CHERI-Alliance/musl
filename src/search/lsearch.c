@@ -14,7 +14,11 @@ void *lsearch(const void *key, void *base, size_t *nelp, size_t width,
 			return p[i];
 	*nelp = n+1;
 #ifdef __CHERI_PURE_CAPABILITY__
+#if 0
 	width = MIN(width, __builtin_cheri_length_get(key) - __builtin_cheri_offset_get(key));
+#else
+	width = MIN(width, __builtin_cheri_length_get(key));
+#endif
 #endif
 	return memcpy(p[n], key, width);
 }

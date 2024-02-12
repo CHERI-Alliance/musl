@@ -442,8 +442,11 @@ static int fmt_cap(FILE *f, const void *cap, unsigned fmt) {
 	}
 
 	/* Attributes */
+#if 0
 	const cheri_otype_t type = __builtin_cheri_type_get(cap);
+#endif
 	const _Bool is_sealed = __builtin_cheri_sealed_get(cap);
+#if 0
 	if (type == CHERI_OTYPE_SENTRY) { // sentry
 		*--z = ')';
 		*--z = 'y';
@@ -452,7 +455,9 @@ static int fmt_cap(FILE *f, const void *cap, unsigned fmt) {
 		*--z = 'n';
 		*--z = 'e';
 		*--z = 's';
-	} else if (is_sealed) { // any other object type
+	} else
+#endif
+	 if (is_sealed) { // any other object type
 		*--z = ')';
 		*--z = 'd';
 		*--z = 'e';
@@ -479,7 +484,11 @@ static int fmt_cap(FILE *f, const void *cap, unsigned fmt) {
 
 	if (fmt) {
 		if (!(perms & __CHERI_CAP_PERMISSION_GLOBAL__)) {
+#if 0
 			if (is_sealed || type == CHERI_OTYPE_SENTRY) {
+#else
+			if (is_sealed) {
+#endif
 				*--z = ',';
 			} else {
 				*--z = ')';

@@ -647,6 +647,7 @@ static void do_relocs(struct dso *dso, size_t *rel, size_t rel_size, size_t stri
 		}
 		case REL_RELATIVE: {
 #if defined(__CHERI_PURE_CAPABILITY__)
+#if 0
 			/* aaelf64-morello reference on Elf64_Rela encoding:
 			https://github.com/ARM-software/abi-aa/blob/main/aaelf64-morello/aaelf64-morello.rst#445dynamic-linking-with-morello
 			*/
@@ -680,6 +681,38 @@ static void do_relocs(struct dso *dso, size_t *rel, size_t rel_size, size_t stri
 
 			reloc_addr = set_rw_cap(dso, reloc_addr);
 			*reloc_addr = cap;
+#else
+			char *v_addr = base_rx + ((bakewell_reloc_cap_t *)reloc_addr)->address;
+			size_t len = ((bakewell_reloc_cap_t *)reloc_addr)->length;
+			size_t perms = ((bakewell_reloc_cap_t *)reloc_addr)->perms;
+			char *cap;
+			char *cap_rx = __builtin_cheri_bounds_set_exact(v_addr, len);
+			char *cap_rw = __builtin_cheri_bounds_set_exact(set_rw_cap(dso, v_addr), len);
+
+			switch (perms) {
+				case BAKEWELL_RELA_PERM_R:
+					cap = __builtin_cheri_perms_and(cap_rx,
+						__CHERI_CAP_PERMISSION_GLOBAL__ | READ_CAP_PERMS);
+					break;
+				case BAKEWELL_RELA_PERM_RW:
+					cap = __builtin_cheri_perms_and(cap_rw,
+						__CHERI_CAP_PERMISSION_GLOBAL__ | READ_CAP_PERMS | WRITE_CAP_PERMS);
+					break;
+				case BAKEWELL_RELA_PERM_RX:
+					cap = __builtin_cheri_perms_and(cap_rx,
+						__CHERI_CAP_PERMISSION_GLOBAL__ | READ_CAP_PERMS | EXEC_CAP_PERMS);
+					break;
+				default:
+					cap = __builtin_cheri_perms_and(cap_rx, 0);
+			}
+			cap += addend;
+
+			if(perms == BAKEWELL_RELA_PERM_RX)
+				cap = __builtin_cheri_seal_entry(cap);
+
+			reloc_addr = set_rw_cap(dso, reloc_addr);
+			*reloc_addr = cap;
+#endif
 #else
 			do_reloc(dso, reloc_addr, base_rx + addend);
 #endif
@@ -2446,6 +2479,7 @@ void __dls3(uintptr_t *sp, size_t *auxv)
 
 	errno = 0;
 #if defined(__CHERI_PURE_CAPABILITY__)
+#if 0 // morello specific
 __asm__ __volatile__ (
 	"mov x0, %0\n"
 	"mov c1, %1\n"
@@ -2454,6 +2488,9 @@ __asm__ __volatile__ (
 	"mov csp,%4 ; br %5\n"
 	: : "r" (argc), "r" (argv), "r" (envp), "r" (auxv), "r"(sp), "r"(AUX_PTR(aux[AT_ENTRY]))
 	: "c0", "c1", "c2", "c3", "memory");
+#else
+	CRTJMPCHERI(AUX_PTR(aux[AT_ENTRY]), sp, argc, argv, envp, auxv);
+#endif
 #else
 	CRTJMP(AUX_PTR(aux[AT_ENTRY]), sp);
 #endif

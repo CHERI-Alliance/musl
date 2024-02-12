@@ -187,28 +187,24 @@ hidden void _dlstart_c(uintptr_t *sp, size_t *dynv_raw)
 		*rel_addr = base_rx + rela_ptr->r_addend;
 #else
 		rel_addr = __builtin_cheri_address_set(rw_cap, rel_addr);
-		char *v_address = base_rx + ((morello_reloc_cap_t *)rel_addr)->address;
-		size_t len = ((morello_reloc_cap_t *)rel_addr)->length;
-		size_t perms = ((morello_reloc_cap_t *)rel_addr)->perms;
+		char *v_address = base_rx + ((struct capreloc *)rel_addr)->capability_location;
+		size_t len = ((struct capreloc *)rel_addr)->size;
+		size_t perms = ((struct capreloc *)rel_addr)->permissions;
 		char *cap;
 		char *cap_rx = __builtin_cheri_bounds_set_exact(v_address, len);
 		char *cap_rw = __builtin_cheri_bounds_set_exact(
 			__builtin_cheri_address_set(rw_cap, v_address), len);
-		switch (perms) {
-		  case MORELLO_RELA_PERM_R:
+		/* TODO are these the correct permissions? */
+		if ((perms & function_reloc_flag) == function_reloc_flag) {
 		    cap = __builtin_cheri_perms_and(cap_rx,
-				__CHERI_CAP_PERMISSION_GLOBAL__ | READ_CAP_PERMS);
-		    break;
-		  case MORELLO_RELA_PERM_RW:
+				function_pointer_permissions_mask);
+		} else if ((perms &constant_reloc_flag) == constant_reloc_flag) {
+		    cap = __builtin_cheri_perms_and(cap_rx,
+				constant_pointer_permissions_mask);
+		}
+		else {
 		    cap = __builtin_cheri_perms_and(cap_rw,
-				__CHERI_CAP_PERMISSION_GLOBAL__ | READ_CAP_PERMS | WRITE_CAP_PERMS);
-		    break;
-		  case MORELLO_RELA_PERM_RX:
-		    cap = __builtin_cheri_perms_and(cap_rx,
-				__CHERI_CAP_PERMISSION_GLOBAL__ | READ_CAP_PERMS | EXEC_CAP_PERMS);
-		    break;
-		  default:
-		    cap = __builtin_cheri_perms_and(cap_rx, 0);
+				global_pointer_permissions_mask);
 		}
 		cap += rela_ptr->r_addend;
 		*rel_addr = cap;

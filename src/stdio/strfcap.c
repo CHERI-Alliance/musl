@@ -146,13 +146,17 @@ static size_t spec_str_length_by_type(char type, size_t base, const void* cap)
 {
 	size_t cap_addr = __builtin_cheri_address_get(cap);
 	size_t cap_base = __builtin_cheri_base_get(cap);
+#if 0
 	size_t cap_hi = __builtin_cheri_copy_from_high(cap);
+#endif
 	size_t cap_lo = (size_t)cap;
 	size_t cap_length = __builtin_cheri_length_get(cap);
 	size_t cap_limit = cap_base + cap_length;
 	size_t cap_perms = __builtin_cheri_perms_get(cap);
+#if 0
 	size_t cap_offset = __builtin_cheri_offset_get(cap);
 	ptrdiff_t cap_otype = __builtin_cheri_type_get(cap);
+#endif
 	bool cap_tag = __builtin_cheri_tag_get(cap);
 	bool cap_null_derived = !cap_tag && __builtin_cheri_equal_exact(cap, (uintcap_t)(ptraddr_t)cap);
 	bool cap_sealed = __builtin_cheri_sealed_get(cap);
@@ -162,7 +166,9 @@ static size_t spec_str_length_by_type(char type, size_t base, const void* cap)
 		case 'a': return size_t_str_len(cap_addr, base);
 		case 'A': return attributes_str_len(cap_sentry, cap_sealed, cap_tag);
 		case 'b': return size_t_str_len(cap_base, base);
+#if 0
 		case 'B': return size_t_full_len(cap_lo, 16) + size_t_full_len(cap_hi, 16);
+#endif
 		case 'C':
 		{
 			size_t length = 0;
@@ -182,15 +188,23 @@ static size_t spec_str_length_by_type(char type, size_t base, const void* cap)
 			return length;
 		}
 		case 'l': return size_t_str_len(cap_length, base);
+#if 0
 		case 'o': return size_t_str_len(cap_offset, base);
+#endif
 		case 'p': return size_t_full_len(cap_perms, 5);
 		case 'P': return permissions_str_len(cap_perms);
+#if 0
 		case 's': return size_t_str_len(cap_otype, base);
+#endif
 		case 'S':
 		{
 			if(cap_sentry) return 8; //"<sentry>"
-			else if(!cap_sealed) return 10; //"<sealed>"
+			else if(!cap_sealed) return 10; //"<unsealed>"
+#if 0
 			else return size_t_str_len(cap_otype, base);
+#else
+			else return 8; //"<sealed"
+#endif
 		}
 		case 't': return size_t_str_len(cap_limit, base);
 		case 'v': return 1;
@@ -257,13 +271,17 @@ ssize_t strfcap(char *restrict buf, size_t maxsize, const char *restrict format,
 
 	size_t cap_addr = __builtin_cheri_address_get(cap);
 	size_t cap_base = __builtin_cheri_base_get(cap);
+#if 0
 	size_t cap_hi = __builtin_cheri_copy_from_high(cap);
+#endif	
 	size_t cap_lo = (size_t)cap;
 	size_t cap_length = __builtin_cheri_length_get(cap);
 	size_t cap_limit = cap_base + cap_length;
 	size_t cap_perms = __builtin_cheri_perms_get(cap);
+#if 0
 	size_t cap_offset = __builtin_cheri_offset_get(cap);
 	ptrdiff_t cap_otype = __builtin_cheri_type_get(cap);
+#endif
 	bool cap_tag = __builtin_cheri_tag_get(cap);
 	bool cap_null_derived = !cap_tag && __builtin_cheri_equal_exact(cap, (uintcap_t)(ptraddr_t)cap);
 	bool cap_sealed = __builtin_cheri_sealed_get(cap);
@@ -331,12 +349,14 @@ ssize_t strfcap(char *restrict buf, size_t maxsize, const char *restrict format,
 			case 'a': spec_str_ptr = write_size_t_to_buf(spec_str_ptr, buf_end, digits, cap_addr, base); break;
 			case 'A': spec_str_ptr = write_attributes_to_buf(spec_str_ptr, buf_end, cap_sentry, cap_sealed, cap_tag); break;
 			case 'b': spec_str_ptr = write_size_t_to_buf(spec_str_ptr, buf_end, digits, cap_base, base); break;
+#if 0
 			case 'B':
 			{
 				spec_str_ptr = write_size_t_full_to_buf(spec_str_ptr, buf_end, digits, cap_lo, 16);
 				spec_str_ptr = write_size_t_full_to_buf(spec_str_ptr, buf_end, digits, cap_hi, 16);
 				break;
 			}
+#endif
 			case 'C':
 			{
 				if(!cap_null_derived)
@@ -357,19 +377,27 @@ ssize_t strfcap(char *restrict buf, size_t maxsize, const char *restrict format,
 				break;
 			}
 			case 'l': spec_str_ptr = write_size_t_to_buf(spec_str_ptr, buf_end, digits, cap_length, base); break;
+#if 0
 			case 'o': spec_str_ptr = write_size_t_to_buf(spec_str_ptr, buf_end, digits, cap_offset, base); break;
+#endif
 			case 'p':
 			{
 				spec_str_ptr = write_size_t_full_to_buf(spec_str_ptr, buf_end, digits, cap_perms, 5);
 				break;
 			}
 			case 'P': spec_str_ptr = write_permissions_to_buf(spec_str_ptr, buf_end, cap_perms); break;
+#if 0
 			case 's': spec_str_ptr = write_size_t_to_buf(spec_str_ptr, buf_end, digits, cap_otype, base); break;
+#endif
 			case 'S':
 			{
 				if(cap_sentry) spec_str_ptr = write_str_to_buf(spec_str_ptr, buf_end, ">yrtnes<", 8); //"<sentry>"
 				else if(!cap_sealed) spec_str_ptr = write_str_to_buf(spec_str_ptr, buf_end, ">delaesnu<", 10); //"<unsealed>"
+	#if 0
 				else spec_str_ptr = write_size_t_to_buf(spec_str_ptr, buf_end, digits, cap_otype, base);
+	#else
+				else spec_str_ptr = write_str_to_buf(spec_str_ptr, buf_end, ">delaes<", 8); //"<sealed>"
+	#endif
 				break;
 			}
 			case 't': spec_str_ptr = write_size_t_to_buf(spec_str_ptr, buf_end, digits, cap_limit, base); break;

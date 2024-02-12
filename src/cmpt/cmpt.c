@@ -7,6 +7,7 @@
 #include "libc.h"
 #include "cmpt.h"
 
+#if 0
 #define LABEL(name) \
 ".global " name " \n" \
 ".hidden " name "\n" \
@@ -66,7 +67,6 @@ int create_cmpt(cmpt_t* cmpt_handle, const char* data, const size_t data_size, c
 	size_t seal_otype = ((((size_t)target) & 0x3fffLU) + 4LU) & 0x7fffLU;
 	void* root_seal_cap =   __builtin_cheri_offset_set(getauxptr(AT_CHERI_SEAL_CAP), seal_otype);
 	void* root_unseal_cap = __builtin_cheri_offset_set(getauxptr(AT_CHERI_SEAL_CAP), 1);
-
 	//STEP: Set target func
 	cmpt->target = target;
 
@@ -158,4 +158,5 @@ bool is_cmpt_valid(const cmpt_t* cmpt_handle)
 		(data_perms & WRITE_CAP_PERMS) //Data can be written to
 	);
 }
+#endif
 #endif

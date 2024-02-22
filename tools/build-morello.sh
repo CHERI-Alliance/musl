@@ -335,6 +335,7 @@ EOF
     popd
 }
 
+# Standalone libcxx build supported up to clang-13.
 function __configure_libcxx() {
     local LLVM_PROJECT=${1}         # path to LLVM sources
     local MORELLO_LLVM_PATH=${2}    # path where Morello LLVM has been installed
@@ -397,6 +398,87 @@ EOF
     -DLIBCXX_HAS_MUSL_LIBC=ON \
     -DLIBCXX_ENABLE_EXCEPTIONS=ON \
     -DLIBCXX_SYSROOT="${SYSROOT}" \
+    -DLIBCXX_CXX_ABI="libcxxabi" \
+    -DLIBCXX_ENABLE_ABI_LINKER_SCRIPT=OFF \
+    -DLIBCXX_INSTALL_INCLUDE_TARGET_DIR="${MORELLO_LLVM_PATH}/include/${TRIPLE}/c++/v1" \
+    -DCMAKE_INSTALL_PREFIX=${SYSROOT} \
+    -DLIBCXX_TARGET_INFO="libcxx.test.target_info.LinuxLocalTI" \
+    -DLIBCXX_TEST_COMPILER_FLAGS="--sysroot=${SYSROOT} ${TFLAGS} -isystem ${BUILD_PATH}/kernel-headers/usr/include" \
+    -DLIBCXX_TEST_LINKER_FLAGS="--sysroot=${SYSROOT} -fuse-ld=lld -nostdlib --rtlib=compiler-rt -Wl,--dynamic-linker=${SYSROOT}/lib/libc.so ${SYSROOT}/lib/crt1.o ${SYSROOT}/lib/crti.o ${SYSROOT}/lib/crtn.o" \
+    -DLIBCXX_CXX_ABI_LIBRARY_PATH="${SYSROOT}/lib"
+    popd
+}
+
+# From clang-14 onwards, use a single CMake invocation
+# when building libcxx and libcxxabi and libunwind.
+function __configure_libruntimes() {
+    local LLVM_PROJECT=${1}         # path to LLVM sources
+    local MORELLO_LLVM_PATH=${2}    # path where Morello LLVM has been installed
+    local BUILD_PATH=${3}           # path to the build folder
+    local SYSROOT=${4}              # path to sysroot with the required libc header
+    local TRIPLE=${5}               # triple to target
+    local KERNEL_BRANCH=${6}        # (optional default: latest) version of kernel headers to download
+    if [[ "${TRIPLE}" == "${MORELLO_TRIPLE}" ]]; then
+        local TFLAGS="-march=morello -mabi=purecap"
+    else
+        local TFLAGS="-march=armv8"
+    fi
+    local LIBUNWIND_HEADERS=${LLVM_PROJECT}/libunwind/include
+    local LIBCXX_HEADERS=${MORELLO_LLVM_PATH}/include/c++/v1
+    mkdir -p ${BUILD_PATH}
+    pushd ${BUILD_PATH}
+
+    __download_kernel_headers "${BUILD_PATH}/" ${KERNEL_BRANCH}
+    cat << EOF > toolchain.cmake
+set(CMAKE_SYSTEM_NAME Linux)
+set(CMAKE_SYSTEM_PROCESSOR aarch64)
+set(CMAKE_ASM_COMPILER_TARGET "${TRIPLE}")
+set(CMAKE_C_COMPILER_TARGET "${TRIPLE}")
+set(CMAKE_CXX_COMPILER_TARGET "${TRIPLE}")
+
+set(CMAKE_ASM_COMPILER_WORKS 1 CACHE INTERNAL "")
+set(CMAKE_C_COMPILER_WORKS 1 CACHE INTERNAL "")
+set(CMAKE_CXX_COMPILER_WORKS 1 CACHE INTERNAL "")
+
+set(CMAKE_ASM_COMPILER "${MORELLO_LLVM_PATH}/bin/clang" CACHE FILEPATH "" FORCE)
+set(CMAKE_C_COMPILER "${MORELLO_LLVM_PATH}/bin/clang" CACHE FILEPATH "" FORCE)
+set(CMAKE_CXX_COMPILER "${MORELLO_LLVM_PATH}/bin/clang++" CACHE FILEPATH "" FORCE)
+set(CMAKE_AR "${MORELLO_LLVM_PATH}/bin/llvm-ar" CACHE FILEPATH "" FORCE)
+set(CMAKE_RANLIB "${MORELLO_LLVM_PATH}/bin/llvm-ranlib" CACHE FILEPATH "" FORCE)
+set(CMAKE_NM "${MORELLO_LLVM_PATH}/bin/llvm-nm" CACHE FILEPATH "" FORCE)
+set(CMAKE_LINKER "${MORELLO_LLVM_PATH}/bin/ld.lld" CACHE FILEPATH "" FORCE)
+set(CMAKE_OBJDUMP "${MORELLO_LLVM_PATH}/bin/llvm-objdump" CACHE FILEPATH "" FORCE)
+set(CMAKE_OBJCOPY "${MORELLO_LLVM_PATH}/bin/llvm-objcopy" CACHE FILEPATH "" FORCE)
+
+set(LLVM_CONFIG_PATH "${MORELLO_LLVM_PATH}/bin/llvm-config" CACHE FILEPATH "" FORCE)
+set(CMAKE_ASM_FLAGS "--sysroot=${SYSROOT} ${TFLAGS} -isystem ${BUILD_PATH}/kernel-headers/usr/include" CACHE STRING "" FORCE)
+set(CMAKE_C_FLAGS "--sysroot=${SYSROOT} ${TFLAGS} -isystem ${BUILD_PATH}/kernel-headers/usr/include" CACHE STRING "" FORCE)
+set(CMAKE_CXX_FLAGS "--sysroot=${SYSROOT} ${TFLAGS} -isystem ${BUILD_PATH}/kernel-headers/usr/include" CACHE STRING "" FORCE)
+set(CMAKE_EXE_LINKER_FLAGS "-fuse-ld=lld -nostdlib --rtlib=compiler-rt" CACHE STRING "" FORCE)
+set(CMAKE_SHARED_LINKER_FLAGS "-fuse-ld=lld -nostdlib --rtlib=compiler-rt" CACHE STRING "" FORCE)
+EOF
+    cmake -S ${LLVM_PROJECT}/runtimes \
+    -B ${BUILD_PATH}\
+    -DLLVM_ENABLE_RUNTIMES="libcxx;libcxxabi;libunwind" \
+    -Wno-dev \
+    -DCMAKE_TOOLCHAIN_FILE=toolchain.cmake \
+    -DCMAKE_BUILD_TYPE=Release \
+    -DLIBUNWIND_ENABLE_THREADS=ON \
+    -DLIBCXX_ENABLE_STATIC=ON \
+    -DLIBCXX_ENABLE_SHARED=ON \
+    -DLIBCXX_INCLUDE_TESTS=ON \
+    -DLIBCXX_INCLUDE_BENCHMARKS=OFF \
+    -DLIBCXX_ENABLE_EXPERIMENTAL_LIBRARY=NO \
+    -DLIBCXXABI_USE_LLVM_UNWINDER=ON \
+    -DLIBUNWIND_USE_COMPILER_RT=ON \
+    -DLIBCXXABI_USE_COMPILER_RT=ON \
+    -DLIBCXX_USE_COMPILER_RT=ON \
+    -DLIBCXXABI_LIBUNWIND_INCLUDES="${LIBUNWIND_HEADERS}" \
+    -DLIBCXXABI_LIBUNWIND_PATH="${SYSROOT}/lib" \
+    -DLIBCXXABI_LIBCXX_INCLUDES="${LIBCXX_HEADERS}" \
+    -DLIBCXX_HAS_MUSL_LIBC=ON \
+    -DLIBCXX_ENABLE_EXCEPTIONS=ON \
+    -DCMAKE_SYSROOT="${SYSROOT}" \
     -DLIBCXX_CXX_ABI="libcxxabi" \
     -DLIBCXX_ENABLE_ABI_LINKER_SCRIPT=OFF \
     -DLIBCXX_INSTALL_INCLUDE_TARGET_DIR="${MORELLO_LLVM_PATH}/include/${TRIPLE}/c++/v1" \
@@ -611,6 +693,25 @@ function build_libcxx() {
 }
 
 # Environment variables:
+#  - MORELLO_NPROC: number of parallel jobs (default: 4)
+function build_libruntimes() {
+    local LLVM_PROJECT=${1}                      # path to LLVM sources
+    local MORELLO_LLVM_PATH=${2}                 # path where Morello LLVM has been installed
+    local BUILD_PATH=${3}                        # path to the build folder
+    local SYSROOT=${4}                           # path to sysroot with the required libc headers
+    local TRIPLE=${5}                            # triple to target
+    local KERNEL_BRANCH=${6:-"morello/master"}   # (optional default: latest) version of kernel headers to download
+    local TARGET_INCLUDE_PATH=${MORELLO_LLVM_PATH}/include/${TRIPLE}/c++/v1
+    rm -rf ${BUILD_PATH}
+    mkdir -p ${TARGET_INCLUDE_PATH}
+    __configure_libruntimes ${LLVM_PROJECT} ${MORELLO_LLVM_PATH} ${BUILD_PATH} ${SYSROOT} ${TRIPLE} ${KERNEL_BRANCH}
+    pushd ${BUILD_PATH}
+    make -j${MORELLO_NPROC:-4}
+    make install
+    popd
+}
+
+# Environment variables:
 #  - TEST_DRIVER: path to the test driver script or Morello IE
 #  - CC: path to Morello clang (when libc-test tests are used)
 #  - MORELLO_NPROC: number of parallel jobs (default: 8)
@@ -732,6 +833,10 @@ case ${STAGE} in
       ;;
   libcxx)
       build_libcxx ${@:2};
+      exit 0;
+      ;;
+  libruntimes)
+      build_libruntimes ${@:2};
       exit 0;
       ;;
   musl-test)

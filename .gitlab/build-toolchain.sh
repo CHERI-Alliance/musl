@@ -64,14 +64,6 @@ bash ${MUSL_PATH}/tools/build-morello.sh musl ${MUSL_PATH} ${PURECAP_SYSROOT} --
 # Build Musl Purecap tests but don't run them
 bash ${MUSL_PATH}/tools/build-morello.sh musl-test ${MUSL_PATH} ${PURECAP_SYSROOT} aarch64-unknown-linux-musl_purecap -- YES
 
-# Build libunwind
-bash ${MUSL_PATH}/tools/build-morello.sh libunwind ${LLVM_PROJECT_PATH} ${MORELLO_LLVM_PATH} ${BUILD_PATH}-libunwind ${AARCH64_SYSROOT} aarch64-unknown-linux-gnu
-bash ${MUSL_PATH}/tools/build-morello.sh libunwind ${LLVM_PROJECT_PATH} ${MORELLO_LLVM_PATH} ${BUILD_PATH}-libunwind ${PURECAP_SYSROOT} aarch64-unknown-linux-musl_purecap
-
-# Build libcxxabi
-bash ${MUSL_PATH}/tools/build-morello.sh libcxxabi ${LLVM_PROJECT_PATH} ${MORELLO_LLVM_PATH} ${BUILD_PATH}-libcxxabi ${AARCH64_SYSROOT} aarch64-unknown-linux-gnu
-bash ${MUSL_PATH}/tools/build-morello.sh libcxxabi ${LLVM_PROJECT_PATH} ${MORELLO_LLVM_PATH} ${BUILD_PATH}-libcxxabi ${PURECAP_SYSROOT} aarch64-unknown-linux-musl_purecap
-
-# Build libcxx
-bash ${MUSL_PATH}/tools/build-morello.sh libcxx ${LLVM_PROJECT_PATH} ${MORELLO_LLVM_PATH} ${BUILD_PATH}-libcxx ${AARCH64_SYSROOT} aarch64-unknown-linux-gnu
-bash ${MUSL_PATH}/tools/build-morello.sh libcxx ${LLVM_PROJECT_PATH} ${MORELLO_LLVM_PATH} ${BUILD_PATH}-libcxx ${PURECAP_SYSROOT} aarch64-unknown-linux-musl_purecap
+# Build libunwind, libcxxabi, libcxx
+bash ${MUSL_PATH}/tools/build-morello.sh libruntimes ${LLVM_PROJECT_PATH} ${MORELLO_LLVM_PATH} ${BUILD_PATH}-runtimes ${AARCH64_SYSROOT} aarch64-unknown-linux-gnu
+bash ${MUSL_PATH}/tools/build-morello.sh libruntimes ${LLVM_PROJECT_PATH} ${MORELLO_LLVM_PATH} ${BUILD_PATH}-runtimes ${PURECAP_SYSROOT} aarch64-unknown-linux-musl_purecap

@@ -188,15 +188,16 @@ Parameters:
 
 The value of ``TRIPLE`` should correspond to the value of ``SYSROOT``.
 
-Build libunwind
-^^^^^^^^^^^^^^^
+Build libunwind, libcxxabi and libcxx
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-The following command builds LLVM's libunwind for the specified target. Note that this is quite
-experimental and will only build static version of the library ``libunwind.a``.
+The following command builds LLVM's libunwind, libcxxabi and libcxx for the specified target. 
+Note that this is quite experimental and will only build static version of the libraries
+ ``libunwind.a``,   ``libc++abi.a`` and ``libc++.a``.
 
 .. code-block::
 
-   bash build-morello.sh libunwind ${LLVM_SRC} ${MORELLO} ${UNWIND_BUILD} ${SYSROOT} ${TRIPLE}
+   bash build-morello.sh libruntimes ${LLVM_SRC} ${MORELLO} ${RUNTIMES_BUILD} ${SYSROOT} ${TRIPLE}
 
 Environment variables:
 
@@ -206,66 +207,14 @@ Parameters:
 
 * ``LLVM_SRC=/path/to/llvm-project`` is path to LLVM sources checked out from Git.
 * ``MORELLO=/path/to/toolchain`` is path where resulting toolchain will be installed.
-* ``UNWIND_BUILD=/path/to/build-unwind`` is path to any empty folder used for intermediate build files.
+* ``RUNTIMES_BUILD=/path/to/build-runtimes`` is path to any empty folder used for intermediate build files.
 * ``SYSROOT=/path/to/sysroot/for/target`` path where Musl binaries have been installed for the current target.
 * ``TRIPLE=aarch64-unknown-linux-musl_purecap`` for Morello Purecap target.
 * ``TRIPLE=aarch64-unknown-linux-gnu`` for AArch64 target.
-
 The value of ``TRIPLE`` should correspond to the value of ``SYSROOT``.
 
-The resulting binaries will be placed into the ``${SYSROOT}/lib`` directory.
+Optional Parameters:
 
-Build libcxxabi
-^^^^^^^^^^^^^^^
-
-The following command builds LLVM's libunwind for the specified target. Note that this is quite
-experimental and will only build static version of the library ``libc++abi.a``.
-
-.. code-block::
-
-   bash build-morello.sh libcxxabi ${LLVM_SRC} ${MORELLO} ${CXXABI_BUILD} ${SYSROOT} ${TRIPLE}
-
-Environment variables:
-
-* ``MORELLO_NPROC=4`` number of parallel build jobs.
-
-Parameters:
-
-* ``LLVM_SRC=/path/to/llvm-project`` is path to LLVM sources checked out from Git.
-* ``MORELLO=/path/to/toolchain`` is path where resulting toolchain will be installed.
-* ``CXXABI_BUILD=/path/to/build-cxxabi`` is path to any empty folder used for intermediate build files.
-* ``SYSROOT=/path/to/sysroot/for/target`` path where Musl binaries have been installed for the current target.
-* ``TRIPLE=aarch64-unknown-linux-musl_purecap`` for Morello Purecap target.
-* ``TRIPLE=aarch64-unknown-linux-gnu`` for AArch64 target.
-
-The value of ``TRIPLE`` should correspond to the value of ``SYSROOT``.
-
-The resulting binaries will be placed into the ``${SYSROOT}/lib`` directory.
-
-Build libcxx
-^^^^^^^^^^^^
-
-The following command builds LLVM's libunwind for the specified target. Note that this is quite
-experimental and will only build static version of the library ``libc++.a``.
-
-.. code-block::
-
-   bash build-morello.sh libcxx ${LLVM_SRC} ${MORELLO} ${CXX_BUILD} ${SYSROOT} ${TRIPLE}
-
-Environment variables:
-
-* ``MORELLO_NPROC=4`` number of parallel build jobs.
-
-Parameters:
-
-* ``LLVM_SRC=/path/to/llvm-project`` is path to LLVM sources checked out from Git.
-* ``MORELLO=/path/to/toolchain`` is path where resulting toolchain will be installed.
-* ``CXX_BUILD=/path/to/build-cxx`` is path to any empty folder used for intermediate build files.
-* ``SYSROOT=/path/to/sysroot/for/target`` path where Musl binaries have been installed for the current target.
-* ``TRIPLE=aarch64-unknown-linux-musl_purecap`` for Morello Purecap target.
-* ``TRIPLE=aarch64-unknown-linux-gnu`` for AArch64 target.
 * ``KERNEL_BRANCH=morello/master`` target branch of kernel headers.
-
-The value of ``TRIPLE`` should correspond to the value of ``SYSROOT``.
 
 The resulting binaries will be placed into the ``${SYSROOT}/lib`` directory.

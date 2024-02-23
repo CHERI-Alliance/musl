@@ -192,8 +192,7 @@ Build libunwind, libcxxabi and libcxx
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 The following command builds LLVM's libunwind, libcxxabi and libcxx for the specified target. 
-Note that this is quite experimental and will only build static version of the libraries
- ``libunwind.a``,   ``libc++abi.a`` and ``libc++.a``.
+Note that this is quite experimental.
 
 .. code-block::
 

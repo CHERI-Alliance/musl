@@ -3,5 +3,5 @@
 __set_thread_area:
 	cmove ctp, ca0
 	li a0, 0
-	cret
+	ret
 .size __set_thread_area, .-__set_thread_area;

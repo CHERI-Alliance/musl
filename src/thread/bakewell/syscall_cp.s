@@ -25,7 +25,7 @@ __cp_begin:
 	cmove ca7, ct0
 	ecall
 __cp_end:
-	cret
+	ret
 __cp_cancel:
 	ctail __cancel
 	.size __cp_cancel, .-__cp_cancel

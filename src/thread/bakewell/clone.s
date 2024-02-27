@@ -24,12 +24,12 @@ __clone:
 
 	beqz a0, 1f
 	# Parent
-	cret
+	ret
 
 	# Child
 1:  clc ca1, 0(csp)
 	clc ca0, 16(csp)
-	cjalr ca1
+	jalr ca1
 
 	# Exit
 	li a7, 93 # SYS_exit

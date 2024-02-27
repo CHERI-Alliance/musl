@@ -5,7 +5,7 @@
 feclearexcept:
 	csrc fflags, a0
 	li a0, 0
-	cret
+	ret
 	.size feclearexcept, .-feclearexcept
 
 .global feraiseexcept
@@ -13,7 +13,7 @@ feclearexcept:
 feraiseexcept:
 	csrs fflags, a0
 	li a0, 0
-	cret
+	ret
 	.size feraiseexcept, .-feraiseexcept
 
 .global fetestexcept
@@ -21,14 +21,14 @@ feraiseexcept:
 fetestexcept:
 	frflags t0
 	and a0, t0, a0
-	cret
+	ret
 	.size fetestexcept, .-fetestexcept
 
 .global fegetround
 .type fegetround, %function
 fegetround:
 	frrm a0
-	cret
+	ret
 	.size fegetround, .-fegetround
 
 .global __fesetround
@@ -36,7 +36,7 @@ fegetround:
 __fesetround:
 	fsrm t0, a0
 	li a0, 0
-	cret
+	ret
 	.size __fesetround, .-__fesetround
 
 .global fegetenv
@@ -45,7 +45,7 @@ fegetenv:
 	frcsr t0
 	csw t0, 0(ca0)
 	li a0, 0
-	cret
+	ret
 	.size fegetenv, .-fegetenv
 
 .global fesetenv
@@ -57,7 +57,7 @@ fesetenv:
 	clw t1, 0(ca0)
 1:	fscsr t1
 	li a0, 0
-	cret
+	ret
 	.size fesetenv, .-fesetenv
 
 #endif

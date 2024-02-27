@@ -39,4 +39,4 @@ setjmp:
 #endif
 
 	li a0, 0
-	cret
+	ret

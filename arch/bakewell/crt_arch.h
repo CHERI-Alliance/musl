@@ -45,7 +45,7 @@ START ":\n"
 "	cmove cs4, ca2\n"
 "	cmove cs5, ca3\n"
 "   cllc ct0, __bakewell_init_static\n"
-"   cjalr ct0\n"
+"   jalr ct0\n"
 #else
 "	cmove ca5, ca3\n"
 "	cmove ca4, ca2\n"
@@ -65,7 +65,7 @@ START ":\n"
 "	cmove ca5, cs5\n"
 #endif
 "   cllc ct0, " START "_c\n"
-"   cjr  ct0\n"
+"   jr  ct0\n"
 ".size " START ", .-" START "\n"
 );
 

@@ -34,7 +34,7 @@
 	"cmove ca1, %1\n" \
 	"cmove ca2, %2\n" \
 	"cmove ca3, %3\n" \
-	"cmove csp,%4 ; cjr %5\n" \
+	"cmove csp,%4 ; jr %5\n" \
 	: : "r" (argc), "C" (argv), "C" (envp), "C" (auxv), "C"(sp), "C"(AUX_PTR(aux[AT_ENTRY])) \
 	: "ca0", "ca1", "ca2", "ca3", "memory")
 

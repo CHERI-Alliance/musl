@@ -153,8 +153,8 @@ static size_t spec_str_length_by_type(char type, size_t base, const void* cap)
 	size_t cap_length = __builtin_cheri_length_get(cap);
 	size_t cap_limit = cap_base + cap_length;
 	size_t cap_perms = __builtin_cheri_perms_get(cap);
-#if 0
 	size_t cap_offset = __builtin_cheri_offset_get(cap);
+#if 0
 	ptrdiff_t cap_otype = __builtin_cheri_type_get(cap);
 #endif
 	bool cap_tag = __builtin_cheri_tag_get(cap);
@@ -188,9 +188,7 @@ static size_t spec_str_length_by_type(char type, size_t base, const void* cap)
 			return length;
 		}
 		case 'l': return size_t_str_len(cap_length, base);
-#if 0
 		case 'o': return size_t_str_len(cap_offset, base);
-#endif
 		case 'p': return size_t_full_len(cap_perms, 5);
 		case 'P': return permissions_str_len(cap_perms);
 #if 0
@@ -278,8 +276,8 @@ ssize_t strfcap(char *restrict buf, size_t maxsize, const char *restrict format,
 	size_t cap_length = __builtin_cheri_length_get(cap);
 	size_t cap_limit = cap_base + cap_length;
 	size_t cap_perms = __builtin_cheri_perms_get(cap);
-#if 0
 	size_t cap_offset = __builtin_cheri_offset_get(cap);
+#if 0
 	ptrdiff_t cap_otype = __builtin_cheri_type_get(cap);
 #endif
 	bool cap_tag = __builtin_cheri_tag_get(cap);
@@ -377,9 +375,7 @@ ssize_t strfcap(char *restrict buf, size_t maxsize, const char *restrict format,
 				break;
 			}
 			case 'l': spec_str_ptr = write_size_t_to_buf(spec_str_ptr, buf_end, digits, cap_length, base); break;
-#if 0
 			case 'o': spec_str_ptr = write_size_t_to_buf(spec_str_ptr, buf_end, digits, cap_offset, base); break;
-#endif
 			case 'p':
 			{
 				spec_str_ptr = write_size_t_full_to_buf(spec_str_ptr, buf_end, digits, cap_perms, 5);

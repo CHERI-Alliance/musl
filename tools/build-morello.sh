@@ -798,6 +798,30 @@ EOF
     popd
 }
 
+function build_package_sysroot() {
+    local LLVM_PROJECT=${1}         # path to LLVM sources
+    local SYSROOT_PATH=${2}         # path to the sysroot folder
+    local BUNDLE=${3}               # name of the tarball
+    local CWD=$(pwd)
+    local PDIR=$(dirname ${SYSROOT_PATH})
+    local PNAME=$(basename ${SYSROOT_PATH})
+    declare -a files=(
+        libc++,libcxx/LICENSE.TXT,LIBCXX-LICENSE.TXT
+        libc++abi,libcxxabi/LICENSE.TXT,LIBCXXABI-LICENSE.TXT
+        libunwind,libunwind/LICENSE.TXT,LIBUNWIND-LICENSE.TXT
+    )
+    for t in ${files[@]}; do
+        IFS="," read name src dst <<< "${t}"
+        if [ -f "${LLVM_PROJECT}/${src}" ]; then
+            cp ${LLVM_PROJECT}/${src} ${SYSROOT_PATH}/share/${dst}
+            echo " - ${name}: share/${dst}" >> ${SYSROOT_PATH}/NOTICE.txt
+        fi
+    done
+    pushd ${PDIR}
+    tar --transform 's|^'${PNAME}'|'${BUNDLE}'|' -czf ${CWD}/${BUNDLE}.tar.gz ${PNAME}
+    popd
+}
+
 case ${STAGE} in
   clang)
       build_clang ${@:2};
@@ -851,6 +875,11 @@ case ${STAGE} in
       build_package ${@:2};
       exit 0;
       ;;
+  package-sysroot)
+      build_package_sysroot ${@:2};
+      exit 0;
+      ;;
+
   *)
       echo "Unknown stage ${STAGE}"
       exit 1

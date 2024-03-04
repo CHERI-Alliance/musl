@@ -13,6 +13,8 @@ export AARCH64_SYSROOT=${CLANG_WORKSPACE}/sysroot-aarch64
 export PURECAP_SYSROOT=${CLANG_WORKSPACE}/sysroot-purecap
 export LLVM_LIT_ARGS="-s --no-progress-bar --workers=20 --xunit-xml-output ${CLANG_WORKSPACE}/${LLVM_TEST_REPORT}"
 
+git config --global --add safe.directory ${PWD}
+
 # Checkout LLVM sources
 mkdir -p ${LLVM_PROJECT_PATH}
 pushd ${LLVM_PROJECT_PATH}
@@ -52,10 +54,6 @@ rm -vf ${BUNDLE_NAME}*.tar.gz
 bash ${MUSL_PATH}/tools/build-morello.sh package ${MORELLO_LLVM_PATH} ${BUNDLE_NAME}
 popd
 
-# Collect artefacts
-mv ${CLANG_WORKSPACE}/*clang*.tar.gz .
-mv ${CLANG_WORKSPACE}/llvm-test-results-*.xml .
-
 # Build Musl
 rm -rf ${AARCH64_SYSROOT} ${PURECAP_SYSROOT}
 bash ${MUSL_PATH}/tools/build-morello.sh musl ${MUSL_PATH} ${AARCH64_SYSROOT} -- aarch64-unknown-linux-gnu
@@ -67,3 +65,15 @@ bash ${MUSL_PATH}/tools/build-morello.sh musl-test ${MUSL_PATH} ${PURECAP_SYSROO
 # Build libunwind, libcxxabi, libcxx
 bash ${MUSL_PATH}/tools/build-morello.sh libruntimes ${LLVM_PROJECT_PATH} ${MORELLO_LLVM_PATH} ${BUILD_PATH}-runtimes ${AARCH64_SYSROOT} aarch64-unknown-linux-gnu
 bash ${MUSL_PATH}/tools/build-morello.sh libruntimes ${LLVM_PROJECT_PATH} ${MORELLO_LLVM_PATH} ${BUILD_PATH}-runtimes ${PURECAP_SYSROOT} aarch64-unknown-linux-musl_purecap
+
+# Package sysroots
+pushd ${CLANG_WORKSPACE}
+rm -vf musl-sysroot-*.tar.gz
+bash ${MUSL_PATH}/tools/build-morello.sh package-sysroot ${LLVM_PROJECT_PATH} ${AARCH64_SYSROOT} musl-sysroot-aarch64
+bash ${MUSL_PATH}/tools/build-morello.sh package-sysroot ${LLVM_PROJECT_PATH} ${PURECAP_SYSROOT} musl-sysroot-purecap
+popd
+
+# Collect artefacts
+rm -vf *.tar.gz *.xml
+mv ${CLANG_WORKSPACE}/*.tar.gz .
+mv ${CLANG_WORKSPACE}/llvm-test-results-*.xml .

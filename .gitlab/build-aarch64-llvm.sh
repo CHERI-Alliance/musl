@@ -5,6 +5,8 @@ set -xe
 export MORELLOIE_PREFIX=${HOME}/morelloie
 export MORELLOIE=${MORELLOIE_PREFIX}/bin/morelloie
 
+git config --global --add safe.directory ${PWD}
+
 # Install Morello IE
 rm -rf ${HOME}/morelloie-* ${MORELLOIE_PREFIX}
 wget -q ${MORELLOIE_DOWNLOAD_URL}/morelloie-${MORELLOIE_VERSION}.tgz.sh -O ${HOME}/morelloie-${MORELLOIE_VERSION}.tgz.sh

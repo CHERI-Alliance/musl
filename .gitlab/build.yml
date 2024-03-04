@@ -54,6 +54,7 @@ build-toolchain-aarch64:
     when: always
     paths:
       - "*clang*.tar.gz"
+      - "musl-sysroot-*.tar.gz"
       - "llvm-test-results-*.xml"
     expire_in: 15 days
 
@@ -76,6 +77,7 @@ build-toolchain-x86:
     when: always
     paths:
       - "*clang*.tar.gz"
+      - "musl-sysroot-*.tar.gz"
       - "llvm-test-results-*.xml"
     expire_in: 15 days
 

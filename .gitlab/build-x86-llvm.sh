@@ -2,6 +2,8 @@
 
 set -xe
 
+git config --global --add safe.directory ${PWD}
+
 # Install Morello LLVM
 export LLVM_PREFIX=${HOME}/llvm
 rm -rf ${LLVM_PREFIX}

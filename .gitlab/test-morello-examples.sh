@@ -7,6 +7,8 @@ export MORELLOIE=${MORELLOIE_PREFIX}/bin/morelloie
 export LLVM_PREFIX=${HOME}/llvm
 export TEST_WORKSPACE=${PWD}/morello-examples
 
+git config --global --add safe.directory ${PWD}
+
 # Install Morello IE
 rm -rf ${HOME}/morelloie-* ${MORELLOIE_PREFIX}
 wget -q ${MORELLOIE_DOWNLOAD_URL}/morelloie-${MORELLOIE_VERSION}.tgz.sh -O ${HOME}/morelloie-${MORELLOIE_VERSION}.tgz.sh

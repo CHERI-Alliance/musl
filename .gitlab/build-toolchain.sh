@@ -47,6 +47,15 @@ bash ${MUSL_PATH}/tools/build-morello.sh crt ${LLVM_PROJECT_PATH} ${PURECAP_SYSR
 bash ${MUSL_PATH}/tools/build-morello.sh compiler-rt ${LLVM_PROJECT_PATH} ${MORELLO_LLVM_PATH} ${BUILD_PATH}-rt ${AARCH64_SYSROOT} aarch64-unknown-linux-gnu
 bash ${MUSL_PATH}/tools/build-morello.sh compiler-rt ${LLVM_PROJECT_PATH} ${MORELLO_LLVM_PATH} ${BUILD_PATH}-rt ${PURECAP_SYSROOT} aarch64-unknown-linux-musl_purecap
 
+# Build Musl
+rm -rf ${AARCH64_SYSROOT} ${PURECAP_SYSROOT}
+bash ${MUSL_PATH}/tools/build-morello.sh musl ${MUSL_PATH} ${AARCH64_SYSROOT} -- aarch64-unknown-linux-gnu
+bash ${MUSL_PATH}/tools/build-morello.sh musl ${MUSL_PATH} ${PURECAP_SYSROOT} -- aarch64-unknown-linux-musl_purecap
+
+# Build libunwind, libcxxabi, libcxx
+bash ${MUSL_PATH}/tools/build-morello.sh libruntimes ${LLVM_PROJECT_PATH} ${MORELLO_LLVM_PATH} ${BUILD_PATH}-runtimes ${AARCH64_SYSROOT} aarch64-unknown-linux-gnu
+bash ${MUSL_PATH}/tools/build-morello.sh libruntimes ${LLVM_PROJECT_PATH} ${MORELLO_LLVM_PATH} ${BUILD_PATH}-runtimes ${PURECAP_SYSROOT} aarch64-unknown-linux-musl_purecap
+
 # Package Clang
 pushd ${CLANG_WORKSPACE}
 echo ${LLVM_VERSION} > ${MORELLO_LLVM_PATH}/VERSION.txt
@@ -54,24 +63,15 @@ rm -vf ${BUNDLE_NAME}*.tar.gz
 bash ${MUSL_PATH}/tools/build-morello.sh package ${MORELLO_LLVM_PATH} ${BUNDLE_NAME}
 popd
 
-# Build Musl
-rm -rf ${AARCH64_SYSROOT} ${PURECAP_SYSROOT}
-bash ${MUSL_PATH}/tools/build-morello.sh musl ${MUSL_PATH} ${AARCH64_SYSROOT} -- aarch64-unknown-linux-gnu
-bash ${MUSL_PATH}/tools/build-morello.sh musl ${MUSL_PATH} ${PURECAP_SYSROOT} -- aarch64-unknown-linux-musl_purecap
-
-# Build Musl Purecap tests but don't run them
-bash ${MUSL_PATH}/tools/build-morello.sh musl-test ${MUSL_PATH} ${PURECAP_SYSROOT} aarch64-unknown-linux-musl_purecap -- YES
-
-# Build libunwind, libcxxabi, libcxx
-bash ${MUSL_PATH}/tools/build-morello.sh libruntimes ${LLVM_PROJECT_PATH} ${MORELLO_LLVM_PATH} ${BUILD_PATH}-runtimes ${AARCH64_SYSROOT} aarch64-unknown-linux-gnu
-bash ${MUSL_PATH}/tools/build-morello.sh libruntimes ${LLVM_PROJECT_PATH} ${MORELLO_LLVM_PATH} ${BUILD_PATH}-runtimes ${PURECAP_SYSROOT} aarch64-unknown-linux-musl_purecap
-
 # Package sysroots
 pushd ${CLANG_WORKSPACE}
 rm -vf musl-sysroot-*.tar.gz
 bash ${MUSL_PATH}/tools/build-morello.sh package-sysroot ${LLVM_PROJECT_PATH} ${AARCH64_SYSROOT} musl-sysroot-aarch64
 bash ${MUSL_PATH}/tools/build-morello.sh package-sysroot ${LLVM_PROJECT_PATH} ${PURECAP_SYSROOT} musl-sysroot-purecap
 popd
+
+# Build Musl Purecap tests but don't run them
+bash ${MUSL_PATH}/tools/build-morello.sh musl-test ${MUSL_PATH} ${PURECAP_SYSROOT} aarch64-unknown-linux-musl_purecap -- YES
 
 # Collect artefacts
 rm -vf *.tar.gz *.xml

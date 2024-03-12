@@ -14,20 +14,20 @@ __cp_begin:
 	clw   t0, 0(ca0)
 	bnez  t0, __cp_cancel
 
-	cmove ct0, ca1
-	cmove ca0, ca2
-	cmove ca1, ca3
-	cmove ca2, ca4
-	cmove ca3, ca5
-	cmove ca4, ca6
-	cmove ca5, ca7
+	cmv   ct0, ca1
+	cmv   ca0, ca2
+	cmv   ca1, ca3
+	cmv   ca2, ca4
+	cmv   ca3, ca5
+	cmv   ca4, ca6
+	cmv   ca5, ca7
 	clc   ca6, 0(csp)
-	cmove ca7, ct0
+	cmv   ca7, ct0
 	ecall
 __cp_end:
 	ret
 __cp_cancel:
-	ctail __cancel
+	tail  __cancel
 	.size __cp_cancel, .-__cp_cancel
 	.size __cp_begin, __cp_end-__cp_begin
 

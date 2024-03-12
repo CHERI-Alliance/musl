@@ -16,9 +16,9 @@ __clone:
 
 	# Call SYS_clone
 	mv a0, a2
-	cmove ca2, ca4
-	cmove ca3, ca5
-	cmove ca4, ca6
+	cmv ca2, ca4
+	cmv ca3, ca5
+	cmv ca4, ca6
 	li a7, 220 # SYS_clone
 	ecall
 

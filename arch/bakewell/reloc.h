@@ -31,10 +31,10 @@
 
 #define CRTJMPCHERI(pc, sp, argc, argv, envp, auxv) __asm__ __volatile__ ( \
 	"mv a0, %0\n" \
-	"cmove ca1, %1\n" \
-	"cmove ca2, %2\n" \
-	"cmove ca3, %3\n" \
-	"cmove csp,%4 ; jr %5\n" \
+	"cmv ca1, %1\n" \
+	"cmv ca2, %2\n" \
+	"cmv ca3, %3\n" \
+	"cmv csp,%4 ; jr %5\n" \
 	: : "r" (argc), "C" (argv), "C" (envp), "C" (auxv), "C"(sp), "C"(AUX_PTR(aux[AT_ENTRY])) \
 	: "ca0", "ca1", "ca2", "ca3", "memory")
 

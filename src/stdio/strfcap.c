@@ -146,9 +146,7 @@ static size_t spec_str_length_by_type(char type, size_t base, const void* cap)
 {
 	size_t cap_addr = __builtin_cheri_address_get(cap);
 	size_t cap_base = __builtin_cheri_base_get(cap);
-#if 0
 	size_t cap_hi = __builtin_cheri_copy_from_high(cap);
-#endif
 	size_t cap_lo = (size_t)cap;
 	size_t cap_length = __builtin_cheri_length_get(cap);
 	size_t cap_limit = cap_base + cap_length;
@@ -166,9 +164,7 @@ static size_t spec_str_length_by_type(char type, size_t base, const void* cap)
 		case 'a': return size_t_str_len(cap_addr, base);
 		case 'A': return attributes_str_len(cap_sentry, cap_sealed, cap_tag);
 		case 'b': return size_t_str_len(cap_base, base);
-#if 0
 		case 'B': return size_t_full_len(cap_lo, 16) + size_t_full_len(cap_hi, 16);
-#endif
 		case 'C':
 		{
 			size_t length = 0;
@@ -269,9 +265,7 @@ ssize_t strfcap(char *restrict buf, size_t maxsize, const char *restrict format,
 
 	size_t cap_addr = __builtin_cheri_address_get(cap);
 	size_t cap_base = __builtin_cheri_base_get(cap);
-#if 0
 	size_t cap_hi = __builtin_cheri_copy_from_high(cap);
-#endif	
 	size_t cap_lo = (size_t)cap;
 	size_t cap_length = __builtin_cheri_length_get(cap);
 	size_t cap_limit = cap_base + cap_length;
@@ -347,14 +341,12 @@ ssize_t strfcap(char *restrict buf, size_t maxsize, const char *restrict format,
 			case 'a': spec_str_ptr = write_size_t_to_buf(spec_str_ptr, buf_end, digits, cap_addr, base); break;
 			case 'A': spec_str_ptr = write_attributes_to_buf(spec_str_ptr, buf_end, cap_sentry, cap_sealed, cap_tag); break;
 			case 'b': spec_str_ptr = write_size_t_to_buf(spec_str_ptr, buf_end, digits, cap_base, base); break;
-#if 0
 			case 'B':
 			{
 				spec_str_ptr = write_size_t_full_to_buf(spec_str_ptr, buf_end, digits, cap_lo, 16);
 				spec_str_ptr = write_size_t_full_to_buf(spec_str_ptr, buf_end, digits, cap_hi, 16);
 				break;
 			}
-#endif
 			case 'C':
 			{
 				if(!cap_null_derived)

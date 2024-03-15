@@ -10,7 +10,7 @@
 .type  __clone, %function
 __clone:
 	# Save func and arg to stack
-	cincoffset ca1, ca1, -32
+	add ca1, ca1, -32
 	csc ca0, 0(ca1)
 	csc ca3, 16(ca1)
 

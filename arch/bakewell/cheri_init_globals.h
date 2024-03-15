@@ -139,7 +139,7 @@ __attribute__((weak)) extern void *__capability __cap_table_end;
           "lui $1, %pcrel_hi("  #c_startup_fn " - 8)\n\t"                      \
           "daddiu $1, $1, %pcrel_lo("  #c_startup_fn " - 4)\n\t"               \
           "cgetpcc $c12\n\t"                                                   \
-          "cincoffset $c12, $c12, $1\n\t"                                      \
+          "add $c12, $c12, $1\n\t"                                      \
           "cjr $c12\n\t"                                                       \
           "nop\n\t"                                                            \
           ".end __start");

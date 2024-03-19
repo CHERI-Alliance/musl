@@ -21,7 +21,7 @@ __cp_begin:
 	cmv   ca3, ca5
 	cmv   ca4, ca6
 	cmv   ca5, ca7
-	clc   ca6, 0(csp)
+	lc   ca6, 0(csp)
 	cmv   ca7, ct0
 	ecall
 __cp_end:

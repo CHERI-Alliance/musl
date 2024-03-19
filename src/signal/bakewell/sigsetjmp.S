@@ -10,16 +10,16 @@ __sigsetjmp:
 	tail setjmp
 1:
 
-	csc cra, SETJMPSIZE(ca0)
-	csc cs0, SETJMPSIZE+16+16(ca0)
+	sc cra, SETJMPSIZE(ca0)
+	sc cs0, SETJMPSIZE+16+16(ca0)
 	cmv cs0, ca0
 
 	call setjmp
 
 	cmv ca1, ca0
 	cmv ca0, cs0
-	clc cs0, 224(ca0)
-	clc cra, SETJMPSIZE+16+16(ca0)
+	lc cs0, 224(ca0)
+	lc cra, SETJMPSIZE+16+16(ca0)
 
 .hidden __sigsetjmp_tail
 	tail __sigsetjmp_tail

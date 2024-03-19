@@ -57,7 +57,7 @@ START ":\n"
 ".hidden _DYNAMIC\n"
 "   cllc ca1, _DYNAMIC\n"
 "   andi s6, sp, -16\n\t"
-"   csetaddr csp, csp, s6\n\t"
+"   scaddr csp, csp, s6\n\t"
 #ifndef SHARED
 "	cmv ca2, cs2\n"
 "	cmv ca3, cs3\n"

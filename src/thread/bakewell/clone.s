@@ -11,8 +11,8 @@
 __clone:
 	# Save func and arg to stack
 	add ca1, ca1, -32
-	csc ca0, 0(ca1)
-	csc ca3, 16(ca1)
+	sc ca0, 0(ca1)
+	sc ca3, 16(ca1)
 
 	# Call SYS_clone
 	mv a0, a2
@@ -27,8 +27,8 @@ __clone:
 	ret
 
 	# Child
-1:  clc ca1, 0(csp)
-	clc ca0, 16(csp)
+1:  lc ca1, 0(csp)
+	lc ca0, 16(csp)
 	jalr ca1
 
 	# Exit

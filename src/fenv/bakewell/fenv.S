@@ -43,7 +43,7 @@ __fesetround:
 .type fegetenv, %function
 fegetenv:
 	frcsr t0
-	csw t0, 0(ca0)
+	sw t0, 0(ca0)
 	li a0, 0
 	ret
 	.size fegetenv, .-fegetenv
@@ -54,7 +54,7 @@ fesetenv:
 	li t2, -1
 	li t1, 0
 	beq a0, t2, 1f
-	clw t1, 0(ca0)
+	lw t1, 0(ca0)
 1:	fscsr t1
 	li a0, 0
 	ret

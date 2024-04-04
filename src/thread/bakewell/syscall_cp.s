@@ -11,7 +11,7 @@
 .type __syscall_cp_asm, %function
 __syscall_cp_asm:
 __cp_begin:
-	clw   t0, 0(ca0)
+	lw    t0, 0(ca0)
 	bnez  t0, __cp_cancel
 
 	cmv   ct0, ca1

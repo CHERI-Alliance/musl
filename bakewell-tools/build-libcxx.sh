@@ -22,7 +22,7 @@ function __configure_libcxx() {
     local BUILD_PATH=${3}           # path to the build folder
     local SYSROOT=${4}              # path to sysroot with the required libc header
     local TRIPLE=${5}               # triple to target
-    local TFLAGS="-mno-relax -march=rv64imafdc_zcheri-mode -mabi=l64pc128d"
+    local TFLAGS="-march=rv64imafdc_zcheri-mode -mabi=l64pc128d"
     mkdir -p ${BUILD_PATH}
     pushd ${BUILD_PATH}
 

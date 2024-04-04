@@ -51,9 +51,9 @@ EOF
     cmake -Wno-dev \
         -DCMAKE_TOOLCHAIN_FILE=toolchain.cmake \
         -DCMAKE_BUILD_TYPE=Release \
-        -DCMAKE_C_FLAGS="-mno-relax -nostdinc -isystem ${SYSROOT}/include ${TFLAGS}" \
-        -DCMAKE_CXX_FLAGS="-mno-relax -nostdinc -isystem ${SYSROOT}/include ${TFLAGS}" \
-        -DCMAKE_ASM_FLAGS="-mno-relax -nostdinc -isystem ${SYSROOT}/include ${TFLAGS}" \
+        -DCMAKE_C_FLAGS="-nostdinc -isystem ${SYSROOT}/include ${TFLAGS}" \
+        -DCMAKE_CXX_FLAGS="-nostdinc -isystem ${SYSROOT}/include ${TFLAGS}" \
+        -DCMAKE_ASM_FLAGS="-nostdinc -isystem ${SYSROOT}/include ${TFLAGS}" \
         -DCMAKE_EXE_LINKER_FLAGS="${TFLAGS} -nostartfiles -nostdlib ${SWITCHES}" \
         -DCMAKE_EXPORT_COMPILE_COMMANDS=ON \
         -DCMAKE_SKIP_BUILD_RPATH=OFF \

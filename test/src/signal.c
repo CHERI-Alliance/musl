@@ -79,10 +79,10 @@ int main() {
 	sigact.sa_flags = 0;
 	sigact.sa_flags = sigact.sa_flags | SA_SIGINFO | SA_RESTART;
 	sigact.sa_sigaction = catcher;
-	sigaction(SIGUSR1, &sigact, NULL);
+	sigaction(SIGSEGV, &sigact, NULL);
 
-	printf("raise SIGUSR1 signal\n");
-	kill(getpid(), SIGUSR1);
+	printf("trigger SIGSEGV signal\n");
+	*(volatile int *)NULL = 0;
 
 	return 1;
 }

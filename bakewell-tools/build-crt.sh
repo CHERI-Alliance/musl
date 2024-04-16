@@ -20,6 +20,8 @@ if [ "${LINUX_HEADERS}" == "" ]; then
     LINUX_HEADERS=${PWD}/musl-libc/bakewell-linux-libc-headers
 fi
 
+set -e
+
 # Environment variables:
 #  - CC: path to Morello clang
 function build_musl_headers() {
@@ -29,7 +31,6 @@ function build_musl_headers() {
     local CFGFLAGS="--enable-bakewell --enable-shared"
     mkdir -p ${BUILDPREFIX}/musl-headers
     pushd ${BUILDPREFIX}/musl-headers
-    make distclean
     ${MUSL_PATH}/configure ${CFGFLAGS} --prefix=${PREFIX_PATH} --target=${TRIPLE}
     make install-headers
     popd

@@ -16,6 +16,8 @@ if [ "${BUILDPREFIX}" == "" ]; then
     BUILDPREFIX=${PWD}/build
 fi
 
+set -e
+
 function __configure_comp_rt() {
     local LLVM_PROJECT=${1}         # path to LLVM sources
     local BAKEWELL_LLVM_PATH=${2}    # path where Morello LLVM has been installed

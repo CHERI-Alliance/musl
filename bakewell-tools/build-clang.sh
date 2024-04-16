@@ -20,6 +20,8 @@ if [ "${LLVM_LIT_ARGS}" == "" ]; then
     LLVM_LIT_ARGS="--max-time 3600 --timeout 300 -s -vv"
 fi
 
+set -e
+
 function __configure_clang() {
     local LLVM_PROJECT=${1}
     local BAKEWELL_LLVM_PATH=${2}

@@ -16,6 +16,8 @@ if [ "${BUILDPREFIX}" == "" ]; then
     BUILDPREFIX=${PWD}/build
 fi
 
+set -e
+
 function __configure_libcxx() {
     local LLVM_PROJECT=${1}         # path to LLVM sources
     local TARGET_LLVM_PATH=${2}     # path where target LLVM has been installed

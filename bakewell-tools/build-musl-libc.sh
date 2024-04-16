@@ -16,6 +16,8 @@ if [ "${BUILDPREFIX}" == "" ]; then
     BUILDPREFIX=${PWD}/build
 fi
 
+set -e
+
 # Environment variables:
 #  - CC: path to bakewell clang
 #  - BAKEWELL_NPROC: number of parallel jobs (default: 8)
@@ -40,4 +42,4 @@ EOF
 export CC=${BAKEWELL_HOME}/cherillvm/bin/riscv64-unknown-linux-gnu-cc
 mkdir -p ${BUILDPREFIX}/musl
 cd ${BUILDPREFIX}/musl
-build_musl ${MUSL_PATH} ${BAKEWELL_HOME} riscv64-unknown-linux-gnu 
+build_musl ${MUSL_PATH} ${BAKEWELL_HOME} riscv64-unknown-linux-gnu

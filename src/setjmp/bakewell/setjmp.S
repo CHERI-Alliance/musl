@@ -24,18 +24,18 @@ setjmp:
 	sc cra,    208(ca0)
 
 #ifndef __riscv_float_abi_soft
-	cfsd fs0,  224(ca0)
-	cfsd fs1,  232(ca0)
-	cfsd fs2,  240(ca0)
-	cfsd fs3,  248(ca0)
-	cfsd fs4,  256(ca0)
-	cfsd fs5,  264(ca0)
-	cfsd fs6,  272(ca0)
-	cfsd fs7,  280(ca0)
-	cfsd fs8,  288(ca0)
-	cfsd fs9,  296(ca0)
-	cfsd fs10, 304(ca0)
-	cfsd fs11, 312(ca0)
+	fsd fs0,  224(ca0)
+	fsd fs1,  232(ca0)
+	fsd fs2,  240(ca0)
+	fsd fs3,  248(ca0)
+	fsd fs4,  256(ca0)
+	fsd fs5,  264(ca0)
+	fsd fs6,  272(ca0)
+	fsd fs7,  280(ca0)
+	fsd fs8,  288(ca0)
+	fsd fs9,  296(ca0)
+	fsd fs10, 304(ca0)
+	fsd fs11, 312(ca0)
 #endif
 
 	li a0, 0

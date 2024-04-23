@@ -1,6 +1,7 @@
 #include <fcntl.h>
 #include <stdbool.h>
 #include <stdio.h>
+#include <stdint.h>
 #include <stdlib.h>
 #include <sys/mman.h>
 #include <unistd.h>
@@ -110,6 +111,7 @@ int test_mmap_tags(bool do_munmap) {
 			perror("munmap");
 			return 4;
 		}
+		mem = (void *)(uintptr_t)__builtin_cheri_address_get(mem);
 	}
 	mem = mmap(mem, len, MEM_PROT, MAP_FIXED | MEM_FLAGS, -1, 0);
 	if (mem == MAP_FAILED) {

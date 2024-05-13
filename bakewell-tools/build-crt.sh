@@ -45,7 +45,7 @@ function build_crt() {
     local CRT=${LLVM_PROJECT}/compiler-rt/lib/crt
     local DESTDIR=$(${CC} -print-resource-dir)/lib/${TRIPLE}
     local INCLUDE=${SYSROOT}/include
-    local XFLAGS="-DCRT_HAS_INITFINI_ARRAY --target=${TRIPLE} -march=rv64imafdc_zcheri-mode -mabi=l64pc128d -nostdinc -isystem ${INCLUDE}"
+    local XFLAGS="-DCRT_HAS_INITFINI_ARRAY --target=${TRIPLE} -march=rv64imafdc_zcheri-legacy -mabi=l64pc128d -nostdinc -isystem ${INCLUDE}"
     mkdir -p ${DESTDIR}
     ${CC} ${XFLAGS} -c ${CRT}/crtbegin.c -o ${DESTDIR}/clang_rt.crtbegin.o
     ${CC} ${XFLAGS} -c ${CRT}/crtend.c -o ${DESTDIR}/clang_rt.crtend.o

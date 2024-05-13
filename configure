@@ -541,8 +541,8 @@ fi
 test "$bakewell" = yes
 if test "$bakewell" = yes ; then
     if test "$ARCH" = "riscv64" ; then
-        tryflag CFLAGS_BAKEWELL "-march=rv64imafdc_zcheri-mode -mabi=l64pc128d"
-        tryldflag LDFLAGS_BAKEWELL "-march=rv64imafdc_zcheri-mode -mabi=l64pc128d"
+        tryflag CFLAGS_BAKEWELL "-march=rv64imafdc_zcheri-legacy -mabi=l64pc128d"
+        tryldflag LDFLAGS_BAKEWELL "-march=rv64imafdc_zcheri-legacy -mabi=l64pc128d"
         ARCH=bakewell
     else
         fail "$0: Bakewell can only be enabled for riscv64 target"

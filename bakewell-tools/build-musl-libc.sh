@@ -40,6 +40,7 @@ EOF
 }
 
 export CC=${BAKEWELL_HOME}/cherillvm/bin/riscv64-unknown-linux-gnu-cc
+export CFLAGS="-isystem ${BAKEWELL_HOME}/cherillvm/lib/clang/15.0.0/include"
 mkdir -p ${BUILDPREFIX}/musl
 cd ${BUILDPREFIX}/musl
 build_musl ${MUSL_PATH} ${BAKEWELL_HOME} riscv64-unknown-linux-gnu

@@ -7,31 +7,7 @@
 #include "reloc.h"
 #endif
 
-struct capreloc {
-  __SIZE_TYPE__ capability_location;
-  __SIZE_TYPE__ object;
-  __SIZE_TYPE__ offset;
-  __SIZE_TYPE__ size;
-  __SIZE_TYPE__ permissions;
-};
-
-static const __SIZE_TYPE__ function_reloc_flag = (__SIZE_TYPE__)1
-                                                 << (__SIZE_WIDTH__ - 1);
-static const __SIZE_TYPE__ function_pointer_permissions_mask =
-    ~(__SIZE_TYPE__)(__CHERI_CAP_PERMISSION_PERMIT_SEAL__ |
-                     __CHERI_CAP_PERMISSION_PERMIT_STORE_CAPABILITY__ |
-                     __CHERI_CAP_PERMISSION_PERMIT_STORE__);
-static const __SIZE_TYPE__ constant_reloc_flag = (__SIZE_TYPE__)1
-                                                 << (__SIZE_WIDTH__ - 2);
-static const __SIZE_TYPE__ constant_pointer_permissions_mask =
-    ~(__SIZE_TYPE__)(__CHERI_CAP_PERMISSION_PERMIT_SEAL__ |
-                     __CHERI_CAP_PERMISSION_PERMIT_STORE_CAPABILITY__ |
-                     __CHERI_CAP_PERMISSION_PERMIT_STORE_LOCAL__ |
-                     __CHERI_CAP_PERMISSION_PERMIT_STORE__ |
-                     __CHERI_CAP_PERMISSION_PERMIT_EXECUTE__);
-static const __SIZE_TYPE__ global_pointer_permissions_mask =
-    ~(__SIZE_TYPE__)(__CHERI_CAP_PERMISSION_PERMIT_SEAL__ |
-                     __CHERI_CAP_PERMISSION_PERMIT_EXECUTE__);
+#include "cheri_init_globals_bw.h"
 
 __asm__(
 ".section .sdata,\"aw\"\n"

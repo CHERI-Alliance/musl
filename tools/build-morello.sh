@@ -193,12 +193,12 @@ set(CMAKE_OBJDUMP "${MORELLO_LLVM_PATH}/bin/llvm-objdump" CACHE FILEPATH "" FORC
 set(CMAKE_OBJCOPY "${MORELLO_LLVM_PATH}/bin/llvm-objcopy" CACHE FILEPATH "" FORCE)
 
 set(LLVM_CONFIG_PATH "${MORELLO_LLVM_PATH}/bin/llvm-config" CACHE FILEPATH "" FORCE)
+set(CMAKE_ASM_FLAGS "-nostdinc --isystem ${SYSROOT}/include" CACHE STRING "" FORCE)
+set(CMAKE_C_FLAGS "-nostdinc --isystem ${SYSROOT}/include" CACHE STRING "" FORCE)
 EOF
     cmake -Wno-dev \
         -DCMAKE_TOOLCHAIN_FILE=toolchain.cmake \
         -DCMAKE_BUILD_TYPE=Release \
-        -DCMAKE_C_FLAGS="-nostdinc -isystem ${SYSROOT}/include" \
-        -DCMAKE_ASM_FLAGS="-nostdinc -isystem ${SYSROOT}/include" \
         -DCMAKE_EXPORT_COMPILE_COMMANDS=ON \
         -DCMAKE_SKIP_BUILD_RPATH=OFF \
         -DCMAKE_INSTALL_RPATH=\$ORIGIN/../lib \

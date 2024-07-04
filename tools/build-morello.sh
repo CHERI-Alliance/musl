@@ -193,8 +193,8 @@ set(CMAKE_OBJDUMP "${MORELLO_LLVM_PATH}/bin/llvm-objdump" CACHE FILEPATH "" FORC
 set(CMAKE_OBJCOPY "${MORELLO_LLVM_PATH}/bin/llvm-objcopy" CACHE FILEPATH "" FORCE)
 
 set(LLVM_CONFIG_PATH "${MORELLO_LLVM_PATH}/bin/llvm-config" CACHE FILEPATH "" FORCE)
-set(CMAKE_ASM_FLAGS "-nostdinc --isystem ${SYSROOT}/include" CACHE STRING "" FORCE)
-set(CMAKE_C_FLAGS "-nostdinc --isystem ${SYSROOT}/include" CACHE STRING "" FORCE)
+set(CMAKE_ASM_FLAGS "-nostdinc -isystem ${SYSROOT}/include" CACHE STRING "" FORCE)
+set(CMAKE_C_FLAGS "-nostdinc -isystem ${SYSROOT}/include" CACHE STRING "" FORCE)
 EOF
     cmake -Wno-dev \
         -DCMAKE_TOOLCHAIN_FILE=toolchain.cmake \
@@ -381,6 +381,8 @@ set(CMAKE_C_FLAGS "--sysroot=${SYSROOT} ${TFLAGS} -isystem ${BUILD_PATH}/kernel-
 set(CMAKE_CXX_FLAGS "--sysroot=${SYSROOT} ${TFLAGS} -isystem ${BUILD_PATH}/kernel-headers/usr/include" CACHE STRING "" FORCE)
 set(CMAKE_EXE_LINKER_FLAGS "-fuse-ld=lld -nostdlib --rtlib=compiler-rt" CACHE STRING "" FORCE)
 set(CMAKE_SHARED_LINKER_FLAGS "-fuse-ld=lld -nostdlib --rtlib=compiler-rt" CACHE STRING "" FORCE)
+set(LIBCXX_TEST_COMPILER_FLAGS "--sysroot=${SYSROOT} ${TFLAGS} -isystem ${BUILD_PATH}/kernel-headers/usr/include" CACHE STRING "" FORCE)
+set(LIBCXX_TEST_LINKER_FLAGS "--sysroot=${SYSROOT} -fuse-ld=lld -nostdlib --rtlib=compiler-rt -Wl,--dynamic-linker=${SYSROOT}/lib/libc.so ${SYSROOT}/lib/crt1.o ${SYSROOT}/lib/crti.o ${SYSROOT}/lib/crtn.o" CACHE STRING "" FORCE)
 EOF
     cmake -S ${LLVM_PROJECT}/libcxx \
     -B ${BUILD_PATH}\
@@ -403,8 +405,6 @@ EOF
     -DLIBCXX_INSTALL_INCLUDE_TARGET_DIR="${MORELLO_LLVM_PATH}/include/${TRIPLE}/c++/v1" \
     -DCMAKE_INSTALL_PREFIX=${SYSROOT} \
     -DLIBCXX_TARGET_INFO="libcxx.test.target_info.LinuxLocalTI" \
-    -DLIBCXX_TEST_COMPILER_FLAGS="--sysroot=${SYSROOT} ${TFLAGS} -isystem ${BUILD_PATH}/kernel-headers/usr/include" \
-    -DLIBCXX_TEST_LINKER_FLAGS="--sysroot=${SYSROOT} -fuse-ld=lld -nostdlib --rtlib=compiler-rt -Wl,--dynamic-linker=${SYSROOT}/lib/libc.so ${SYSROOT}/lib/crt1.o ${SYSROOT}/lib/crti.o ${SYSROOT}/lib/crtn.o" \
     -DLIBCXX_CXX_ABI_LIBRARY_PATH="${SYSROOT}/lib"
     popd
 }

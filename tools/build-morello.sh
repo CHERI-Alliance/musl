@@ -131,7 +131,8 @@ function __configure_clang() {
         -DCMAKE_SKIP_BUILD_RPATH=OFF \
         -DCMAKE_INSTALL_RPATH=\$ORIGIN/../lib \
         -DCMAKE_BUILD_WITH_INSTALL_RPATH=ON \
-        -DLLVM_ENABLE_PROJECTS="clang;lld;lldb;libcxx;libcxxabi;compiler-rt;libunwind" \
+        -DLLVM_ENABLE_PROJECTS="clang;lld;lldb;compiler-rt" \
+        -DLLVM_ENABLE_RUNTIMES="libcxx;libcxxabi;libunwind" \
         -DLLVM_TARGETS_TO_BUILD="${LLVM_TARGETS}" \
         -DLLVM_ENABLE_ASSERTIONS=OFF \
         -DLLVM_ENABLE_LIBCXX=ON \
@@ -193,8 +194,9 @@ set(CMAKE_OBJDUMP "${MORELLO_LLVM_PATH}/bin/llvm-objdump" CACHE FILEPATH "" FORC
 set(CMAKE_OBJCOPY "${MORELLO_LLVM_PATH}/bin/llvm-objcopy" CACHE FILEPATH "" FORCE)
 
 set(LLVM_CONFIG_PATH "${MORELLO_LLVM_PATH}/bin/llvm-config" CACHE FILEPATH "" FORCE)
-set(CMAKE_ASM_FLAGS "-nostdinc -isystem ${SYSROOT}/include" CACHE STRING "" FORCE)
-set(CMAKE_C_FLAGS "-nostdinc -isystem ${SYSROOT}/include" CACHE STRING "" FORCE)
+set(CMAKE_ASM_FLAGS "-nostdinc -isystem ${SYSROOT}/include" CACHE FILEPATH "" FORCE)
+set(CMAKE_C_FLAGS_DEBUG "-nostdinc -O1 -isystem ${SYSROOT}/include" CACHE FILEPATH "" FORCE)
+set(CMAKE_C_FLAGS_RELEASE "-nostdinc -O3 -DNDEBUG -isystem ${SYSROOT}/include" CACHE FILEPATH "" FORCE)
 EOF
     cmake -Wno-dev \
         -DCMAKE_TOOLCHAIN_FILE=toolchain.cmake \

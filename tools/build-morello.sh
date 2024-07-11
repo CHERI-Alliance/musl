@@ -131,8 +131,7 @@ function __configure_clang() {
         -DCMAKE_SKIP_BUILD_RPATH=OFF \
         -DCMAKE_INSTALL_RPATH=\$ORIGIN/../lib \
         -DCMAKE_BUILD_WITH_INSTALL_RPATH=ON \
-        -DLLVM_ENABLE_PROJECTS="clang;lld;lldb;compiler-rt" \
-        -DLLVM_ENABLE_RUNTIMES="libcxx;libcxxabi;libunwind" \
+        -DLLVM_ENABLE_PROJECTS="clang;lld;lldb;compiler-rt;libcxx;libcxxabi;libunwind" \
         -DLLVM_TARGETS_TO_BUILD="${LLVM_TARGETS}" \
         -DLLVM_ENABLE_ASSERTIONS=OFF \
         -DLLVM_ENABLE_LIBCXX=ON \

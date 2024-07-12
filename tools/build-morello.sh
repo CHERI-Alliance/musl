@@ -102,6 +102,9 @@ esac
 set -x
 set -e
 
+which cmake
+cmake -version
+
 MORELLO_TRIPLE=aarch64-unknown-linux-musl_purecap
 AARCH64_TRIPLE=aarch64-unknown-linux-gnu
 

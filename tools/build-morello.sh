@@ -99,8 +99,7 @@ case ${STAGE} in
       ;;
 esac
 
-set -x
-set -e
+set -ex
 
 which cmake
 cmake -version
@@ -197,8 +196,7 @@ set(CMAKE_OBJCOPY "${MORELLO_LLVM_PATH}/bin/llvm-objcopy" CACHE FILEPATH "" FORC
 
 set(LLVM_CONFIG_PATH "${MORELLO_LLVM_PATH}/bin/llvm-config" CACHE FILEPATH "" FORCE)
 set(CMAKE_ASM_FLAGS "-nostdinc -isystem ${SYSROOT}/include" CACHE STRING "" FORCE)
-set(CMAKE_C_FLAGS_DEBUG "-nostdinc -O1 -isystem ${SYSROOT}/include" CACHE FILEPATH "" FORCE)
-set(CMAKE_C_FLAGS_RELEASE "-nostdinc -O3 -DNDEBUG -isystem ${SYSROOT}/include" CACHE FILEPATH "" FORCE)
+set(CMAKE_C_FLAGS "-nostdinc -isystem ${SYSROOT}/include" CACHE STRING "" FORCE)
 EOF
     cmake -Wno-dev \
         -DCMAKE_TOOLCHAIN_FILE=toolchain.cmake \

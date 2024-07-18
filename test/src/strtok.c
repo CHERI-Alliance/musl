@@ -1,7 +1,7 @@
 #include <string.h>
 #include <stdio.h>
 
-int main(){
+int main(void){
 	char str[] = "a long   string split into tokens";
 	char *words[] = {"a", "long", "string", "split", "into", "tokens"};
 	size_t str_len = strlen(str) + 1;

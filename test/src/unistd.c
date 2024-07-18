@@ -1,9 +1,9 @@
 #include <unistd.h>
 #include <stdio.h>
 
-static int test_getlogin();
-static int test_getlogin_r();
-static int test_ttyname();
+static int test_getlogin(void);
+static int test_getlogin_r(void);
+static int test_ttyname(void);
 
 int main(int argc, char *argv[])
 {
@@ -18,7 +18,7 @@ int main(int argc, char *argv[])
 	}
 }
 
-static int test_getlogin()
+static int test_getlogin(void)
 {
 	char *login = getlogin();
 	printf("getlogin = %s\n", login);
@@ -28,7 +28,7 @@ static int test_getlogin()
 	return 0;
 }
 
-static int test_getlogin_r()
+static int test_getlogin_r(void)
 {
 	char login[32] = {};
 	int r = getlogin_r(login, sizeof(login));
@@ -39,7 +39,7 @@ static int test_getlogin_r()
 	return r;
 }
 
-static int test_ttyname()
+static int test_ttyname(void)
 {
 	char *name = ttyname(0); // stdin
 	printf("ttyname = %s\n", name);

@@ -8,12 +8,12 @@
 
 char DIR_PATH[PATH_MAX];
 
-int test_stat();
-int test_mkfifo();
-int test_umask();
-int test_utimensat_futimensat();
-int test_chmod();
-int test_statvfs();
+int test_stat(void);
+int test_mkfifo(void);
+int test_umask(void);
+int test_utimensat_futimensat(void);
+int test_chmod(void);
+int test_statvfs(void);
 
 mode_t mode = 0666;
 
@@ -43,7 +43,7 @@ int main(int argc, char **argv) {
 
 // stat() simply calls fstatat(), so this test pretty much covers fstat(),
 // lstat(), and fstatat() too.
-int test_stat() {
+int test_stat(void) {
   struct stat statbuf = { 0 };
 
   char filename[PATH_MAX];
@@ -67,7 +67,7 @@ int test_stat() {
 }
 
 // internally calls mknod()/mknodat(), so this provides some coverage of that.
-int test_mkfifo() {
+int test_mkfifo(void) {
   char filename_buffer[PATH_MAX];
   char *filename = create_temp_file(DIR_PATH, "/statXXXXXX", &filename_buffer[0]);
 
@@ -80,7 +80,7 @@ int test_mkfifo() {
   return 0;
 }
 
-int test_umask() {
+int test_umask(void) {
   mode_t um = umask(mode);
   umask(um);
   mode_t um2 = umask(mode);
@@ -90,7 +90,7 @@ int test_umask() {
   return 0;
 }
 
-int test_utimensat_futimensat() {
+int test_utimensat_futimensat(void) {
   struct stat statbuf = { 0 };
   char filename[PATH_MAX];
   strcpy(filename, DIR_PATH);
@@ -142,7 +142,7 @@ int test_utimensat_futimensat() {
 }
 
 // lchmod() is not tested as it simply wraps fchmodat()
-int test_chmod() {
+int test_chmod(void) {
   char filename[PATH_MAX];
   strcpy(filename, DIR_PATH);
   strcat(filename, "/statXXXXXX");
@@ -160,7 +160,7 @@ int test_chmod() {
   return 0;
 }
 
-int test_statvfs() {
+int test_statvfs(void) {
   char filename[PATH_MAX];
   strcpy(filename, DIR_PATH);
   strcat(filename, "/statXXXXXX");

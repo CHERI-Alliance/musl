@@ -3,8 +3,8 @@
 #include <stdlib.h>
 #include <wchar.h>
 
-int test_strdup_strndup();
-int test_wcsdup();
+int test_strdup_strndup(void);
+int test_wcsdup(void);
 
 int main(int argc, char **argv) {
     if (argc < 2) return -1;
@@ -19,7 +19,7 @@ int main(int argc, char **argv) {
     return -1;
 }
 
-int test_strdup_strndup() {
+int test_strdup_strndup(void) {
     const char str[] = "this is a test string.";
     char *dup = strdup(str);
 
@@ -36,7 +36,7 @@ int test_strdup_strndup() {
     return 0;
 }
 
-int test_wcsdup() {
+int test_wcsdup(void) {
     const wchar_t str[] = L"this is a test string.";
 
     wchar_t *dup = wcsdup(str);

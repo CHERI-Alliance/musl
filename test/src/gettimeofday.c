@@ -1,6 +1,6 @@
 #include <sys/time.h>
 
-int main() {
+int main(void) {
   struct timeval time;
   int ret = gettimeofday(&time, 0);
   // We can't really check for the 'correct' value of time, but we can at least

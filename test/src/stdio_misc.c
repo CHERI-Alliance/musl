@@ -5,14 +5,14 @@
 #include <string.h>
 #include <unistd.h>
 
-int test_perror();
-int test_ctermid();
-int test_fopencookie();
-int test_setvbuf();
+int test_perror(void);
+int test_ctermid(void);
+int test_fopencookie(void);
+int test_setvbuf(void);
 int test_setvbuf_stdout(int);
-int test_getdelim();
-int test_freopen();
-int test_fmemopen();
+int test_getdelim(void);
+int test_freopen(void);
+int test_fmemopen(void);
 
 int main(int argc, char **argv) {
     if (argc < 2) return -1;
@@ -41,7 +41,7 @@ int main(int argc, char **argv) {
     return -1;
 }
 
-int test_fmemopen() {
+int test_fmemopen(void) {
     FILE *out, *in;
     const char sentence[] = "longer sentence to check buffer resizes to hold";
     char inbuf[100] = "initial data";
@@ -95,7 +95,7 @@ int file_fgetpos(FILE *fp) {
     return 0;
 }
 
-int test_freopen() {
+int test_freopen(void) {
     FILE *fp = stdout;
     const char *filename = tmpnam(NULL);
     int r = 0;
@@ -108,7 +108,7 @@ int test_freopen() {
     return r;
 }
 
-int test_getdelim() {
+int test_getdelim(void) {
     FILE* fp = tmpfile();
     if(!fp) return 1;
 
@@ -152,7 +152,7 @@ int test_setvbuf_stdout(int buf_type){
     return 0;
 }
 
-int test_setvbuf() {
+int test_setvbuf(void) {
     FILE* fp = tmpfile();
     if(!fp) return 1;
 
@@ -164,7 +164,7 @@ int test_setvbuf() {
     return 0;
 }
 
-int test_perror() {
+int test_perror(void) {
     char template[] = "testXXXXXX";
     char *filename = mktemp(template);
 
@@ -177,7 +177,7 @@ int test_perror() {
     return 0;
 }
 
-int test_ctermid() {
+int test_ctermid(void) {
     char termid[64];
     ctermid(termid);
 
@@ -186,7 +186,7 @@ int test_ctermid() {
     return 0;
 }
 
-int test_fopencookie() {
+int test_fopencookie(void) {
     // very simplified test, may need more in depth testing in future if issues arise
 
     cookie_io_functions_t io_funcs = (cookie_io_functions_t) {

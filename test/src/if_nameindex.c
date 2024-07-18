@@ -2,7 +2,7 @@
 #include <stdio.h>
 #include <string.h>
 
-int main() {
+int main(void) {
 	struct if_nameindex *namei, *p;
 	int i, n = sizeof(struct if_nameindex);
 

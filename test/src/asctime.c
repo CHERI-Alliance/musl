@@ -2,7 +2,7 @@
 #include <time.h>
 #include <string.h>
 
-int main() {
+int main(void) {
   time_t t;
   time(&t);
   struct tm *lt = localtime(&t);

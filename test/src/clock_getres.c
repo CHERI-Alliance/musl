@@ -1,6 +1,6 @@
 #include <time.h>
 
-int main() {
+int main(void) {
   struct timespec spec;
   int ret = clock_getres(CLOCK_REALTIME, &spec);
   // We can't really check for the 'correct' value of res, but we can at least

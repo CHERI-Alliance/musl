@@ -1,7 +1,7 @@
 #include <errno.h>
 #include <string.h>
 
-int main() {
+int main(void) {
   char *str = strerror(EAFNOSUPPORT);
   if (strcmp(str, "Address family not supported by protocol")) {
     return 1;

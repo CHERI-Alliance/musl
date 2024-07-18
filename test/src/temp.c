@@ -10,14 +10,14 @@
 
 char DIR_PATH[PATH_MAX];
 
-int test_mktemp();
-int test_mkstemp();
-int test_mkostemp();
-int test_mkstemps();
-int test_mkostemps();
-int test_mkdtemp();
-int test_tmpfile();
-int test_tempname();
+int test_mktemp(void);
+int test_mkstemp(void);
+int test_mkostemp(void);
+int test_mkstemps(void);
+int test_mkostemps(void);
+int test_mkdtemp(void);
+int test_tmpfile(void);
+int test_tempname(void);
 
 int main(int argc, char **argv) {
     if (argc < 2) return -1;
@@ -47,7 +47,7 @@ int main(int argc, char **argv) {
     return -1;
 }
 
-int test_mktemp() {
+int test_mktemp(void) {
     struct stat statbuf;
 
     for (int i = 0; i < NUMITERS; i++) {
@@ -71,7 +71,7 @@ int test_mktemp() {
     return 0;
 }
 
-int test_mkstemp() {
+int test_mkstemp(void) {
     struct stat statbuf;
 
     for (int i = 0; i < NUMITERS; i++) {
@@ -94,7 +94,7 @@ int test_mkstemp() {
     return 0;
 }
 
-int test_mkostemp() {
+int test_mkostemp(void) {
     struct stat statbuf;
 
     for (int i = 0; i < NUMITERS; i++) {
@@ -117,7 +117,7 @@ int test_mkostemp() {
     return 0;
 }
 
-int test_mkstemps() {
+int test_mkstemps(void) {
     struct stat statbuf;
 
     for (int i = 0; i < NUMITERS; i++) {
@@ -141,7 +141,7 @@ int test_mkstemps() {
     return 0;
 }
 
-int test_mkostemps() {
+int test_mkostemps(void) {
     struct stat statbuf;
 
     for (int i = 0; i < NUMITERS; i++) {
@@ -166,7 +166,7 @@ int test_mkostemps() {
     return 0;
 }
 
-int test_mkdtemp() {
+int test_mkdtemp(void) {
     struct stat statbuf;
 
     for (int i = 0; i < NUMITERS; i++) {
@@ -188,7 +188,7 @@ int test_mkdtemp() {
     return 0;
 }
 
-int test_tmpfile() {
+int test_tmpfile(void) {
     for (int i = 0; i < NUMITERS; i++) {
         FILE *file;
 
@@ -201,7 +201,7 @@ int test_tmpfile() {
     return 0;
 }
 
-int test_tempname() {
+int test_tempname(void) {
     // tempnam
     for (int i = 0; i < NUMITERS; i++) {
         char *name = tempnam(DIR_PATH, "test");

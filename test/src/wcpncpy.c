@@ -1,6 +1,6 @@
 #include <wchar.h>
 
-int main() {
+int main(void) {
   wchar_t *words[] = {L"where", L"daffodil", L"and", L"lily", L"wave"};
   size_t ns[] = {1, 4, 2, 4, 4};
 

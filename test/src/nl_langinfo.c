@@ -2,7 +2,7 @@
 #include <locale.h>
 #include <stdio.h>
 
-int main() {
+int main(void) {
   char* li = nl_langinfo(CODESET);
   printf("%s\n", li);
   printf("%lu\n", __builtin_cheri_length_get(li));

@@ -1,7 +1,7 @@
 #include <string.h>
 #include <signal.h>
 
-int main() {
+int main(void) {
   char *res = strsignal(SIGILL);
   char exp[] = "Illegal instruction";
   if (__builtin_cheri_tag_get(res) != 1) return 1;

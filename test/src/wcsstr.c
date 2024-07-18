@@ -9,7 +9,7 @@ int replace_first(wchar_t *str, wchar_t *subs, wchar_t *repl) {
   return 0;
 }
 
-int main() {
+int main(void) {
 
   wchar_t str[] = L"on the ning nang nong all the cows go bong!";
 

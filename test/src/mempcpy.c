@@ -2,7 +2,7 @@
 
 #include <string.h>
 
-int main() {
+int main(void) {
   char str[21];
   strcpy(str, "overwrite up to here");
   char* res = mempcpy(str, "nothing to see  ", 16);

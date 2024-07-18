@@ -1,7 +1,7 @@
 #include <unistd.h>
 #include <string.h>
 
-int main() {
+int main(void) {
   char src[] = "abcdefghi";
   char dst[sizeof(src)];
   memset(dst, 0, sizeof(dst));

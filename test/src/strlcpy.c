@@ -1,6 +1,6 @@
 #include <string.h>
 
-int main() {
+int main(void) {
 
   char* words[] = {"i ", "wandered ", "lonely ", "as ", "a ", "cloud"};
   size_t lengths[] = {3, 7, 13, 4, 4, 0};

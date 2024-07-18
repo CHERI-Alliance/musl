@@ -2,7 +2,7 @@
 #include <stdio.h>
 #include <string.h>
 
-int main() {
+int main(void) {
     // make sure the env variable used are not already set
     if(getenv("DUMMY_NAME1") || getenv("DUMMY_NAME2") || getenv("DUMMY_NAME3")) return 1;
 

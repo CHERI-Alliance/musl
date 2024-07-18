@@ -7,8 +7,8 @@
 char DIR_PATH[PATH_MAX];
 #define IN_TMP_DIR(f) TMP_DIR f
 
-static int test_putw_read_only();
-static int test_putw_write_only();
+static int test_putw_read_only(void);
+static int test_putw_write_only(void);
 
 int main(int argc, char *argv[]) {
     if (argc < 2) return -1;
@@ -26,13 +26,13 @@ int main(int argc, char *argv[]) {
     return -1;
 }
 
-static int test_putw_read_only() {
+static int test_putw_read_only(void) {
     if (putw(0, stdin) != EOF) return 1;
 
     return 0;
 }
 
-static int test_putw_write_only() {
+static int test_putw_write_only(void) {
     char filename_buffer[PATH_MAX];
     char *filename = create_temp_file(DIR_PATH, "testXXXXXX", &filename_buffer[0]);
 

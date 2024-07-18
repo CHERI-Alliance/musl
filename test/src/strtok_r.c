@@ -1,6 +1,6 @@
 #include <string.h>
 
-int main() {
+int main(void) {
   char str[] = "i wandered   lonely  as a ? cloud";
   size_t untokenised_len = strlen(str) + 1;
   char *words[] = {"i", "wandered", "lonely", "as", "a", "cloud"};

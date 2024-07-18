@@ -15,7 +15,7 @@ unsigned short xi[3] = {
   1, 2, 3
 };
 
-int test_seeds() {
+int test_seeds(void) {
   srand(1);
   srand48(2);
   seed48(xi);
@@ -31,7 +31,7 @@ int test_seeds() {
   return 0;
 }
 
-int test_rand() {
+int test_rand(void) {
   for (int i = 1; i < SAMPLE_SIZE; i++) {
     int num = rand();
 
@@ -43,7 +43,7 @@ int test_rand() {
   return 0;
 }
 
-int test_drand48_erand48() {
+int test_drand48_erand48(void) {
   for (int i = 1; i < SAMPLE_SIZE; i++) {
     double numd = drand48();
     double nume = erand48(xi);
@@ -56,7 +56,7 @@ int test_drand48_erand48() {
   return 0;
 }
 
-int test_lrand48_nrand48() {
+int test_lrand48_nrand48(void) {
   const long LRAND_MAX  = 1l << 31;
 
   for (int i = 1; i < SAMPLE_SIZE; i++) {
@@ -71,7 +71,7 @@ int test_lrand48_nrand48() {
   return 0;
 }
 
-int test_mrand48_jrand48() {
+int test_mrand48_jrand48(void) {
   const long MRAND_MAX = 1l << 31;
   const long MRAND_MIN = -(1l << 31);
 

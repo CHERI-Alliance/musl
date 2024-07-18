@@ -7,14 +7,14 @@
 
 char DIR_PATH[PATH_MAX];
 
-int create_tmp_file() {
+int create_tmp_file(void) {
   char template[PATH_MAX];
   strcpy(template, DIR_PATH);
   strcat(template, "/testXXXXXX");
   return mkstemp(template);
 }
 
-int test_fcntl_flock() {
+int test_fcntl_flock(void) {
   int fd = create_tmp_file();
   if (fd < 0) {
     return 1;
@@ -53,7 +53,7 @@ int test_fcntl_flock() {
   return 0;
 }
 
-int test_fcntl_fd() {
+int test_fcntl_fd(void) {
   int fd = create_tmp_file();
   if (fd < 0) {
     return 1;
@@ -81,7 +81,7 @@ int test_fcntl_fd() {
   return 0;
 }
 
-int test_fcntl_fl() {
+int test_fcntl_fl(void) {
   int fd = create_tmp_file();
   if (fd < 0) {
     return 1;
@@ -109,7 +109,7 @@ int test_fcntl_fl() {
   return 0;
 }
 
-int test_fcntl_own() {
+int test_fcntl_own(void) {
   struct f_owner_ex owner;
 
   int fd = create_tmp_file();

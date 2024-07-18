@@ -1,6 +1,6 @@
 #include <string.h>
 
-int main() {
+int main(void) {
   if (strcmp("should match", "should match")) return 1;
   if (strcmp("should be greater", "") <= 0) return 2;
   if (strcmp("", "should be less") >= 0) return 3;

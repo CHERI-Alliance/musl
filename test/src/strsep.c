@@ -1,7 +1,7 @@
 #define _GNU_SOURCE
 #include <string.h>
 
-int main() {
+int main(void) {
   char str[] = "i wandered lonely as a cloud";
   size_t untokenised_len = strlen(str);
   char* words[] = {"i", "wandered", "lonely", "as", "a", "cloud"};

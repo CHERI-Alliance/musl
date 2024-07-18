@@ -1,8 +1,8 @@
 #include <libintl.h>
 #include <stdio.h>
 
-static int test_bind_textdomain_codeset();
-static int test_textdomain();
+static int test_bind_textdomain_codeset(void);
+static int test_textdomain(void);
 
 int main(int argc, char *argv[])
 {
@@ -16,7 +16,7 @@ int main(int argc, char *argv[])
 	}
 }
 
-static int test_bind_textdomain_codeset()
+static int test_bind_textdomain_codeset(void)
 {
 	char *res = bind_textdomain_codeset("morello-project.org", 0);
 	printf("res = %s\n", res);
@@ -36,7 +36,7 @@ static int test_bind_textdomain_codeset()
 	return 0;
 }
 
-static int test_textdomain()
+static int test_textdomain(void)
 {
 	char *res = textdomain(0);
 	if (__builtin_cheri_tag_get(res) == 0) {

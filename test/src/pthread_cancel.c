@@ -58,7 +58,7 @@ void *test_cancel_async_no_cp(void *arg) {
   return NULL;
 }
 
-static int cancel_async_no_cp() {
+static int cancel_async_no_cp(void) {
   T(sem_init(&sem, 0, 0), "sem_init failed");
   void *thread_ret = 0;
   ASTR(checkpoint, 0);
@@ -85,7 +85,7 @@ void *test_cancel_async_in_cp(void *arg) {
   return NULL;
 }
 
-static int cancel_async_in_cp() {
+static int cancel_async_in_cp(void) {
   void *thread_ret = 0;
   ASTR(checkpoint, 0);
   pthread_t thread;
@@ -116,7 +116,7 @@ void *test_cancel_deferred_no_cp(void *arg) {
   return NULL;
 }
 
-static int cancel_deferred_no_cp() {
+static int cancel_deferred_no_cp(void) {
   void *thread_ret = 0;
   ASTR(checkpoint, 0);
   pthread_t thread;
@@ -145,7 +145,7 @@ void *test_cancel_deferred_in_cp(void *arg) {
   return NULL;
 }
 
-static int cancel_deferred_in_cp() {
+static int cancel_deferred_in_cp(void) {
   void *thread_ret = 0;
   pthread_t thread;
   pthread_create(&thread, NULL, test_cancel_deferred_in_cp, NULL);
@@ -176,7 +176,7 @@ void *test_cancel_async_disabled(void *arg) {
   return NULL;
 }
 
-static int cancel_async_disabled() {
+static int cancel_async_disabled(void) {
   void *thread_ret = 0;
   ASTR(checkpoint, 0);
   pthread_t thread;
@@ -211,7 +211,7 @@ void *test_cancel_deferred_disabled(void *arg) {
   return NULL;
 }
 
-static int cancel_deferred_disabled() {
+static int cancel_deferred_disabled(void) {
   void *thread_ret = 0;
   ASTR(checkpoint, 0);
   pthread_t thread;
@@ -240,7 +240,7 @@ void *test_cancel_async_masked(void *arg) {
   return 0;
 }
 
-static int cancel_async_masked() {
+static int cancel_async_masked(void) {
   void *thread_ret = 0;
   ASTR(checkpoint, 0);
   pthread_t thread;
@@ -273,7 +273,7 @@ void *test_cancel_deferred_in_cp_custom(void *arg) {
   return NULL;
 }
 
-static int cancel_deferred_in_cp_custom() {
+static int cancel_deferred_in_cp_custom(void) {
   void *thread_ret = 0;
   pthread_t thread;
   for (int i = 0; i < 1000; i++) {

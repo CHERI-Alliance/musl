@@ -1,6 +1,6 @@
 #include <string.h>
 
-int main() {
+int main(void) {
   char* words[] = {"the ", "boy ", "stood ", "on ", "the ", "burning ", "deck"};
   char str[34];
   memset(str, 0, sizeof(str));

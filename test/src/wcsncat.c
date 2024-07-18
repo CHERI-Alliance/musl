@@ -1,6 +1,6 @@
 #include <wchar.h>
 
-int main() {
+int main(void) {
   wchar_t* words[] = {L"the ", L"boy ", L"stood ", L"on ", L"the ", L"burning ", L"deck"};
   size_t lengths[] = {1, 7, 6, 2, 0, 1, 4};
   wchar_t str[34];

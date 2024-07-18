@@ -1,6 +1,6 @@
 #include <string.h>
 
-int main() {
+int main(void) {
 
   const char* words[] = {
     "i ",

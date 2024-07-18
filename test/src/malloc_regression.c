@@ -5,7 +5,7 @@
 
 #include "alloc_helpers.h"
 
-int group_map_not_cleaned_on_create()
+int group_map_not_cleaned_on_create(void)
 {
     int **list = NULL;
     int len = 0;
@@ -22,7 +22,7 @@ int group_map_not_cleaned_on_create()
     return TEST_SUCCESS;
 }
 
-int unmap_move_corrupt_nested_group()
+int unmap_move_corrupt_nested_group(void)
 {
     struct dirent **namelist = NULL;
 

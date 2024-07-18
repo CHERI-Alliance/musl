@@ -1,6 +1,6 @@
 #include <wchar.h>
 
-int main() {
+int main(void) {
   wchar_t str[] = L"i wandered   lonely  as a ? cloud";
   size_t untokenised_len = (wcslen(str) + 1) * sizeof(wchar_t);
   wchar_t *words[] = {L"i", L"wandered", L"lonely", L"as", L"a", L"cloud"};

@@ -70,7 +70,7 @@ static void catcher(int sig, siginfo_t *si, void *ctx) {
 	UC_MCONTEXT_PC(uc->uc_mcontext) = (unsigned long) __builtin_cheri_address_get(jump_to_c) & ~0x1;
 }
 
-int main() {
+int main(void) {
 	struct sigaction sigact;
 
 	printf("jump_to_c addr: %#p\n", (void *) jump_to_c);

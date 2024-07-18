@@ -1,6 +1,6 @@
 #include <wchar.h>
 
-int main() {
+int main(void) {
   if (wcsncmp(L"should match!", L"should match, honest", 12)) return 1;
   if (wcsncmp(L"should be greater", L"", 11) <= 0) return 2;
   if (wcsncmp(L"", L"should be less", 5) >= 0) return 3;

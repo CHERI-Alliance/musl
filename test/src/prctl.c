@@ -1,7 +1,7 @@
 #include <sys/prctl.h>
 #include <string.h>
 
-int main() {
+int main(void) {
     const char new_name[16] = "FancyThreadName";
     char current_name[16] = { 0 };
     if (prctl(PR_SET_NAME, &new_name[0])) return 1;

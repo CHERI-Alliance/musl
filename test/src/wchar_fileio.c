@@ -8,9 +8,9 @@
 
 char DIR_PATH[PATH_MAX];
 
-int wchar_file();
-int wchar_std();
-int wstr_file();
+int wchar_file(void);
+int wchar_std(void);
+int wstr_file(void);
 
 int main(int argc, char **argv)
 {
@@ -28,7 +28,7 @@ int main(int argc, char **argv)
 	}
 }
 
-int wchar_file()
+int wchar_file(void)
 {
 	FILE *f;
 	char *filename;
@@ -80,7 +80,7 @@ int wchar_file()
 	return 0;
 }
 
-int wchar_std()
+int wchar_std(void)
 {
 	wchar_t read_char;
 	wchar_t write_char;
@@ -102,7 +102,7 @@ int wchar_std()
 	return 0;
 }
 
-int wstr_file()
+int wstr_file(void)
 {
 	FILE *f;
 	char *filename;

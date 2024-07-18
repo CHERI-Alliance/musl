@@ -3,9 +3,9 @@
 #include <stdio.h>
 #include <stddef.h>
 
-static int test_ctime();
-static int test_ctime_r();
-static int test_getdate();
+static int test_ctime(void);
+static int test_ctime_r(void);
+static int test_getdate(void);
 
 int main(int argc, char *argv[])
 {
@@ -20,7 +20,7 @@ int main(int argc, char *argv[])
 	}
 }
 
-static int test_ctime()
+static int test_ctime(void)
 {
 	time_t x = 0;
 	char *res = ctime(&x);
@@ -31,7 +31,7 @@ static int test_ctime()
 	return 0;
 }
 
-static int test_ctime_r()
+static int test_ctime_r(void)
 {
 	time_t x = 0;
 	char buf[256];
@@ -47,7 +47,7 @@ static int test_ctime_r()
 	return 0;
 }
 
-static int test_getdate()
+static int test_getdate(void)
 {
 	struct tm *res = getdate("2009-12-28");
 	printf("res = %p\n", (void *)res);

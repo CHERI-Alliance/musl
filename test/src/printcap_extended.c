@@ -5,7 +5,7 @@
 #include <sys/auxv.h>
 #include <cheriintrin.h>
 
-int test_csp() {
+int test_csp(void) {
 	void *csp = __builtin_cheri_stack_get();
 	int n = printf("%+#p\n", csp);
 	if(n < 0) return 1;
@@ -13,7 +13,7 @@ int test_csp() {
 	return 0;
 }
 
-int test_pcc() {
+int test_pcc(void) {
 	void *pcc = cheri_pcc_get();
 	int n = printf("%#+p\n", pcc);
 	if (n < 0) return 1;
@@ -21,7 +21,7 @@ int test_pcc() {
 	return 0;
 }
 
-int test_local() {
+int test_local(void) {
 	int x;
 	int *p = &x;
 	p = cheri_perms_clear(p, CHERI_PERM_GLOBAL);
@@ -31,7 +31,7 @@ int test_local() {
 	return 0;
 }
 
-int test_sentry() {
+int test_sentry(void) {
 	void *sentry = (void *)test_local;
 	int m =  printf("%+#lp\n", sentry);
 	if(m < 0) return 2;
@@ -44,7 +44,7 @@ int test_sentry() {
 	return 0;
 }
 
-int test_auxv() {
+int test_auxv(void) {
 	void *entry = getauxptr(AT_CHERI_SEAL_CAP);
 	int m =  printf("%+#lp\n", entry);
 	if(m < 0) return 2;
@@ -54,7 +54,7 @@ int test_auxv() {
 	return 0;
 }
 
-int test_cap_null() {
+int test_cap_null(void) {
 	int n = printf("%+#p\n", NULL);
 	if(n < 0) return 1;
 

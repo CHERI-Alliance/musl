@@ -20,7 +20,7 @@ void *run_thread(void *arg) {
     return NULL;
 }
 
-int main() {
+int main(void) {
     int cleanuparg = 16;
 
     pthread_t thread;

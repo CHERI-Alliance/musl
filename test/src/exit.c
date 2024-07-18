@@ -9,12 +9,12 @@ void at_quick_exit_func(void) {
     printf("quick_exit() called\n");
 }
 
-void test_exit() {
+void test_exit(void) {
     atexit(&atexit_func);
     exit(1);
 }
 
-void test_quick_exit() {
+void test_quick_exit(void) {
     at_quick_exit(&at_quick_exit_func);
     quick_exit(1);
 }

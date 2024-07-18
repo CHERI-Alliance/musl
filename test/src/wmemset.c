@@ -30,7 +30,7 @@ int test_align(int align, int len) {
 	return 0;
 }
 
-int main() {
+int main(void) {
 	int i,j,k;
 	wchar_t a[30];
 

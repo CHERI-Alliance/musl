@@ -11,7 +11,7 @@ int fn_n(const char *p, const struct stat * st, int d, struct FTW *ftwbuf) {
 	return fn(p, st, d);
 }
 
-int main() {
+int main(void) {
 	int r;
 	if((r=ftw(".", fn, 2))) return r;
 	r = nftw(".", fn_n, 2, 0);

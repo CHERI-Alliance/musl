@@ -1,6 +1,6 @@
 #include <wchar.h>
 
-int main() {
+int main(void) {
   wchar_t* words[] = {L"the ", L"boy ", L"stood ", L"on ", L"the ", L"burning ", L"deck"};
   wchar_t str[34];
   wmemset(str, 0, sizeof(str)/sizeof(wchar_t));

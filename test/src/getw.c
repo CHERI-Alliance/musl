@@ -3,8 +3,8 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-static int test_getw_eof();
-static int test_getw_not_eof();
+static int test_getw_eof(void);
+static int test_getw_not_eof(void);
 
 int main(int argc, char *argv[]) {
     if (argc < 2) return -1;
@@ -19,7 +19,7 @@ int main(int argc, char *argv[]) {
     return -1;
 }
 
-static int test_getw_eof() {
+static int test_getw_eof(void) {
     const char *filename = "resources/test-getw-eof.dat";
     FILE *f = fopen(filename, "r");
     if (!f) return 1;
@@ -29,7 +29,7 @@ static int test_getw_eof() {
     return 0;
 }
 
-static int test_getw_not_eof() {
+static int test_getw_not_eof(void) {
   const char *filename = "resources/test-getw-not-eof.dat";
   FILE *f = fopen(filename, "r");
   if (!f) return 1;

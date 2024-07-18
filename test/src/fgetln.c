@@ -2,9 +2,9 @@
 
 #include <stdio.h>
 
-static int test_fgetln_with_newline();
-static int test_fgetln_with_eof();
-static int test_fgetln_at_eof();
+static int test_fgetln_with_newline(void);
+static int test_fgetln_with_eof(void);
+static int test_fgetln_at_eof(void);
 
 int main(int argc, char *argv[]) {
     if (argc < 2) return -1;
@@ -21,7 +21,7 @@ int main(int argc, char *argv[]) {
     return -1;
 }
 
-static int test_fgetln_with_newline() {
+static int test_fgetln_with_newline(void) {
     const char *filename = "resources/test-fgetln-with-newline.dat";
     FILE *f = fopen(filename, "r");
     if (!f) return 1;
@@ -34,7 +34,7 @@ static int test_fgetln_with_newline() {
     return 0;
 }
 
-static int test_fgetln_with_eof() {
+static int test_fgetln_with_eof(void) {
     const char *filename = "resources/test-fgetln-with-eof.dat";
     FILE *f = fopen(filename, "r");
     if (!f) return 1;
@@ -48,7 +48,7 @@ static int test_fgetln_with_eof() {
     return 0;
 }
 
-static int test_fgetln_at_eof() {
+static int test_fgetln_at_eof(void) {
     const char *filename = "resources/test-fgetln-at-eof.dat";
     FILE *f = fopen(filename, "r");
     if (!f) return 1;

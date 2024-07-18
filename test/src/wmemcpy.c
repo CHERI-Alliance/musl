@@ -1,6 +1,6 @@
 #include <wchar.h>
 
-int main() {
+int main(void) {
   wchar_t src[] = L"copy this";
   wchar_t dst[sizeof(src)/sizeof(wchar_t)];
   wmemcpy(dst, src, wcslen(src) + 1);

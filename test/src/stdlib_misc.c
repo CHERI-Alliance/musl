@@ -4,9 +4,9 @@
 #include <limits.h>
 #include <unistd.h>
 
-int test_setkey_encrypt();
-int test_realpath();
-int test_system();
+int test_setkey_encrypt(void);
+int test_realpath(void);
+int test_system(void);
 
 int main(int argc, char **argv) {
     if (argc < 2) return -1;
@@ -23,7 +23,7 @@ int main(int argc, char **argv) {
     return -1;
 }
 
-int test_setkey_encrypt() {
+int test_setkey_encrypt(void) {
     char bytes[64] = {
         0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1,
     };
@@ -34,14 +34,14 @@ int test_setkey_encrypt() {
     return 0;
 }
 
-int test_realpath() {
+int test_realpath(void) {
     char rp[PATH_MAX];
     if(!realpath("/proc/self/exe", rp)) return 1;
 
     return 0;
 }
 
-int test_system() {
+int test_system(void) {
     if(!system(NULL)) return 1;
 
     return 0;

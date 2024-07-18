@@ -4,8 +4,8 @@
 #include <stdio.h>
 #include <string.h>
 
-int test_atof();
-int test_evct_fcvt_gcvt();
+int test_atof(void);
+int test_evct_fcvt_gcvt(void);
 
 int main(int argc, char **argv) {
     if (argc < 2) return -1;
@@ -20,14 +20,14 @@ int main(int argc, char **argv) {
     return -1;
 }
 
-int test_atof() {
+int test_atof(void) {
     char str[] = "1.5";
     if(atof(str) != 1.5f) return 1;
 
     return 0;
 }
 
-int test_evct_fcvt_gcvt() {
+int test_evct_fcvt_gcvt(void) {
     int decpt;
     int sign;
 

@@ -8,8 +8,8 @@
 #define MAGIC 0xb0bacafe
 
 static void *test(void *args);
-int test_pthread();
-int test_pthread_setstack();
+int test_pthread(void);
+int test_pthread_setstack(void);
 
 int main(int argc, char **argv) {
     if (argc < 2) return -1;
@@ -24,7 +24,7 @@ int main(int argc, char **argv) {
     return -1;
 }
 
-int test_pthread() {
+int test_pthread(void) {
     int ret;
 
     pthread_attr_t attr;
@@ -50,7 +50,7 @@ int test_pthread() {
     return 0;
 }
 
-int test_pthread_setstack() {
+int test_pthread_setstack(void) {
     int ret;
 
     pthread_attr_t attr;

@@ -85,7 +85,7 @@ void* basic_test(size_t size1, size_t size2)
     return ptr;
 }
 
-void test_fit_in_slot()
+void test_fit_in_slot(void)
 {
     void* all_ptr[2];
     all_ptr[0] = basic_test(175*16, 180*16);
@@ -95,7 +95,7 @@ void test_fit_in_slot()
     free(all_ptr[1]);
 }
 
-void test_increase_size()
+void test_increase_size(void)
 {
     void* all_ptr[2];
     all_ptr[0] = basic_test(175*16, 300*16);
@@ -106,7 +106,7 @@ void test_increase_size()
     free(all_ptr[1]);
 }
 
-void test_reduce_size()
+void test_reduce_size(void)
 {
     void* all_ptr[3];
     // just one size class
@@ -122,7 +122,7 @@ void test_reduce_size()
     free(all_ptr[2]);
 }
 
-void test_change_regime()
+void test_change_regime(void)
 {
     void* all_ptr[2];
     all_ptr[0] = basic_test(175*16, 16384*16+1);
@@ -133,13 +133,13 @@ void test_change_regime()
     free(all_ptr[1]);
 }
 
-void test_alignment_increase() {
+void test_alignment_increase(void) {
     // Morello alignment requirement increases when resizing to the larger size
     void *ptr = basic_test(32768 - 32, 32768);
     free(ptr);
 }
 
-void test_high_count_bounds() {
+void test_high_count_bounds(void) {
     // Increase ctx.mmap_counter to increase offset
     for (int i = 0; i < 1000; i++) {
         malloc(i);
@@ -152,7 +152,7 @@ void test_high_count_bounds() {
     }
 }
 
-void test_half_page_alloc() {
+void test_half_page_alloc(void) {
     for (int i = 1620; i < 2032; i++) {
 	void* ptr = malloc(i);
 	free(ptr);

@@ -5,9 +5,9 @@
 #include <sys/select.h>
 #include <time.h>
 
-int test_poll();
-int test_select();
-int test_pselect();
+int test_poll(void);
+int test_select(void);
+int test_pselect(void);
 
 int main(int argc, char **argv) {
   if (argc < 2) return -1;
@@ -24,7 +24,7 @@ int main(int argc, char **argv) {
   return -1;
 }
 
-int test_poll() {
+int test_poll(void) {
   struct pollfd fd = (struct pollfd) {
     .fd = STDOUT_FILENO,
     .events = POLLOUT
@@ -36,7 +36,7 @@ int test_poll() {
   return 0;
 }
 
-int test_select() {
+int test_select(void) {
   fd_set readfds;
   FD_ZERO(&readfds);
   FD_SET(STDIN_FILENO, &readfds);
@@ -55,7 +55,7 @@ int test_select() {
   return 0;
 }
 
-int test_pselect() {
+int test_pselect(void) {
   fd_set readfds;
   FD_ZERO(&readfds);
   FD_SET(STDIN_FILENO, &readfds);

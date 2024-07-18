@@ -1,6 +1,6 @@
 #include <string.h>
 
-int main() {
+int main(void) {
 
   char* words[] = {"i ", "wandered ", "lonely ", "as ", "a ", "cloud"};
   char str[29];

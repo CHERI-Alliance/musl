@@ -3,7 +3,7 @@
 #include <unistd.h>
 #include <sys/mman.h>
 
-int test_write()
+int test_write(void)
 {
 	char input_buf[32] = {};
 	syscall(SYS_write, 0, input_buf, 8);
@@ -13,7 +13,7 @@ int test_write()
 	return 0;
 }
 
-int test_getcpu()
+int test_getcpu(void)
 {
 	unsigned int cpu;
 	unsigned int node;
@@ -21,7 +21,7 @@ int test_getcpu()
 	return 0;
 }
 
-int test_mmap()
+int test_mmap(void)
 {
 	intptr_t point = syscall(SYS_mmap, NULL, 100, PROT_NONE, MAP_PRIVATE|MAP_ANON, -1, 0);
 	if (!__builtin_cheri_tag_get(point)) return 5;

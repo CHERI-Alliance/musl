@@ -2,8 +2,8 @@
 #include <unistd.h>
 #include <stdio.h>
 
-static int test_cuserid();
-static int test_getusershell();
+static int test_cuserid(void);
+static int test_getusershell(void);
 
 int main(int argc, char *argv[])
 {
@@ -17,7 +17,7 @@ int main(int argc, char *argv[])
 	}
 }
 
-static int test_cuserid()
+static int test_cuserid(void)
 {
 	char buf[L_cuserid] = {};
 	char *res = cuserid(buf); // null use case is not supported
@@ -28,7 +28,7 @@ static int test_cuserid()
 	return 0;
 }
 
-static int test_getusershell()
+static int test_getusershell(void)
 {
 	char *res = getusershell();
 	printf("getusershell = %s\n", res);

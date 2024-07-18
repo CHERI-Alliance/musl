@@ -13,7 +13,7 @@
 
 extern char **environ;
 
-int child()
+int child(void)
 {
     char cwd[4096];
 

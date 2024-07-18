@@ -6,7 +6,7 @@
 #include <sys/wait.h>
 #include <unistd.h>
 
-int main() {
+int main(void) {
 	struct sockaddr_in saddr = {.sin_family = AF_INET, .sin_port = 12121};
 	struct sockaddr * psaddr = (struct sockaddr *)&saddr;
 	socklen_t addr_len = sizeof(saddr);

@@ -1,7 +1,7 @@
 #include <errno.h>
 #include <string.h>
 
-int main() {
+int main(void) {
   errno = ENOSTR;
   char s[15];
   int d = strerror_r(errno, s, 15);

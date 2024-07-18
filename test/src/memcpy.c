@@ -86,12 +86,12 @@ static void test_ptr_size(void** ptr,long long size)
 }
 
 static int init_int(int i) {return 1+i*3;}
-static int int_zero_init() {return 0;}
+static int int_zero_init(void) {return 0;}
 static int equal_int(int a,int b) {return a==b;}
 static void null_int_func(int a) {}
 
 static double init_double(int i) {return (1+3*i)*M_PI;}
-static double double_zero_init() {return 0;}
+static double double_zero_init(void) {return 0;}
 static int equal_double(double a,double b) {return a==b;}
 static void null_double_func(double a) {}
 
@@ -104,7 +104,7 @@ struct simple_struct{ // between 17B and 24B
 };
 
 static struct simple_struct init_simple_struct(int i) {return (struct simple_struct){ .integer = 1+3*i, .bitfield5 = (5+i)%32, .bitfield3 = i%8, .floating_point = (1+3*i)*M_PI };}
-static struct simple_struct simple_struct_zero_init() {return (struct simple_struct){ .integer = 0, .bitfield5 = 0, .bitfield3 = 0, .floating_point = 0 };}
+static struct simple_struct simple_struct_zero_init(void) {return (struct simple_struct){ .integer = 0, .bitfield5 = 0, .bitfield3 = 0, .floating_point = 0 };}
 static int equal_simple_struct(struct simple_struct a,struct simple_struct b) {return a.integer==b.integer && a.bitfield5==b.bitfield5 && a.bitfield3==b.bitfield3 && a.floating_point==b.floating_point;}
 static void null_simple_struct_func(struct simple_struct a) {}
 
@@ -118,11 +118,11 @@ struct complex_struct{ // between 33B and 40B
 };
 
 static struct complex_struct init_complex_struct(int i) {return (struct complex_struct){ .integer = 1+3*i, .bitfield5 = (5+i)%32, .capability = &target, .floating_point = (1+3*i)*M_PI };}
-static struct complex_struct complex_struct_zero_init() {return (struct complex_struct){ .integer = 0, .bitfield5 = 0, .capability = &bad_target, .floating_point = 0 };}
+static struct complex_struct complex_struct_zero_init(void) {return (struct complex_struct){ .integer = 0, .bitfield5 = 0, .capability = &bad_target, .floating_point = 0 };}
 static int equal_complex_struct(struct complex_struct a,struct complex_struct b) {return a.integer==b.integer && a.bitfield5==b.bitfield5 && a.capability==b.capability && a.floating_point==b.floating_point;}
 static void test_inner_cap(struct complex_struct a) {test_ptr_size((void**)&(a.capability),sizeof(int));}
 
-static void test_small_copy() //less than 32B
+static void test_small_copy(void) //less than 32B
 {
     int int_var_src = 255;
     int int_var_dst = 0;
@@ -140,21 +140,21 @@ static void test_small_copy() //less than 32B
     return;
 }
 
-static void test_medium_array() { // between 32 and 128 B
+static void test_medium_array(void) { // between 32 and 128 B
     //test_primitive_array(10,5); // works with both 4B and 8B int, and 8B double
     TEST_ARRAY(int, 10, init_int, int_zero_init, equal_int, null_int_func)
     TEST_ARRAY(double, 5, init_double, double_zero_init, equal_double, null_double_func)
     TEST_ARRAY(struct simple_struct, 4, init_simple_struct, simple_struct_zero_init, equal_simple_struct, null_simple_struct_func)
 }
 
-static void test_big_array() { // above 128B
+static void test_big_array(void) { // above 128B
     //test_primitive_array(40,20); // works with both 4B and 8B int, and 8B double
     TEST_ARRAY(int, 40, init_int, int_zero_init, equal_int, null_int_func)
     TEST_ARRAY(double, 20, init_double, double_zero_init, equal_double, null_double_func)
     TEST_ARRAY(struct simple_struct, 8, init_simple_struct, simple_struct_zero_init, equal_simple_struct, null_simple_struct_func)
 }
 
-static void test_nested_capabilities() {
+static void test_nested_capabilities(void) {
     //medium size
     TEST_ARRAY(struct complex_struct, 2, init_complex_struct, complex_struct_zero_init, equal_complex_struct, test_inner_cap)
     //large size

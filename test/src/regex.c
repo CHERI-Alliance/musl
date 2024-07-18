@@ -3,9 +3,9 @@
 #include <glob.h>
 #include <stdio.h>
 
-int test_fnmatch();
-int test_glob();
-int test_regcomp();
+int test_fnmatch(void);
+int test_glob(void);
+int test_regcomp(void);
 
 int main(int argc, char **argv) {
   if (argc < 2) return -1;
@@ -22,7 +22,7 @@ int main(int argc, char **argv) {
   return -1;
 }
 
-int test_fnmatch() {
+int test_fnmatch(void) {
   const char *teststr = "dog123123cat";
 
   if (fnmatch("*cat*", teststr, 0)) return 1;
@@ -32,7 +32,7 @@ int test_fnmatch() {
 }
 
 // TODO: malloc usage in this currently throws a capability fault
-int test_glob() {
+int test_glob(void) {
   glob_t globbuf;
   glob("/proc/self/s*", GLOB_ERR, NULL, &globbuf);
 
@@ -45,7 +45,7 @@ int test_glob() {
   return 0;
 }
 
-int test_regcomp() {
+int test_regcomp(void) {
   regex_t preg;
   if (regcomp(&preg, "dog[1-3]+cat", REG_EXTENDED)) return 1;
 

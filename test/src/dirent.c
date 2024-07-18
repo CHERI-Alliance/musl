@@ -5,12 +5,12 @@
 #include <string.h>
 #include <stdlib.h>
 
-int test_scandir();
-int test_alphasort();
-int test_opendir_closedir();
-int test_fdopendir_dirfd();
-int test_readdir_readdir_r();
-int test_rewinddir_seekdir_telldir();
+int test_scandir(void);
+int test_alphasort(void);
+int test_opendir_closedir(void);
+int test_fdopendir_dirfd(void);
+int test_readdir_readdir_r(void);
+int test_rewinddir_seekdir_telldir(void);
 
 int main(int argc, char **argv) {
     if (argc < 2) return -1;
@@ -40,7 +40,7 @@ int filter(const struct dirent *dirent) {
     return strlen(dirent->d_name) > 0;
 }
 
-int test_scandir() {
+int test_scandir(void) {
     struct dirent **namelist;
 
     int n = scandir("/proc/self", &namelist, filter, alphasort);
@@ -50,7 +50,7 @@ int test_scandir() {
     return 0;
 }
 
-int test_opendir_closedir() {
+int test_opendir_closedir(void) {
     DIR *d = opendir("/proc/self/");
     if (!d) return 1;
 
@@ -59,7 +59,7 @@ int test_opendir_closedir() {
     return 0;
 }
 
-int test_fdopendir_dirfd() {
+int test_fdopendir_dirfd(void) {
     int fd = open("/tmp", O_RDONLY);
     if (fd < 0) return 1;
 
@@ -74,7 +74,7 @@ int test_fdopendir_dirfd() {
     return 0;
 }
 
-int test_readdir_readdir_r() {
+int test_readdir_readdir_r(void) {
     DIR *d = opendir("/proc/self/");
     if (!d) return 1;
 
@@ -90,7 +90,7 @@ int test_readdir_readdir_r() {
     return 0;
 }
 
-int test_rewinddir_seekdir_telldir() {
+int test_rewinddir_seekdir_telldir(void) {
     DIR *d = opendir("/proc/self/");
     if (telldir(d) != 0) return 1;
 

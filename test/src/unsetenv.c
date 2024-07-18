@@ -2,7 +2,7 @@
 #include <stdio.h>
 #include <string.h>
 
-int main() {
+int main(void) {
     const char* world = "world";
 
     //check that the outside env var used for this test is set appropriately

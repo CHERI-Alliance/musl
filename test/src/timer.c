@@ -1,7 +1,7 @@
 #include <time.h>
 #include <signal.h>
 
-int main() {
+int main(void) {
   timer_t t;
   struct itimerspec it = {
     .it_interval = { 10, 0},

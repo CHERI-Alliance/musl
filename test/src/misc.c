@@ -11,12 +11,12 @@
 #include <string.h>
 
 
-static int test_a64l();
-static int test_basename();
-static int test_dirname();
-static int test_getcwd();
+static int test_a64l(void);
+static int test_basename(void);
+static int test_dirname(void);
+static int test_getcwd(void);
 //static int test_getwd();
-static int test_get_current_dir_name();
+static int test_get_current_dir_name(void);
 
 int main(int argc, char *argv[])
 {
@@ -34,7 +34,7 @@ int main(int argc, char *argv[])
 	}
 }
 
-static int test_a64l()
+static int test_a64l(void)
 {
 	long z = a64l("hello");
 	char *res = l64a(z);
@@ -42,7 +42,7 @@ static int test_a64l()
 	return strncmp(res, "hello", 6);
 }
 
-static int test_basename()
+static int test_basename(void)
 {
 	char path0[] = "/usr/lib";
 	if (strcmp(basename(path0), "lib")) { return 1; }
@@ -59,7 +59,7 @@ static int test_basename()
 	return 0;
 }
 
-static int test_dirname()
+static int test_dirname(void)
 {
 	char path0[] = "/usr/lib";
 	if (strcmp(dirname(path0), "/usr")) { return 1; }
@@ -76,7 +76,7 @@ static int test_dirname()
 	return 0;
 }
 
-static int test_getcwd()
+static int test_getcwd(void)
 {
 	char *res;
 	res = getcwd(NULL, 0);
@@ -124,7 +124,7 @@ static int test_getcwd()
 //	return 0;
 //}
 
-static int test_get_current_dir_name()
+static int test_get_current_dir_name(void)
 {
 	char *res = get_current_dir_name();
 	printf("res = %s\n", res);

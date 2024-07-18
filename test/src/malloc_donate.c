@@ -25,7 +25,7 @@ void __malloc_donate(char *start, char *end);
 #endif
 
 
-int main() {
+int main(void) {
 
 #ifdef DYNAMIC
     printf("Cannot test with dynamic linking\n");

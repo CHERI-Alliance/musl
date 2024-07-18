@@ -2,7 +2,7 @@
 #include <stdlib.h>
 #include <string.h>
 
-int main() {
+int main(void) {
     char *buf = malloc(64);
     FILE *fp = popen("cat /proc/self/cmdline", "r");
     if (!fp) return 1;

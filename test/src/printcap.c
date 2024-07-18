@@ -1,7 +1,7 @@
 #include <stdio.h>
 #include <stdint.h>
 
-static int test_cap_null()
+static int test_cap_null(void)
 {
 	int n = printf("%#p\n", NULL);
 	if(n < 0) return 1;
@@ -12,7 +12,7 @@ static int test_cap_null()
 	return 0;
 }
 
-static int test_cap_null_derived()
+static int test_cap_null_derived(void)
 {
 	void *cap = __builtin_cheri_offset_set(NULL, 42);
 	int n = printf("%#p\n", cap);
@@ -24,7 +24,7 @@ static int test_cap_null_derived()
 	return 0;
 }
 
-static int test_csp()
+static int test_csp(void)
 {
 	void *csp = __builtin_cheri_stack_get();
 	int n = printf("%#p\n", csp);
@@ -36,7 +36,7 @@ static int test_csp()
 	return 0;
 }
 
-static int test_cap_max()
+static int test_cap_max(void)
 {
 	/* We make _almost_ cap max because we can't forge tag for it */
 	uint64_t hi = 0xffffc00000010005ul;
@@ -50,7 +50,7 @@ static int test_cap_max()
 	return 0;
 }
 
-static int test_cap_sealed()
+static int test_cap_sealed(void)
 {
 	void *fun;
 #if defined(__CHERI_PURE_CAPABILITY__)
@@ -70,7 +70,7 @@ static int test_cap_sealed()
 	return 0;
 }
 
-static int test_cap_sentry()
+static int test_cap_sentry(void)
 {
 	int n = printf("%#p\n", (void *)test_cap_sentry);
 	if(n < 0) return 1;
@@ -81,7 +81,7 @@ static int test_cap_sentry()
 	return 0;
 }
 
-static int test_cap_sealed_invalid()
+static int test_cap_sealed_invalid(void)
 {
 	void *fun = (void *)test_cap_sealed;
 	fun = __builtin_cheri_tag_clear(fun);

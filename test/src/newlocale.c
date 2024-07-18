@@ -42,7 +42,7 @@ static void test_ptr_size(void** ptr, int is_read_only)
     }
 }
 
-int main()
+int main(void)
 {
     locale_t loc;
 

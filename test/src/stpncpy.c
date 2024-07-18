@@ -1,6 +1,6 @@
 #include <string.h>
 
-int main() {
+int main(void) {
   char *words[] = {"where", "daffodil", "and", "lily", "wave"};
   size_t ns[] = {1, 4, 2, 4, 4};
 

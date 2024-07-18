@@ -2,7 +2,7 @@
 #include <stdlib.h>
 #include <stdio.h>
 
-int main() {
+int main(void) {
   char* val = secure_getenv("HELLO");
   printf("%s\n", val);
   printf("%lu\n", __builtin_cheri_length_get(val));

@@ -1,7 +1,7 @@
 #include <time.h>
 
 
-int main() {
+int main(void) {
   struct timespec ts_cpuclk;
   clockid_t clk_cpu;
   if (clock_getcpuclockid(0, &clk_cpu) != 0) return 1;

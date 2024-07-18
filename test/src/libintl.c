@@ -3,7 +3,7 @@
 char *bindtextdomain(const char *, const char *);
 
 static int
-test_bindtextdomain()
+test_bindtextdomain(void)
 {
 	char *res = bindtextdomain("morello", "musl");
 	printf("%s\n", res);

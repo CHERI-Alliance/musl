@@ -1,23 +1,23 @@
 #include <stdio.h>
 
-void ctor() __attribute__((constructor));
-void ctor2() __attribute__((constructor));
+void ctor(void) __attribute__((constructor));
+void ctor2(void) __attribute__((constructor));
 
-void ctor() {
+void ctor(void) {
 	printf("ctor call ");
 }
 
-void ctor2() {
+void ctor2(void) {
 	fprintf(stderr, "ctor call2 ");
 }
-void dtor() __attribute__((destructor));
-void dtor2() __attribute__((destructor));
+void dtor(void) __attribute__((destructor));
+void dtor2(void) __attribute__((destructor));
 
-void dtor() {
+void dtor(void) {
 	printf("dtor call\n");
 }
 
-void dtor2() {
+void dtor2(void) {
 	fprintf(stderr,"dtor call2\n");
 }
 

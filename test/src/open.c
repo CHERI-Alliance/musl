@@ -9,7 +9,7 @@ char DIR_PATH[PATH_MAX];
 
 mode_t mode = 0666;
 
-int test_open() {
+int test_open(void) {
   // set up root dir in /tmp
   if (mkdir(DIR_PATH, 0777) && errno != EEXIST) return -2;
 
@@ -50,7 +50,7 @@ int test_open() {
   return 0;
 }
 
-int test_openat() {
+int test_openat(void) {
   int dirfd = open("/proc/self/", O_DIRECTORY);
 
   // try to open ourself (read-only)
@@ -61,7 +61,7 @@ int test_openat() {
   return 0;
 }
 
-int test_creat() {
+int test_creat(void) {
   char *filename;
 
   // set up root dir in /tmp

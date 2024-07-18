@@ -3,7 +3,7 @@
 #include <sys/signalfd.h>
 #include <sys/timex.h>
 
-int main()
+int main(void)
 {
 	printf("struct sigevent = %zu\n", sizeof(struct sigevent));
 	printf("siginfo_t = %zu\n", sizeof(siginfo_t));

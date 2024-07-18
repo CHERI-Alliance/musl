@@ -1,6 +1,6 @@
 #include <wchar.h>
 
-int main() {
+int main(void) {
 
   wchar_t* words[] = {L"i ", L"wandered ", L"lonely ", L"as ", L"a ", L"cloud"};
   wchar_t str[29];

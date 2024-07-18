@@ -10,8 +10,8 @@
 #define MEM_PROT    PROT_READ | PROT_WRITE
 #define MEM_FLAGS   MAP_PRIVATE | MAP_ANONYMOUS
 
-int test_mmap();
-int test_mmap_offset();
+int test_mmap(void);
+int test_mmap_offset(void);
 int test_mmap_tags(bool do_munmap);
 
 int main(int argc, char **argv) {
@@ -31,7 +31,7 @@ int main(int argc, char **argv) {
 	return -1;
 }
 
-int test_mmap() {
+int test_mmap(void) {
 	size_t len = 128;
 	int *p = mmap(NULL, len, MEM_PROT, MEM_FLAGS, 0, 0);
 	if (p == MAP_FAILED) {
@@ -51,7 +51,7 @@ int test_mmap() {
 	return z;
 }
 
-int test_mmap_offset() {
+int test_mmap_offset(void) {
 	char directory_buffer[PATH_MAX];
 	char filename_buffer[PATH_MAX];
 

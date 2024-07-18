@@ -1,7 +1,7 @@
 #include <stdio.h>
 #include <time.h>
 
-int main() {
+int main(void) {
   size_t buf_size = 40;
   time_t rawtime;
   time(&rawtime);

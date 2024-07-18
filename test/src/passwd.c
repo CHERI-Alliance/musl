@@ -8,8 +8,8 @@
 #include <grp.h>
 #include <errno.h>
 
-static int test_fgetpwent();
-static int test_getgrouplist();
+static int test_fgetpwent(void);
+static int test_getgrouplist(void);
 
 int main(int argc, char *argv[])
 {
@@ -23,7 +23,7 @@ int main(int argc, char *argv[])
 	}
 }
 
-static int test_fgetpwent()
+static int test_fgetpwent(void)
 {
 	FILE *f = fopen("/etc/passwd", "rt");
 	struct passwd *p = fgetpwent(f);
@@ -57,7 +57,7 @@ static int test_fgetpwent()
 	return 0;
 }
 
-static int test_getgrouplist()
+static int test_getgrouplist(void)
 {
 	int pz = 3;
 	gid_t groups[3] = {1, 2, 3};

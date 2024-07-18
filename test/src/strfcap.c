@@ -106,7 +106,7 @@ static int test_strfcap_compare(const char* strfcap_format, const char* verify_f
 	return strcmp(output_buffer, verify_buffer);
 }
 
-static int test_strfcap_ordinary_chars()
+static int test_strfcap_ordinary_chars(void)
 {
 	char output_buffer[BUFFER_SIZE] = {};
 
@@ -135,7 +135,7 @@ static int test_strfcap_ordinary_chars()
 	return !(!first_cmp && !second_cmp && first_ret == 0 && second_ret == strlen(hello_world));
 }
 
-static int test_strfcap_padding_and_width()
+static int test_strfcap_padding_and_width(void)
 {
 	char output_buffer[BUFFER_SIZE] = {};
 
@@ -164,7 +164,7 @@ static int test_strfcap_padding_and_width()
 	return !(first_ret == 25 && second_ret == 25 && third_ret == 25 && first_pad == ' ' && second_pad == ' ' && third_pad == '0');
 }
 
-static int test_strfcap_maxsize()
+static int test_strfcap_maxsize(void)
 {
 	char output_buffer[BUFFER_SIZE] = {};
 	memset(output_buffer, 1, BUFFER_SIZE);
@@ -201,7 +201,7 @@ static int test_strfcap_maxsize()
 	return first_test || second_test;
 }
 
-static int test_strfcap_NULL_terminated()
+static int test_strfcap_NULL_terminated(void)
 {
 	char output_buffer[BUFFER_SIZE] = {};
 	memset(output_buffer, 1, BUFFER_SIZE);
@@ -239,7 +239,7 @@ static int test_strfcap_specifier_a(void** test_capabilities, const char** test_
 	return 0;
 }
 
-static int test_strfcap_specifier_A()
+static int test_strfcap_specifier_A(void)
 {
 	char test_buffer[16] = {};
 	int first_test = test_strfcap_specifier_no_properties("%A", "(invalid)", NULL);
@@ -312,7 +312,7 @@ static int test_strfcap_specifier_B(void** test_capabilities, const char** test_
 	return 0;
 }
 
-static int test_strfcap_specifier_C()
+static int test_strfcap_specifier_C(void)
 {
 	void* cap = NULL;
 	int first_test = test_strfcap_compare("%C", "%#xa", cap);
@@ -395,7 +395,7 @@ static int test_strfcap_specifier_p(void** test_capabilities, const char** test_
 	return 0;
 }
 
-static int test_strfcap_specifier_P()
+static int test_strfcap_specifier_P(void)
 {
 	void* cap = __builtin_cheri_stack_get();
 	cap = __builtin_cheri_perms_and(cap, ~__ARM_CAP_PERMISSION_EXECUTIVE__);
@@ -423,7 +423,7 @@ static int test_strfcap_specifier_P()
 	return first_test || second_test || third_test || fourth_test || fifth_test || sixth_test || seventh_test;
 }
 
-static int test_strfcap_specifier_s()
+static int test_strfcap_specifier_s(void)
 {
 	void* cap = __builtin_cheri_stack_get();
 	int first_test = test_strfcap_specifier_no_properties("%s", "0", cap);
@@ -442,7 +442,7 @@ static int test_strfcap_specifier_s()
 	return first_test || second_test || third_test || fourth_test;
 }
 
-static int test_strfcap_specifier_S()
+static int test_strfcap_specifier_S(void)
 {
 	void* cap = __builtin_cheri_stack_get();
 	int first_test = test_strfcap_specifier_no_properties("%S", "<unsealed>", cap);
@@ -479,7 +479,7 @@ static int test_strfcap_specifier_t(void** test_capabilities, const char** test_
 	return 0;
 }
 
-static int test_strfcap_specifier_T()
+static int test_strfcap_specifier_T(void)
 {
 	void* cap = __builtin_cheri_stack_get();
 	int first_test = test_strfcap_specifier_no_properties("%T", "", cap);
@@ -487,7 +487,7 @@ static int test_strfcap_specifier_T()
 	return first_test || second_test;
 }
 
-static int test_strfcap_specifier_v()
+static int test_strfcap_specifier_v(void)
 {
 	void* cap = __builtin_cheri_stack_get();
 	int first_test = test_strfcap_specifier_no_properties("%v", "1", cap);
@@ -498,7 +498,7 @@ static int test_strfcap_specifier_v()
 	return first_test || second_test;
 }
 
-static int test_strfcap_specifier_percent()
+static int test_strfcap_specifier_percent(void)
 {
 	void* cap = __builtin_cheri_stack_get();
 	int first_test = test_strfcap_specifier_no_properties("%%hello%%", "%hello%", cap);

@@ -4,9 +4,9 @@
 
 #include "alloc_helpers.h"
 
-static int test_large_allocation();
-static int test_many_allocations();
-static int test_all_sizeclasses();
+static int test_large_allocation(void);
+static int test_many_allocations(void);
+static int test_all_sizeclasses(void);
 
 int main(int argc, char *argv[]) {
 	switch (argv[1][0]) {
@@ -17,7 +17,7 @@ int main(int argc, char *argv[]) {
 	}
 }
 
-static int test_large_allocation()
+static int test_large_allocation(void)
 {
 	const size_t s = 1024 * 1024 * 10;
 	void *p = malloc(s);
@@ -28,7 +28,7 @@ static int test_large_allocation()
 	return TEST_SUCCESS;
 }
 
-static int test_many_allocations()
+static int test_many_allocations(void)
 {
 	for (int k = 0; k < 10000; k++) {
 		void *q = malloc(517);
@@ -46,7 +46,7 @@ static int test_many_allocations()
 	return TEST_SUCCESS;
 }
 
-static int test_all_sizeclasses()
+static int test_all_sizeclasses(void)
 {
 	const uint16_t size_classes[] = {
 		1, 2, 3, 4, 5, 6, 7, 8,

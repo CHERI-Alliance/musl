@@ -143,7 +143,7 @@ CFLAGS_MORELLO=
 CFLAGS_MORELLO_STATIC=
 LDFLAGS_MORELLO=
 LDFLAGS_AUTO=
-LDFLAGS_TRY=-target=aarch64-unknown-linux-gnu
+LDFLAGS_TRY=
 OPTIMIZE_GLOBS=
 srcdir=
 testdir=
@@ -270,6 +270,9 @@ test -d "$srcdir/src/malloc/$malloc_dir" \
 if test "$morello" = yes ; then
 target=aarch64-linux-musl_purecap
 fi
+
+test "$target" != "" &&\
+LDFLAGS_TRY=--target=$target
 
 #
 # Check whether we are cross-compiling, and set a default

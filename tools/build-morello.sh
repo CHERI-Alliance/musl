@@ -196,7 +196,7 @@ set(CMAKE_OBJCOPY "${MORELLO_LLVM_PATH}/bin/llvm-objcopy" CACHE FILEPATH "" FORC
 
 set(LLVM_CONFIG_PATH "${MORELLO_LLVM_PATH}/bin/llvm-config" CACHE FILEPATH "" FORCE)
 set(CMAKE_ASM_FLAGS "-nostdinc -isystem ${SYSROOT}/include" CACHE STRING "" FORCE)
-set(CMAKE_C_FLAGS "-nostdinc -isystem ${SYSROOT}/include" CACHE STRING "" FORCE)
+include_directories("${SYSROOT}/include")
 EOF
     cmake -Wno-dev \
         -DCMAKE_TOOLCHAIN_FILE=toolchain.cmake \
@@ -214,6 +214,7 @@ EOF
         -DCOMPILER_RT_BUILD_XRAY=OFF \
         -DCOMPILER_RT_BUILD_LIBFUZZER=OFF \
         -DCOMPILER_RT_BUILD_PROFILE=OFF \
+        -DTARGET_TRIPLE=${TRIPLE} \
         ${LLVM_PROJECT}/compiler-rt
     popd
 }

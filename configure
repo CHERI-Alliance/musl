@@ -271,9 +271,6 @@ if test "$morello" = yes ; then
 target=aarch64-linux-musl_purecap
 fi
 
-test "$target" != "" &&\
-LDFLAGS_TRY=--target=$target
-
 #
 # Check whether we are cross-compiling, and set a default
 # CROSS_COMPILE prefix if none was provided.

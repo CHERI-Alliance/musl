@@ -281,6 +281,12 @@ test -z "$CROSS_COMPILE" && \
 CROSS_COMPILE="$target-"
 
 #
+# Check whether x86 host, for which linker needs explicit target
+#
+test "$LLVM_TARGETS" = "X86;AArch64" && \
+LDFLAGS_TRY="-target=$target"
+
+#
 # Find a C compiler to use
 #
 printf "checking for C compiler... "

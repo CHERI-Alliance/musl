@@ -281,12 +281,6 @@ test -z "$CROSS_COMPILE" && \
 CROSS_COMPILE="$target-"
 
 #
-# Check whether x86 host, for which linker needs explicit target
-#
-test "$LLVM_TARGETS" = "X86;AArch64" && \
-LDFLAGS_TRY="-target=$target"
-
-#
 # Find a C compiler to use
 #
 printf "checking for C compiler... "
@@ -327,6 +321,16 @@ if fnmatch '*gcc\ version*' "$cc_ver" ; then
 cc_family=gcc
 elif fnmatch '*clang\ version*' "$cc_ver" ; then
 cc_family=clang
+if fnmatch '*clang\ version\ 14*' "$cc_ver" ; then
+echo "clang 14"
+else
+echo "NOT clang 14"
+# Check whether x86 host, for which linker needs explicit target
+test "$LLVM_TARGETS" = "X86;AArch64" && \
+LDFLAGS_TRY="-target=$target"
+printf "LLVM_TARGETS=%s\n" "$LLVM_TARGETS"
+printf "Check for multiple LLVM targets. LDFLAGS_TRY=%s\n" "$LDFLAGS_TRY"
+fi
 fi
 echo "$cc_family"
 

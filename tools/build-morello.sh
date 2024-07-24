@@ -458,7 +458,7 @@ set(LLVM_CONFIG_PATH "${MORELLO_LLVM_PATH}/bin/llvm-config" CACHE FILEPATH "" FO
 set(CMAKE_ASM_FLAGS "--sysroot=${SYSROOT} ${TFLAGS} -isystem ${BUILD_PATH}/kernel-headers/usr/include" CACHE STRING "" FORCE)
 set(CMAKE_C_FLAGS "--sysroot=${SYSROOT} ${TFLAGS} -isystem ${BUILD_PATH}/kernel-headers/usr/include" CACHE STRING "" FORCE)
 set(CMAKE_CXX_FLAGS "--sysroot=${SYSROOT} ${TFLAGS} -isystem ${BUILD_PATH}/kernel-headers/usr/include" CACHE STRING "" FORCE)
-set(CMAKE_EXE_LINKER_FLAGS "-fuse-ld=lld -nostdlib --rtlib=compiler-rt" CACHE STRING "" FORCE)
+set(CMAKE_EXE_LINKER_FLAGS "-fuse-ld=lld --rtlib=compiler-rt" CACHE STRING "" FORCE)
 set(CMAKE_SHARED_LINKER_FLAGS "-fuse-ld=lld -nostdlib --rtlib=compiler-rt" CACHE STRING "" FORCE)
 EOF
     cmake -S ${LLVM_PROJECT}/runtimes \

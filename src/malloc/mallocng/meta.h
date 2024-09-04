@@ -96,6 +96,10 @@ int is_allzero(void *);
 
 #ifdef __CHERI_PURE_CAPABILITY__
 static const unsigned long USER_PTR_PERMS_REMOVED =
+#ifdef __riscv_zcheripurecap
+	__CHERI_BW_CAP_PERMISSION_ACCESS_SYSTEM_REGISTERS__ |
+	__CHERI_BW_CAP_PERMISSION_EXECUTE__;
+#else
 #ifdef __ARM_CAP_PERMISSION_EXECUTIVE__
 	__ARM_CAP_PERMISSION_EXECUTIVE__ |
 #endif
@@ -109,6 +113,7 @@ static const unsigned long USER_PTR_PERMS_REMOVED =
 	__CHERI_CAP_PERMISSION_PERMIT_UNSEAL__ |
 	__CHERI_CAP_PERMISSION_PERMIT_SEAL__ |
 	__CHERI_CAP_PERMISSION_PERMIT_EXECUTE__;
+#endif
 
 static inline void *expand_bounds(void *p) {
 	struct group *g = (struct group *) mallocmap_find(p, &(ctx.capmap));
@@ -119,7 +124,11 @@ static inline void *expand_bounds(void *p) {
 
 static inline void *restrict_user_ptr(void *p, size_t len) {
 	return __builtin_cheri_perms_and(__builtin_cheri_bounds_set(p, len),
+#ifdef __riscv_zcheripurecap
+		READ_CAP_PERMS | WRITE_CAP_PERMS);
+#else
 		__CHERI_CAP_PERMISSION_GLOBAL__ | READ_CAP_PERMS | WRITE_CAP_PERMS);
+#endif
 }
 
 static inline void *restrict_perms(void *p) {

@@ -619,16 +619,28 @@ static void do_relocs(struct dso *dso, size_t *rel, size_t rel_size, size_t stri
 					cap = __builtin_cheri_perms_and(cap_rx, 0);
 				} else if (def.sym && ELF64_ST_TYPE(def.sym->st_info) == STT_FUNC) {
 					cap = __builtin_cheri_perms_and(cap_rx,
+#if defined(__riscv_zcheripurecap)
+						EXEC_CAP_PERMS | READ_CAP_PERMS);
+#else
 						__CHERI_CAP_PERMISSION_GLOBAL__ | EXEC_CAP_PERMS | READ_CAP_PERMS);
+#endif
 					cap = __builtin_cheri_seal_entry(cap);
 				} else if (dso == &ldso || is_sym_in_writeable_segment(&segments, def.sym)) {
 					cap = __builtin_cheri_perms_and(cap_rw,
+#if defined(__riscv_zcheripurecap)
+					        READ_CAP_PERMS | WRITE_CAP_PERMS);
+#else
 						__CHERI_CAP_PERMISSION_GLOBAL__ | READ_CAP_PERMS | WRITE_CAP_PERMS);
+#endif
 					length = def.sym->st_size;
 					cap = __builtin_cheri_bounds_set(cap, length);
 				} else {
 					cap = __builtin_cheri_perms_and(cap_rx,
+#if defined(__riscv_zcheripurecap)
+					        READ_CAP_PERMS);
+#else
 						__CHERI_CAP_PERMISSION_GLOBAL__ | READ_CAP_PERMS);
+#endif
 					length = def.sym->st_size;
 					cap = __builtin_cheri_bounds_set(cap, length);
 				}
@@ -647,7 +659,7 @@ static void do_relocs(struct dso *dso, size_t *rel, size_t rel_size, size_t stri
 		}
 		case REL_RELATIVE: {
 #if defined(__CHERI_PURE_CAPABILITY__)
-#if 0
+#if !defined(__riscv_zcheripurecap)
 			/* aaelf64-morello reference on Elf64_Rela encoding:
 			https://github.com/ARM-software/abi-aa/blob/main/aaelf64-morello/aaelf64-morello.rst#445dynamic-linking-with-morello
 			*/
@@ -691,16 +703,13 @@ static void do_relocs(struct dso *dso, size_t *rel, size_t rel_size, size_t stri
 
 			switch (perms) {
 				case BAKEWELL_RELA_PERM_R:
-					cap = __builtin_cheri_perms_and(cap_rx,
-						__CHERI_CAP_PERMISSION_GLOBAL__ | READ_CAP_PERMS);
+					cap = __builtin_cheri_perms_and(cap_rx, READ_CAP_PERMS);
 					break;
 				case BAKEWELL_RELA_PERM_RW:
-					cap = __builtin_cheri_perms_and(cap_rw,
-						__CHERI_CAP_PERMISSION_GLOBAL__ | READ_CAP_PERMS | WRITE_CAP_PERMS);
+					cap = __builtin_cheri_perms_and(cap_rw, READ_CAP_PERMS | WRITE_CAP_PERMS);
 					break;
 				case BAKEWELL_RELA_PERM_RX:
-					cap = __builtin_cheri_perms_and(cap_rx,
-						__CHERI_CAP_PERMISSION_GLOBAL__ | READ_CAP_PERMS | EXEC_CAP_PERMS);
+					cap = __builtin_cheri_perms_and(cap_rx, READ_CAP_PERMS | EXEC_CAP_PERMS);
 					break;
 				default:
 					cap = __builtin_cheri_perms_and(cap_rx, 0);
@@ -1144,7 +1153,11 @@ static void *map_library(int fd, struct dso *dso)
 done_mapping:
 	dso->base = base;
 #ifdef __CHERI_PURE_CAPABILITY__
+#if defined(__riscv_zcheripurecap)
+	dso->rw_capability = __builtin_cheri_perms_and(base, READ_CAP_PERMS | WRITE_CAP_PERMS);
+#else
 	dso->rw_capability = __builtin_cheri_perms_and(base, __CHERI_CAP_PERMISSION_GLOBAL__ | READ_CAP_PERMS | WRITE_CAP_PERMS);
+#endif
 #endif
 	dso->dynv = laddr(dso, dyn);
 	if (dso->tls.size) dso->tls.image = laddr(dso, tls_image);

@@ -116,6 +116,21 @@ static char* write_attributes_to_buf(char* buf, char* buf_end, bool capsentry, b
 static size_t permissions_str_len(size_t perms)
 {
 	size_t len = 0;
+#if defined(__riscv_zcheripurecap)
+	if ((perms & (__CHERI_BW_CAP_PERMISSION_WRITE__
+		      |  __CHERI_BW_CAP_PERMISSION_CAPABILITY__))
+	    == (__CHERI_BW_CAP_PERMISSION_WRITE__
+		|  __CHERI_BW_CAP_PERMISSION_CAPABILITY__))
+	  ++len; //'W'
+	if ((perms & (__CHERI_BW_CAP_PERMISSION_READ__
+		      |  __CHERI_BW_CAP_PERMISSION_CAPABILITY__))
+	    == (__CHERI_BW_CAP_PERMISSION_READ__
+		|  __CHERI_BW_CAP_PERMISSION_CAPABILITY__))
+	  ++len; //'R'
+	if(perms & __CHERI_BW_CAP_PERMISSION_EXECUTE__) ++len; //'x'
+	if(perms & __CHERI_BW_CAP_PERMISSION_WRITE__) ++len; //'w'
+	if(perms & __CHERI_BW_CAP_PERMISSION_READ__) ++len; //'r'
+#else
 #ifdef __ARM_CAP_PERMISSION_EXECUTIVE__
 	if(perms & __ARM_CAP_PERMISSION_EXECUTIVE__) ++len; //'E'
 #endif
@@ -124,12 +139,28 @@ static size_t permissions_str_len(size_t perms)
 	if(perms & __CHERI_CAP_PERMISSION_PERMIT_EXECUTE__) ++len; //'x'
 	if(perms & __CHERI_CAP_PERMISSION_PERMIT_STORE__) ++len; //'w'
 	if(perms & __CHERI_CAP_PERMISSION_PERMIT_LOAD__) ++len; //'r'
+#endif
 	return len;
 }
 
 //Write capability permissions to string
 static char* write_permissions_to_buf(char* buf, char* buf_end, size_t perms)
 {
+#if defined(__riscv_zcheripurecap)
+	if ((perms & (__CHERI_BW_CAP_PERMISSION_WRITE__
+		      |  __CHERI_BW_CAP_PERMISSION_CAPABILITY__))
+	    == (__CHERI_BW_CAP_PERMISSION_WRITE__
+		|  __CHERI_BW_CAP_PERMISSION_CAPABILITY__))
+	  buf = write_str_to_buf(buf, buf_end, "W", 1);
+	if ((perms & (__CHERI_BW_CAP_PERMISSION_READ__
+		      |  __CHERI_BW_CAP_PERMISSION_CAPABILITY__))
+	    == (__CHERI_BW_CAP_PERMISSION_READ__
+		|  __CHERI_BW_CAP_PERMISSION_CAPABILITY__))
+	  buf = write_str_to_buf(buf, buf_end, "R", 1);
+	if(perms & __CHERI_BW_CAP_PERMISSION_EXECUTE__) buf = write_str_to_buf(buf, buf_end, "x", 1);
+	if(perms & __CHERI_BW_CAP_PERMISSION_WRITE__) buf = write_str_to_buf(buf, buf_end, "w", 1);
+	if(perms & __CHERI_BW_CAP_PERMISSION_READ__) buf = write_str_to_buf(buf, buf_end, "r", 1);
+#else
 #ifdef __ARM_CAP_PERMISSION_EXECUTIVE__
 	if(perms & __ARM_CAP_PERMISSION_EXECUTIVE__) buf = write_str_to_buf(buf, buf_end, "E", 1);
 #endif
@@ -138,6 +169,7 @@ static char* write_permissions_to_buf(char* buf, char* buf_end, size_t perms)
 	if(perms & __CHERI_CAP_PERMISSION_PERMIT_EXECUTE__) buf = write_str_to_buf(buf, buf_end, "x", 1);
 	if(perms & __CHERI_CAP_PERMISSION_PERMIT_STORE__) buf = write_str_to_buf(buf, buf_end, "w", 1);
 	if(perms & __CHERI_CAP_PERMISSION_PERMIT_LOAD__) buf = write_str_to_buf(buf, buf_end, "r", 1);
+#endif
 	return buf;
 }
 
@@ -158,7 +190,11 @@ static size_t spec_str_length_by_type(char type, size_t base, const void* cap)
 	bool cap_tag = __builtin_cheri_tag_get(cap);
 	bool cap_null_derived = !cap_tag && __builtin_cheri_equal_exact(cap, (uintcap_t)(ptraddr_t)cap);
 	bool cap_sealed = __builtin_cheri_sealed_get(cap);
+#if defined(__riscv_zcheripurecap)
+	bool cap_sentry = cap_sealed && (cap_perms & __CHERI_BW_CAP_PERMISSION_EXECUTE__);
+#else
 	bool cap_sentry = cap_sealed && (cap_perms & __CHERI_CAP_PERMISSION_PERMIT_EXECUTE__);
+#endif
 	switch(type)
 	{
 		case 'a': return size_t_str_len(cap_addr, base);
@@ -277,7 +313,11 @@ ssize_t strfcap(char *restrict buf, size_t maxsize, const char *restrict format,
 	bool cap_tag = __builtin_cheri_tag_get(cap);
 	bool cap_null_derived = !cap_tag && __builtin_cheri_equal_exact(cap, (uintcap_t)(ptraddr_t)cap);
 	bool cap_sealed = __builtin_cheri_sealed_get(cap);
+#if defined(__riscv_zcheripurecap)
+	bool cap_sentry = cap_sealed && (cap_perms & __CHERI_BW_CAP_PERMISSION_EXECUTE__);
+#else
 	bool cap_sentry = cap_sealed && (cap_perms & __CHERI_CAP_PERMISSION_PERMIT_EXECUTE__);
+#endif
 	for(;;)
 	{
 		written += length_to_write;

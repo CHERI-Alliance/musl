@@ -442,11 +442,8 @@ static int fmt_cap(FILE *f, const void *cap, unsigned fmt) {
 	}
 
 	/* Attributes */
-#if 0
 	const cheri_otype_t type = __builtin_cheri_type_get(cap);
-#endif
 	const _Bool is_sealed = __builtin_cheri_sealed_get(cap);
-#if 0
 	if (type == CHERI_OTYPE_SENTRY) { // sentry
 		*--z = ')';
 		*--z = 'y';
@@ -456,7 +453,6 @@ static int fmt_cap(FILE *f, const void *cap, unsigned fmt) {
 		*--z = 'e';
 		*--z = 's';
 	} else
-#endif
 	 if (is_sealed) { // any other object type
 		*--z = ')';
 		*--z = 'd';
@@ -482,6 +478,7 @@ static int fmt_cap(FILE *f, const void *cap, unsigned fmt) {
 		*--z = 'i';
 	}
 
+#if !defined(__riscv_zcheripurecap)
 	if (fmt) {
 		if (!(perms & __CHERI_CAP_PERMISSION_GLOBAL__)) {
 #if 0
@@ -500,8 +497,13 @@ static int fmt_cap(FILE *f, const void *cap, unsigned fmt) {
 			*--z = 'l';
 		}
 	}
+#endif
 
+#if defined(__riscv_zcheripurecap)
+	if (!tag || is_sealed) {
+#else
 	if (!tag || is_sealed || (fmt && !(perms & __CHERI_CAP_PERMISSION_GLOBAL__))) {
+#endif
 		*--z = '(';
 		*--z = ' ';
 	}
@@ -533,6 +535,11 @@ static int fmt_cap(FILE *f, const void *cap, unsigned fmt) {
 	 * be chained together.
 	 */
 	if (fmt) {
+#if defined(__riscv_zcheripurecap)
+		if (perms & __CHERI_BW_CAP_PERMISSION_ACCESS_SYSTEM_REGISTERS__) {
+			*--z = 'S';
+		}
+#else
 		if (perms & __CHERI_CAP_PERMISSION_USER3__) {
 			*--z = '3';
 		}
@@ -582,10 +589,18 @@ static int fmt_cap(FILE *f, const void *cap, unsigned fmt) {
 			*--z = 'M';
 		}
 #endif
+#endif
 	}
 
 	/* Permissions */
 	unsigned perms_macros[] =  {
+#if defined(__riscv_zcheripurecap)
+				    __CHERI_BW_CAP_PERMISSION_CAPABILITY__ | __CHERI_BW_CAP_PERMISSION_WRITE__,
+				    __CHERI_BW_CAP_PERMISSION_CAPABILITY__ | __CHERI_BW_CAP_PERMISSION_READ__,
+				    __CHERI_BW_CAP_PERMISSION_EXECUTE__,
+				    __CHERI_BW_CAP_PERMISSION_WRITE__,
+				    __CHERI_BW_CAP_PERMISSION_READ__};
+#else
 #ifdef __ARM_CAP_PERMISSION_EXECUTIVE__
 								__ARM_CAP_PERMISSION_EXECUTIVE__,
 #endif
@@ -594,13 +609,14 @@ static int fmt_cap(FILE *f, const void *cap, unsigned fmt) {
 								__CHERI_CAP_PERMISSION_PERMIT_EXECUTE__,
 								__CHERI_CAP_PERMISSION_PERMIT_STORE__,
 								__CHERI_CAP_PERMISSION_PERMIT_LOAD__};
+#endif
 	char perms_char_rep[] = {
 #ifdef __ARM_CAP_PERMISSION_EXECUTIVE__
 		'E',
 #endif
 		'W', 'R', 'x', 'w', 'r'};
 	for (int i = 0; i < (sizeof(perms_char_rep) / sizeof(perms_char_rep[0])); i++) {
-		if ((perms & perms_macros[i]) != 0) {
+		if ((perms & perms_macros[i]) == perms_macros[i]) {
 			*--z = perms_char_rep[i];
 		}
 	}

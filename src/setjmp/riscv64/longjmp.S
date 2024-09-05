@@ -7,6 +7,7 @@
 __longjmp:
 _longjmp:
 longjmp:
+#ifndef __CHERI_PURE_CAPABILITY__
 	ld s0,    0(a0)
 	ld s1,    8(a0)
 	ld s2,    16(a0)
@@ -40,3 +41,40 @@ longjmp:
 	seqz a0, a1
 	add a0, a0, a1
 	ret
+#else
+	lc cs0,    (0*16)(ca0)
+	lc cs1,    (1*16)(ca0)
+	lc cs2,    (2*16)(ca0)
+	lc cs3,    (3*16)(ca0)
+	lc cs4,    (4*16)(ca0)
+	lc cs5,    (5*16)(ca0)
+	lc cs6,    (6*16)(ca0)
+	lc cs7,    (7*16)(ca0)
+	lc cs8,    (8*16)(ca0)
+	lc cs9,    (9*16)(ca0)
+	lc cs10,   (10*16)(ca0)
+	lc cs11,   (11*16)(ca0)
+	lc csp,    (12*16)(ca0)
+	lc cra,    (13*16)(ca0)
+	caddi ca0, ca0, (14 * 16)
+
+#ifndef __riscv_float_abi_soft
+	fld fs0,  (0*8)(ca0)
+	fld fs1,  (1*8)(ca0)
+	fld fs2,  (2*8)(ca0)
+	fld fs3,  (3*8)(ca0)
+	fld fs4,  (4*8)(ca0)
+	fld fs5,  (5*8)(ca0)
+	fld fs6,  (6*8)(ca0)
+	fld fs7,  (7*8)(ca0)
+	fld fs8,  (8*8)(ca0)
+	fld fs9,  (9*8)(ca0)
+	fld fs10, (10*8)(ca0)
+	fld fs11, (11*8)(ca0)
+	caddi ca0, ca0, (12 * 8)
+#endif
+
+	seqz a0, a1
+	add a0, a0, a1
+	ret
+#endif

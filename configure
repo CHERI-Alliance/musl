@@ -37,7 +37,6 @@ Optional features:
   --disable-static        inhibit building static library [enabled]
   --disable-builtins      do not use compiler atomic builtins [enabled]
   --disable-morello       inhibit using Morello features (only for AArch64 targets) [enabled]
-  --disable-bakewell      inhibit using Bakewell features (only for riscv64 targets) [enabled]
   --enable-caprelocs      enable caprelocs for static linking
 
 Optional packages:
@@ -143,9 +142,6 @@ CFLAGS_TRY=
 CFLAGS_MORELLO=
 CFLAGS_MORELLO_STATIC=
 LDFLAGS_MORELLO=
-CFLAGS_BAKEWELL=
-CFLAGS_BAKEWELL_STATIC=
-LDFLAGS_BAKEWELL=
 LDFLAGS_AUTO=
 LDFLAGS_TRY=
 OPTIMIZE_GLOBS=
@@ -164,7 +160,6 @@ target=
 optimize=auto
 debug=no
 morello=no
-bakewell=no
 caprelocs=no
 warnings=yes
 shared=yes
@@ -197,8 +192,6 @@ case "$arg" in
 --disable-debug|--enable-debug=no) debug=no ;;
 --enable-morello|--enable-morello=yes) morello=yes ;;
 --disable-morello|--enable-morello=no) morello=no ;;
---enable-bakewell|--enable-bakewell=yes) bakewell=yes ;;
---disable-bakewell|--enable-bakewell=no) bakewell=no ;;
 --enable-caprelocs|--enable-caprelocs=yes) caprelocs=yes ;;
 --enable-warnings|--enable-warnings=yes) warnings=yes ;;
 --disable-warnings|--enable-warnings=no) warnings=no ;;
@@ -276,10 +269,6 @@ test -d "$srcdir/src/malloc/$malloc_dir" \
 
 if test "$morello" = yes ; then
 target=aarch64-linux-musl_purecap
-fi
-
-if test "$bakewell" = yes ; then
-target=riscv64-unknown-linux-gnu
 fi
 
 #
@@ -535,36 +524,12 @@ if test "$morello" = yes ; then
 fi
 
 #
-# Enable Bakewell if requested.
-#
-test "$bakewell" = yes
-if test "$bakewell" = yes ; then
-    if test "$ARCH" = "riscv64" ; then
-        tryflag CFLAGS_BAKEWELL "-march=rv64imafdc_zcherihybrid -mabi=l64pc128d"
-        tryldflag LDFLAGS_BAKEWELL "-march=rv64imafdc_zcherihybrid -mabi=l64pc128d"
-        ARCH=bakewell
-    else
-        fail "$0: Bakewell can only be enabled for riscv64 target"
-    fi
-    if fnmatch '*-march=*cheri*' "$CFLAGS_BAKEWELL" ; then :
-    else
-        fail "$0: Bakewell is not supported by $CC"
-    fi
-
-    # Caprelocs can only be enabled in morello
-    if test "$caprelocs" = no; then
-        tryldflag CFLAGS_BAKEWELL_STATIC "-Wl,--local-caprelocs=elf"
-    fi
-fi
-
-#
 # Use compiler builtins as much as possible, if requested.
 # This switch is on by default, turn off for backward compatibility.
 #
 if test "$enable_builtins" = yes ; then
   case "$ARCH" in
-    aarch64|morello|x86_64) ;;
-    bakewell) ;;
+    aarch64|morello|x86_64|riscv64) ;;
     *) fail "$0: $ARCH is not checked for compiler builtins yet";;
   esac
   CFLAGS_AUTO="$CFLAGS_AUTO -DMUSL_USE_COMPILER_BUILTINS"
@@ -977,9 +942,6 @@ MALLOC_DIR = $malloc_dir
 CFLAGS_MORELLO = $CFLAGS_MORELLO
 CFLAGS_MORELLO_STATIC = $CFLAGS_MORELLO_STATIC
 LDFLAGS_MORELLO = $LDFLAGS_MORELLO
-CFLAGS_BAKEWELL = $CFLAGS_BAKEWELL
-CFLAGS_BAKEWELL_STATIC = $CFLAGS_BAKEWLL_STATIC
-LDFLAGS_BAKEWELL = $LDFLAGS_BAKEWELL
 EOF
 test "x$static" = xno && echo "STATIC_LIBS ="
 test "x$shared" = xno && echo "SHARED_LIBS ="

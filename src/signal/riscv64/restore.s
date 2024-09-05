@@ -6,3 +6,6 @@ __restore:
 __restore_rt:
 	li a7, 139 # SYS_rt_sigreturn
 	ecall
+
+	.size __restore_rt, .-__restore_rt
+	.size __restore, .-__restore

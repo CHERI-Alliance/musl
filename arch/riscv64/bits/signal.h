@@ -6,7 +6,11 @@
 # define SIGSTKSZ 8192
 #endif
 
+#ifdef __CHERI_PURE_CAPABILITY__
+typedef __uintcap_t __riscv_mc_gp_state[32];
+#else
 typedef unsigned long __riscv_mc_gp_state[32];
+#endif
 
 struct __riscv_mc_f_ext_state {
 	unsigned int __f[32];

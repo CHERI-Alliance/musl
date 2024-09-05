@@ -1,3 +1,5 @@
+#if !defined(MUSL_USE_COMPILER_BUILTINS)
+
 #define a_barrier a_barrier
 static inline void a_barrier()
 {
@@ -36,3 +38,5 @@ static inline void *a_cas_p(volatile void *p, void *t, void *s)
 		: "memory");
 	return old;
 }
+
+#endif  // !defined(MUSL_USE_COMPILER_BUILTINS)

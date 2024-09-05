@@ -5,3 +5,4 @@ __unmapself:
 	ecall
 	li a7, 93  # SYS_exit
 	ecall
+.size __unmapself, .-__unmapself

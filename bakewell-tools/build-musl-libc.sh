@@ -25,7 +25,6 @@ function build_musl() {
     local MUSL_PATH=${1}            # path to Musl sources
     local PREFIX_PATH=${2}          # where to install Musl
     local TRIPLE=${4:-${3}}         # target triple
-    local CFGFLAGS="--enable-bakewell"
     ${MUSL_PATH}/configure --prefix=${PREFIX_PATH} --target=${TRIPLE} ${CFGFLAGS} --enable-debug
     make -j${BAKEWELL_NPROC:-8}
     make install
@@ -40,7 +39,8 @@ EOF
 }
 
 export CC=${BAKEWELL_HOME}/cherillvm/bin/riscv64-unknown-linux-gnu-cc
-export CFLAGS="-isystem ${BAKEWELL_HOME}/cherillvm/lib/clang/15.0.0/include"
+TFLAGS="-march=rv64imafdc_zcherihybrid -mabi=l64pc128d"
+export CFLAGS="-isystem ${BAKEWELL_HOME}/cherillvm/lib/clang/15.0.0/include $TFLAGS"
 mkdir -p ${BUILDPREFIX}/musl
 cd ${BUILDPREFIX}/musl
 build_musl ${MUSL_PATH} ${BAKEWELL_HOME} riscv64-unknown-linux-gnu

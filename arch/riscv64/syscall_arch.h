@@ -1,7 +1,77 @@
 #define __SYSCALL_LL_E(x) (x)
 #define __SYSCALL_LL_O(x) (x)
 
+#ifdef __CHERI_PURE_CAPABILITY__
 #define __asm_syscall(...) \
+	__asm__ __volatile__ ("ecall\n\t" \
+	: "=C"(a0) : __VA_ARGS__ : "memory"); \
+	return a0; \
+
+static inline intptr_t __syscall0(intptr_t n)
+{
+	register intptr_t a7 __asm__("ca7") = n;
+	register intptr_t a0 __asm__("ca0");
+	__asm_syscall("C"(a7))
+}
+
+static inline intptr_t __syscall1(intptr_t n, intptr_t a)
+{
+	register intptr_t a7 __asm__("ca7") = n;
+	register intptr_t a0 __asm__("ca0") = a;
+	__asm_syscall("C"(a7), "0"(a0))
+}
+
+static inline intptr_t __syscall2(intptr_t n, intptr_t a, intptr_t b)
+{
+	register intptr_t a7 __asm__("ca7") = n;
+	register intptr_t a0 __asm__("ca0") = a;
+	register intptr_t a1 __asm__("ca1") = b;
+	__asm_syscall("C"(a7), "0"(a0), "C"(a1))
+}
+
+static inline intptr_t __syscall3(intptr_t n, intptr_t a, intptr_t b, intptr_t c)
+{
+	register intptr_t a7 __asm__("ca7") = n;
+	register intptr_t a0 __asm__("ca0") = a;
+	register intptr_t a1 __asm__("ca1") = b;
+	register intptr_t a2 __asm__("ca2") = c;
+	__asm_syscall("C"(a7), "0"(a0), "C"(a1), "C"(a2))
+}
+
+static inline intptr_t __syscall4(intptr_t n, intptr_t a, intptr_t b, intptr_t c, intptr_t d)
+{
+	register intptr_t a7 __asm__("ca7") = n;
+	register intptr_t a0 __asm__("ca0") = a;
+	register intptr_t a1 __asm__("ca1") = b;
+	register intptr_t a2 __asm__("ca2") = c;
+	register intptr_t a3 __asm__("ca3") = d;
+	__asm_syscall("C"(a7), "0"(a0), "C"(a1), "C"(a2), "C"(a3))
+}
+
+static inline intptr_t __syscall5(intptr_t n, intptr_t a, intptr_t b, intptr_t c, intptr_t d, intptr_t e)
+{
+	register intptr_t a7 __asm__("ca7") = n;
+	register intptr_t a0 __asm__("ca0") = a;
+	register intptr_t a1 __asm__("ca1") = b;
+	register intptr_t a2 __asm__("ca2") = c;
+	register intptr_t a3 __asm__("ca3") = d;
+	register intptr_t a4 __asm__("ca4") = e;
+	__asm_syscall("C"(a7), "0"(a0), "C"(a1), "C"(a2), "C"(a3), "C"(a4))
+}
+
+static inline intptr_t __syscall6(intptr_t n, intptr_t a, intptr_t b, intptr_t c, intptr_t d, intptr_t e, intptr_t f)
+{
+	register intptr_t a7 __asm__("ca7") = n;
+	register intptr_t a0 __asm__("ca0") = a;
+	register intptr_t a1 __asm__("ca1") = b;
+	register intptr_t a2 __asm__("ca2") = c;
+	register intptr_t a3 __asm__("ca3") = d;
+	register intptr_t a4 __asm__("ca4") = e;
+	register intptr_t a5 __asm__("ca5") = f;
+	__asm_syscall("C"(a7), "0"(a0), "C"(a1), "C"(a2), "C"(a3), "C"(a4), "C"(a5))
+}
+#else
+#define __asm_syscall(...)		  \
 	__asm__ __volatile__ ("ecall\n\t" \
 	: "=r"(a0) : __VA_ARGS__ : "memory"); \
 	return a0; \
@@ -69,6 +139,7 @@ static inline long __syscall6(long n, long a, long b, long c, long d, long e, lo
 	register long a5 __asm__("a5") = f;
 	__asm_syscall("r"(a7), "0"(a0), "r"(a1), "r"(a2), "r"(a3), "r"(a4), "r"(a5))
 }
+#endif
 
 #define VDSO_USEFUL
 /* We don't have a clock_gettime function.

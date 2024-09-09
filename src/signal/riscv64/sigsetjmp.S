@@ -23,14 +23,13 @@ __sigsetjmp:
 .hidden __sigsetjmp_tail
 	tail __sigsetjmp_tail
 #else
-#define SETJMPSIZE ((14 * 16) + (12 * 8)) // Size of jmp_buf
 	bnez a1, 1f
 	lgc ct0, setjmp
 	jr ct0
 1:
 
-	sc cra, SETJMPSIZE(ca0)
-	sc cs0, SETJMPSIZE+16+16(ca0)
+	sc cra, ((14 * 16) + (12 * 8) + 0)(ca0)
+	sc cs0, ((14 * 16) + (12 * 8) + 16)(ca0)
 	cmv cs0, ca0
 
 	lgc ct0, setjmp
@@ -38,11 +37,10 @@ __sigsetjmp:
 
 	cmv ca1, ca0
 	cmv ca0, cs0
-	lc cs0, SETJMPSIZE+16+16(ca0)
-	lc cra, SETJMPSIZE(ca0)
+	lc cs0, ((14 * 16) + (12 * 8) + 16)(ca0)
+	lc cra, ((14 * 16) + (12 * 8) + 0)(ca0)
 
 .hidden __sigsetjmp_tail
 	lgc ct0, __sigsetjmp_tail
 	jr ct0
 #endif
-	

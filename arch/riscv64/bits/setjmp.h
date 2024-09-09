@@ -3,9 +3,9 @@
 #include <bits/alltypes.h>
 typedef struct {
 	uintptr_t cap1[14];
-	long fp[12];
+	unsigned long fp[12];
 	uintptr_t cap2[2];
 } __jmp_buf;
 #else
-typedef long __jmp_buf[28];
+typedef unsigned long __jmp_buf[26];
 #endif

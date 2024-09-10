@@ -2492,7 +2492,7 @@ void __dls3(uintptr_t *sp, size_t *auxv)
 
 	errno = 0;
 #if defined(__CHERI_PURE_CAPABILITY__)
-#if 0 // morello specific
+#if defined(__aarch64__)
 __asm__ __volatile__ (
 	"mov x0, %0\n"
 	"mov c1, %1\n"

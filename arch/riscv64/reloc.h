@@ -33,7 +33,7 @@ typedef struct {
 
 #ifdef __CHERI_PURE_CAPABILITY__
 #define CRTJMP(pc,sp) __asm__ __volatile__( \
-	"cincoffsetimm csp, %1, 0 ; cjr %0" : : "C"(pc), "C"(sp) : "memory" )
+	"cmv csp, %1 ; jr %0" : : "C"(pc), "C"(sp) : "memory" )
 
 #define CRTJMPCHERI(pc, sp, argc, argv, envp, auxv) __asm__ __volatile__ ( \
 	"mv a0, %0\n" \

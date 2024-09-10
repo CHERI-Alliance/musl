@@ -81,7 +81,7 @@ __bakewell_init_static(int argc, char **argv, char **envp, auxv_entry *auxv)
 		ph = (void *)((char *)ph + phent);
 	}
 
-	cheri_init_globals_3(rw, rx, rw);
+	cheri_init_globals_3(rw, rx, rx);
 }
 #endif
 

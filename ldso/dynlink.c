@@ -24,6 +24,7 @@
 #include "pthread_impl.h"
 #include "fork_impl.h"
 #include "dynlink.h"
+#include "caprelocs.h"
 
 static size_t ldso_page_size;
 #ifndef PAGE_SIZE
@@ -1745,6 +1746,8 @@ static void reloc_all(struct dso *p)
 	segments.writeable = &writeable;
 	segments.relro = &relro;
 #endif
+
+	PROCESS_CAPRELOCS((void *)p->dynv, p->base, p->rw_capability, p->base);
 
 	dynv_entry dyn_null = {0}, *dyn[DYN_CNT];
 	for (; p; p=p->next) {

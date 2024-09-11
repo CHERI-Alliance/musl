@@ -2,6 +2,7 @@
 #include <sys/dynv.h>
 #include "dynlink.h"
 #include "libc.h"
+#include "caprelocs.h"
 
 #ifndef START
 #define START "_dlstart"
@@ -166,6 +167,8 @@ hidden void _dlstart_c(uintptr_t *sp, size_t *dynv_raw)
 			}
 		}
 	}
+
+	PROCESS_CAPRELOCS(dynv, base_rx, rw_cap, rx_cap);
 
 	/* MIPS uses an ugly packed form for GOT relocations. Since we
 	 * can't make function calls yet and the code is tiny anyway,

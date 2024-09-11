@@ -817,7 +817,8 @@ typedef struct {
 #define DT_VERSIONTAGIDX(tag)	(DT_VERNEEDNUM - (tag))
 #define DT_VERSIONTAGNUM 16
 
-
+#define DT_RISCV_CHERI___CAPRELOCS	0x7000c000
+#define DT_RISCV_CHERI___CAPRELOCSSZ	0x7000c001
 
 #define DT_AUXILIARY    0x7ffffffd
 #define DT_FILTER       0x7fffffff

@@ -241,7 +241,10 @@ hidden void _dlstart_c(uintptr_t *sp, size_t *dynv_raw)
 	stage2_func dls2;
 	GETFUNCSYM(&dls2, __dls2, base_rx+DYN_VAL(dyn[DT_PLTGOT]));
 #if defined(__CHERI_PURE_CAPABILITY__)
+#if !defined(__riscv_zcheripurecap)
+	/* Already sealed in the zcheripurecap case. */
 	dls2 = __builtin_cheri_seal_entry(dls2);
+#endif
 	dls2((void *)base_rx, (void *)rw_cap, sp, argc, argv, envp, (uintptr_t *)auxv);
 #else
 	dls2((void *)base_rx, sp);

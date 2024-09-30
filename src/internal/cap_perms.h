@@ -1,8 +1,10 @@
 #ifndef CHERI_CAP_PERMS_DEFINITIONS
 #define CHERI_CAP_PERMS_DEFINITIONS
 
-#if !defined(__riscv_zcheripurecap)
 #ifndef __CHERI_CAP_PERMISSION_VMEM__
+#if defined(__riscv_zcheripurecap)
+#define __CHERI_CAP_PERMISSION_VMEM__ (1U << 16)
+#else
 #define __CHERI_CAP_PERMISSION_VMEM__ (1 << 2)
 #endif
 #endif
@@ -11,7 +13,7 @@
  * ROOT_CAP_PERMS
  */
 #if defined(__riscv_zcheripurecap)
-#define ROOT_CAP_PERMS (0)
+#define ROOT_CAP_PERMS (__CHERI_CAP_PERMISSION_VMEM__)
 #else
 #define ROOT_CAP_PERMS \
 	__CHERI_CAP_PERMISSION_GLOBAL__ \

@@ -39,11 +39,19 @@ inline void *restrict_bounds_to_tail(void *cap) {
 #endif
 #define MUSL_CAP_PROT_NONE (0)
 
+#if defined(__riscv_zcheripurecap)
+#define __CHERI_CAP_PERMISSION_USER0__	(1u << 16)
+#define __CHERI_CAP_PERMISSION_USER1__	(1u << 17)
+#define __CHERI_CAP_PERMISSION_USER2__	(1u << 18)
+#define __CHERI_CAP_PERMISSION_USER3__	(1u << 19)
+#define __CHERI_CAP_PERMISSION_VMEM__	__CHERI_CAP_PERMISSION_USER0__
+#else
 #define __CHERI_CAP_PERMISSION_USER0__	(1u << 2u)
 #define __CHERI_CAP_PERMISSION_USER1__	(1u << 3u)
 #define __CHERI_CAP_PERMISSION_USER2__	(1u << 4u)
 #define __CHERI_CAP_PERMISSION_USER3__	(1u << 5u)
 #define __CHERI_CAP_PERMISSION_VMEM__	__CHERI_CAP_PERMISSION_USER0__
+#endif
 
 #else
 

@@ -749,7 +749,7 @@ static void do_relocs(struct dso *dso, size_t *rel, size_t rel_size, size_t stri
 			reloc_addr[1] = def.sym ? def.dso->got : 0;
 			break;
 		case REL_DTPMOD:
-			*reloc_addr = (void *)def.dso->tls_id;
+			*(size_t *)reloc_addr = def.dso->tls_id;
 			break;
 		case REL_DTPOFF:
 			*reloc_addr = tls_val + addend - DTP_OFFSET;

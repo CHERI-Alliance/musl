@@ -51,11 +51,7 @@ static int static_dl_iterate_phdr(int(*callback)(struct dl_phdr_info *info, size
 	info.dlpi_subs  = 0;
 	if (tls_phdr) {
 		info.dlpi_tls_modid = 1;
-#ifdef __CHERI_PURE_CAPABILITY__
-		info.dlpi_tls_data = __tls_get_addr((tls_mod_off_t[]){1,0,tls_phdr->p_memsz});
-#else
 		info.dlpi_tls_data = __tls_get_addr((tls_mod_off_t[]){1,0});
-#endif
 	} else {
 		info.dlpi_tls_modid = 0;
 		info.dlpi_tls_data = 0;

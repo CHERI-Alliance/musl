@@ -2748,15 +2748,5 @@
         "name": "stt_tls_symboltest",
         "xrc": [0],
         "stdout": ["44"]
-    },
-    {
-        "app": "${build}/tls_get_addr-${kind}.exe",
-        "name": "tls_get_addr_bounds",
-        "xrc": [0]
-    },
-    {
-        "app": "${build}/test_dl_iterate_phdr-${kind}.exe",
-        "name": "dl_iterate_phdr",
-        "xrc": [0]
     }
 ]

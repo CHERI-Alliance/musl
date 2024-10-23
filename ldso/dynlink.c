@@ -2721,13 +2721,8 @@ static void *do_dlsym(struct dso *p, const char *s, void *ra)
 		error("Symbol not found: %s", s);
 		return 0;
 	}
-	if ((def.sym->st_info&0xf) == STT_TLS) {
-#ifdef __CHERI_PURE_CAPABILITY__
-		return __tls_get_addr((tls_mod_off_t []){def.dso->tls_id, def.sym->st_value-DTP_OFFSET, def.sym->st_size});
-#else
+	if ((def.sym->st_info&0xf) == STT_TLS)
 		return __tls_get_addr((tls_mod_off_t []){def.dso->tls_id, def.sym->st_value-DTP_OFFSET});
-#endif
-	}
 	if (DL_FDPIC && (def.sym->st_info&0xf) == STT_FUNC)
 		return def.dso->funcdescs + (def.sym - def.dso->syms);
 	return laddr(def.dso, def.sym->st_value);
@@ -2849,15 +2844,8 @@ int dl_iterate_phdr(int(*callback)(struct dl_phdr_info *info, size_t size, void 
 		info.dlpi_adds      = gencnt;
 		info.dlpi_subs      = 0;
 		info.dlpi_tls_modid = current->tls_id;
-		if (current->tls_id == 0) {
-			info.dlpi_tls_data = 0;
-		} else {
-#ifdef __CHERI_PURE_CAPABILITY__
-			info.dlpi_tls_data = __tls_get_addr((tls_mod_off_t[]){current->tls_id,0,current->tls.size});
-#else
-			info.dlpi_tls_data = __tls_get_addr((tls_mod_off_t[]){current->tls_id,0});
-#endif
-		}
+		info.dlpi_tls_data = !current->tls_id ? 0 :
+			__tls_get_addr((tls_mod_off_t[]){current->tls_id,0});
 
 		ret = (callback)(&info, sizeof (info), data);
 

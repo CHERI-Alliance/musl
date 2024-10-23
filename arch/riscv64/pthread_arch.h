@@ -14,6 +14,8 @@ static inline uintptr_t __get_tp()
 #define TLS_ABOVE_TP
 #define GAP_ABOVE_TP 0
 
+#ifndef __CHERI_PURE_CAPABILITY__
 #define DTP_OFFSET 0x800
+#endif
 
 #define MC_PC __gregs[0]

@@ -4,7 +4,7 @@
 void explicit_bzero(void *d, size_t n)
 {
 	d = memset(d, 0, n);
-#if 0
+#ifndef __CHERI_PURE_CAPABILITY__
 	__asm__ __volatile__ ("" : : "r"(d) : "memory");
 #else
 	__asm__ __volatile__ ("" : : "C"(d) : "memory");

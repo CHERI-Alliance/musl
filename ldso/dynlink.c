@@ -1747,11 +1747,10 @@ static void reloc_all(struct dso *p)
 	segments.relro = &relro;
 #endif
 
-	PROCESS_CAPRELOCS((void *)p->dynv, p->base, p->rw_capability, p->base);
-
 	dynv_entry dyn_null = {0}, *dyn[DYN_CNT];
 	for (; p; p=p->next) {
 		if (p->relocated) continue;
+		PROCESS_CAPRELOCS((void *)p->dynv, p->base, p->rw_capability, p->base);
 		decode_dyn_vec(p->dynv, dyn, DYN_CNT, &dyn_null);
 
 #ifdef __CHERI_PURE_CAPABILITY__

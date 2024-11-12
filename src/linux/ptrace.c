@@ -3,17 +3,13 @@
 #include <unistd.h>
 #include "syscall.h"
 
-long ptrace(int req, ...)
+long __ptrace(int req, pid_t pid, void *addr, void *data, ...)
 {
 	va_list ap;
-	pid_t pid;
-	void *addr, *data, *addr2 = 0;
+	void *addr2 = 0;
 	long ret, result;
 
 	va_start(ap, req);
-	pid = va_arg(ap, pid_t);
-	addr = va_arg(ap, void *);
-	data = va_arg(ap, void *);
 	/* PTRACE_{READ,WRITE}{DATA,TEXT} (16...19) are specific to SPARC. */
 #ifdef PTRACE_READDATA
 	if ((unsigned)req - PTRACE_READDATA < 4)

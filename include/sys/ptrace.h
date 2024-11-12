@@ -139,7 +139,9 @@ struct __ptrace_rseq_configuration {
 	uint32_t pad;
 };
 
-long ptrace(int, ...);
+long __ptrace(int, int, void *, void *, ...);
+#define __ptarg(X) ((void *)(uintptr_t)(X))
+#define ptrace(A,B,C,D,...) __ptrace((A), (B), __ptarg(C), __ptarg(D), ##__VA_ARGS__)
 
 #ifdef __cplusplus
 }

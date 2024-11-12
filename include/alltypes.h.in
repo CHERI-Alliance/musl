@@ -8,7 +8,11 @@ TYPEDEF _Addr ptrdiff_t;
 TYPEDEF _Addr ssize_t;
 TYPEDEF __INTPTR_TYPE__ intptr_t;
 TYPEDEF _Addr regoff_t;
+#ifdef __CHERI__
+TYPEDEF __uintcap_t register_t;
+#else
 TYPEDEF _Reg register_t;
+#endif
 TYPEDEF _Int64 time_t;
 TYPEDEF _Int64 suseconds_t;
 
@@ -25,7 +29,7 @@ TYPEDEF unsigned _Int64 u_int64_t;
 TYPEDEF unsigned _Int64 uintmax_t;
 
 TYPEDEF unsigned mode_t;
-TYPEDEF unsigned _Reg nlink_t;
+TYPEDEF unsigned _Addr nlink_t;
 TYPEDEF _Int64 off_t;
 TYPEDEF unsigned _Int64 ino_t;
 TYPEDEF unsigned _Int64 dev_t;

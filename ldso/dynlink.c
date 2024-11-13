@@ -612,7 +612,7 @@ static void do_relocs(struct dso *dso, size_t *rel, size_t rel_size, size_t stri
 				if (ELF64_ST_TYPE(def.sym->st_info) == STT_GNU_IFUNC)
 					break;
 
-				char *cap_rx = sym_val + addend;
+				char *cap_rx = sym_val;
 				char *cap_rw = set_rw_cap(def.dso, cap_rx);
 				char *cap;
 
@@ -625,7 +625,7 @@ static void do_relocs(struct dso *dso, size_t *rel, size_t rel_size, size_t stri
 #else
 						__CHERI_CAP_PERMISSION_GLOBAL__ | EXEC_CAP_PERMS | READ_CAP_PERMS);
 #endif
-					cap = __builtin_cheri_seal_entry(cap);
+					cap = __builtin_cheri_seal_entry(cap + addend);
 				} else if (dso == &ldso || is_sym_in_writeable_segment(&segments, def.sym)) {
 					cap = __builtin_cheri_perms_and(cap_rw,
 #if defined(__riscv_zcheripurecap)
@@ -635,6 +635,7 @@ static void do_relocs(struct dso *dso, size_t *rel, size_t rel_size, size_t stri
 #endif
 					length = def.sym->st_size;
 					cap = __builtin_cheri_bounds_set(cap, length);
+					cap += addend;
 				} else {
 					cap = __builtin_cheri_perms_and(cap_rx,
 #if defined(__riscv_zcheripurecap)
@@ -644,6 +645,7 @@ static void do_relocs(struct dso *dso, size_t *rel, size_t rel_size, size_t stri
 #endif
 					length = def.sym->st_size;
 					cap = __builtin_cheri_bounds_set(cap, length);
+					cap += addend;
 				}
 
 				reloc_addr = set_rw_cap(dso, reloc_addr);

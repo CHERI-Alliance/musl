@@ -10,6 +10,7 @@
 .type __syscall_cp_asm, %function
 __syscall_cp_asm:
 __cp_begin:
+	.cfi_startproc
 #ifndef __CHERI_PURE_CAPABILITY__
 	lw t0, 0(a0)
 	bnez t0, __cp_cancel
@@ -48,6 +49,7 @@ __cp_cancel:
 	lgc ct0, __cancel
 	jr ct0
 #endif
+	.cfi_endproc
 	.size __cp_cancel, .-__cp_cancel
 	.size __cp_begin, __cp_end-__cp_begin
 	

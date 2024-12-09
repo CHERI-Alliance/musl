@@ -3,7 +3,11 @@
 
 #ifndef __CHERI_CAP_PERMISSION_VMEM__
 #if defined(__riscv_zcheripurecap)
+#ifdef __CHERI_BW_CAP_PERMISSION_CAPABILITY__
 #define __CHERI_CAP_PERMISSION_VMEM__ (1U << 16)
+#else
+#define __CHERI_CAP_PERMISSION_VMEM__ (1U << 6)
+#endif
 #else
 #define __CHERI_CAP_PERMISSION_VMEM__ (1 << 2)
 #endif
@@ -24,9 +28,17 @@
  * READ_CAP_PERMS
  */
 #if defined(__riscv_zcheripurecap)
+
+#ifdef __CHERI_BW_CAP_PERMISSION_CAPABILITY__
 #define READ_CAP_PERMS \
 	(__CHERI_BW_CAP_PERMISSION_READ__ | \
 	 __CHERI_BW_CAP_PERMISSION_CAPABILITY__)
+#else
+#define READ_CAP_PERMS \
+	(__CHERI_CAP_PERMISSION_LOAD_MUTABLE__ | \
+	 __CHERI_CAP_PERMISSION_READ__ | \
+	 __CHERI_CAP_PERMISSION_CAPABILITY__)
+#endif
 #else
 #ifdef __ARM_CAP_PERMISSION_MUTABLE_LOAD__
 #define READ_CAP_PERMS \
@@ -44,9 +56,15 @@
  * WRITE_CAP_PERMS
  */
 #if defined(__riscv_zcheripurecap)
+#ifdef __CHERI_BW_CAP_PERMISSION_CAPABILITY__
 #define WRITE_CAP_PERMS \
 	(__CHERI_BW_CAP_PERMISSION_WRITE__ | \
 	 __CHERI_BW_CAP_PERMISSION_CAPABILITY__)
+#else
+#define WRITE_CAP_PERMS \
+	(__CHERI_CAP_PERMISSION_WRITE__ | \
+	 __CHERI_CAP_PERMISSION_CAPABILITY__)
+#endif
 #else
 #define WRITE_CAP_PERMS			      \
 	__CHERI_CAP_PERMISSION_PERMIT_STORE__ \
@@ -58,9 +76,15 @@
  * EXEC_CAP_PERMS
  */
 #if defined(__riscv_zcheripurecap)
+#ifdef __CHERI_BW_CAP_PERMISSION_CAPABILITY__
 #define EXEC_CAP_PERMS \
 	(__CHERI_BW_CAP_PERMISSION_EXECUTE__ | \
 	 __CHERI_BW_CAP_PERMISSION_ACCESS_SYSTEM_REGISTERS__)
+#else
+#define EXEC_CAP_PERMS \
+	(__CHERI_CAP_PERMISSION_EXECUTE__ | \
+	 __CHERI_CAP_PERMISSION_ACCESS_SYSTEM_REGISTERS__)
+#endif
 #else
 #ifdef __ARM_CAP_PERMISSION_EXECUTIVE__
 #define EXEC_CAP_PERMS \

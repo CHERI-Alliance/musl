@@ -536,7 +536,12 @@ static int fmt_cap(FILE *f, const void *cap, unsigned fmt) {
 	 */
 	if (fmt) {
 #if defined(__riscv_zcheripurecap)
-		if (perms & __CHERI_BW_CAP_PERMISSION_ACCESS_SYSTEM_REGISTERS__) {
+#ifdef __CHERI_BW_CAP_PERMISSION_ACCESS_SYSTEM_REGISTERS__
+		if (perms & __CHERI_BW_CAP_PERMISSION_ACCESS_SYSTEM_REGISTERS__)
+#else
+		if (perms & __CHERI_CAP_PERMISSION_ACCESS_SYSTEM_REGISTERS__)
+#endif
+		{
 			*--z = 'S';
 		}
 #else
@@ -595,11 +600,19 @@ static int fmt_cap(FILE *f, const void *cap, unsigned fmt) {
 	/* Permissions */
 	unsigned perms_macros[] =  {
 #if defined(__riscv_zcheripurecap)
+#ifdef __CHERI_BW_CAP_PERMISSION_CAPABILITY__
 				    __CHERI_BW_CAP_PERMISSION_CAPABILITY__ | __CHERI_BW_CAP_PERMISSION_WRITE__,
 				    __CHERI_BW_CAP_PERMISSION_CAPABILITY__ | __CHERI_BW_CAP_PERMISSION_READ__,
 				    __CHERI_BW_CAP_PERMISSION_EXECUTE__,
 				    __CHERI_BW_CAP_PERMISSION_WRITE__,
-				    __CHERI_BW_CAP_PERMISSION_READ__};
+				    __CHERI_BW_CAP_PERMISSION_READ__
+#else
+				    __CHERI_CAP_PERMISSION_CAPABILITY__ | __CHERI_CAP_PERMISSION_WRITE__,
+				    __CHERI_CAP_PERMISSION_CAPABILITY__ | __CHERI_CAP_PERMISSION_READ__,
+				    __CHERI_CAP_PERMISSION_EXECUTE__,
+				    __CHERI_CAP_PERMISSION_WRITE__,
+				    __CHERI_CAP_PERMISSION_READ__
+#endif
 #else
 #ifdef __ARM_CAP_PERMISSION_EXECUTIVE__
 								__ARM_CAP_PERMISSION_EXECUTIVE__,
@@ -608,8 +621,9 @@ static int fmt_cap(FILE *f, const void *cap, unsigned fmt) {
 								__CHERI_CAP_PERMISSION_PERMIT_LOAD_CAPABILITY__,
 								__CHERI_CAP_PERMISSION_PERMIT_EXECUTE__,
 								__CHERI_CAP_PERMISSION_PERMIT_STORE__,
-								__CHERI_CAP_PERMISSION_PERMIT_LOAD__};
+								__CHERI_CAP_PERMISSION_PERMIT_LOAD__
 #endif
+};
 	char perms_char_rep[] = {
 #ifdef __ARM_CAP_PERMISSION_EXECUTIVE__
 		'E',

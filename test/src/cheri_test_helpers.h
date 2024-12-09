@@ -3,11 +3,17 @@
 #include <stdint.h>
 
 #if defined(__riscv_zcheripurecap)
-/* FIXCHERI: Pre v0.9 permission encoding. */
+#ifdef __CHERI_BW_CAP_PERMISSION_CAPABILITY__
 #define __CHERI_CAP_PERMISSION_USER0__	(1u << 16u)
-#define __CHERI_CAP_PERMISSION_USER1__	(1u << 16u)
-#define __CHERI_CAP_PERMISSION_USER2__	(1u << 16u)
-#define __CHERI_CAP_PERMISSION_USER3__	(1u << 16u)
+#define __CHERI_CAP_PERMISSION_USER1__	(1u << 17u)
+#define __CHERI_CAP_PERMISSION_USER2__	(1u << 18u)
+#define __CHERI_CAP_PERMISSION_USER3__	(1u << 19u)
+#else
+#define __CHERI_CAP_PERMISSION_USER0__	(1u << 6u)
+#define __CHERI_CAP_PERMISSION_USER1__	(1u << 7u)
+#define __CHERI_CAP_PERMISSION_USER2__	(1u << 8u)
+#define __CHERI_CAP_PERMISSION_USER3__	(1u << 9u)
+#endif
 #else
 #define __CHERI_CAP_PERMISSION_USER0__	(1u << 2u)
 #define __CHERI_CAP_PERMISSION_USER1__	(1u << 3u)

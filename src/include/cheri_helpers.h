@@ -26,24 +26,24 @@ inline void *restrict_bounds_to_tail(void *cap) {
   return __builtin_cheri_bounds_set(cap, len - off);
 }
 
-#if defined(__riscv_zcheripurecap)
 #define MUSL_CAP_PROT_MAPFILE (READ_CAP_PERMS | ROOT_CAP_PERMS)
 #define MUSL_CAP_PROT_THREAD (READ_CAP_PERMS | WRITE_CAP_PERMS | ROOT_CAP_PERMS)
 #define MUSL_CAP_PROT_MALLOC (READ_CAP_PERMS | WRITE_CAP_PERMS | ROOT_CAP_PERMS)
 #define MUSL_CAP_PROT_SEM (READ_CAP_PERMS | WRITE_CAP_PERMS | ROOT_CAP_PERMS)
-#else
-#define MUSL_CAP_PROT_MAPFILE (READ_CAP_PERMS | ROOT_CAP_PERMS)
-#define MUSL_CAP_PROT_THREAD (READ_CAP_PERMS | WRITE_CAP_PERMS | ROOT_CAP_PERMS)
-#define MUSL_CAP_PROT_MALLOC (READ_CAP_PERMS | WRITE_CAP_PERMS | ROOT_CAP_PERMS)
-#define MUSL_CAP_PROT_SEM (READ_CAP_PERMS | WRITE_CAP_PERMS | ROOT_CAP_PERMS)
-#endif
 #define MUSL_CAP_PROT_NONE (0)
 
 #if defined(__riscv_zcheripurecap)
+#ifdef __CHERI_BW_CAP_PERMISSION_CAPABILITY__
 #define __CHERI_CAP_PERMISSION_USER0__	(1u << 16)
 #define __CHERI_CAP_PERMISSION_USER1__	(1u << 17)
 #define __CHERI_CAP_PERMISSION_USER2__	(1u << 18)
 #define __CHERI_CAP_PERMISSION_USER3__	(1u << 19)
+#else
+#define __CHERI_CAP_PERMISSION_USER0__	(1u << 6)
+#define __CHERI_CAP_PERMISSION_USER1__	(1u << 7)
+#define __CHERI_CAP_PERMISSION_USER2__	(1u << 8)
+#define __CHERI_CAP_PERMISSION_USER3__	(1u << 9)
+#endif
 #define __CHERI_CAP_PERMISSION_VMEM__	__CHERI_CAP_PERMISSION_USER0__
 #else
 #define __CHERI_CAP_PERMISSION_USER0__	(1u << 2u)

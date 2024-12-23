@@ -84,13 +84,15 @@ echo "-- INFO  - skipped: $${SKIPPED_TESTS_NUM}"
 if [ -z "$${FAILED_TESTS}" ]; then
     exit 0
 else
+    echo "-- INFO - FAILED_TESTS"
+    echo $${FAILED_TESTS}
     exit 1
 fi
 
 ''')
 
 test_template = Template(
-    '${env} test_run ${name} "${cmd}" "${stdin}" ${xrc} ${kind} "${skip}" "${ignore}"'
+    '${env} test_run ${name} "${cmd}" "${stdin}" ${xrc} ${kind} "${skip}" "${ignore}" ${env_end}'
 )
 
 class Args(object):
@@ -120,7 +122,8 @@ if __name__ == '__main__':
 
     tests = []
     for t in static_tests + dynamic_tests:
-        tenv = ' '.join([f'{n}={v}' for n, v in t.env.items()])
+        tenv = ' '.join([f'export {n}={v}\n' for n, v in t.env.items()])
+        tenv_end = ' '.join([f'\nexport {n}=\n' for n, v in t.env.items()])
         tcmd = ' '.join(t.cmd)
         if t.stdin is not None:
             user_input = t.stdin.replace('\n', '\\n')
@@ -132,7 +135,7 @@ if __name__ == '__main__':
             xrc=t.expected.get('rc')[0],
             kind=t.kind, timeout=t.timeout,
             skip=' '.join(t.skip), ignore=' '.join(t.ignore),
-        ).strip())
+            env_end=tenv_end).strip())
 
     with open(args.scriptpath, 'wt') as f:
         f.write(script_template.substitute(

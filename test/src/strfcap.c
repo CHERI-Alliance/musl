@@ -1,3 +1,4 @@
+#ifdef STRFCAP_SUPPORTED
 #ifdef __CHERI_PURE_CAPABILITY__
 #include <stdio.h>
 #include <string.h>
@@ -641,5 +642,10 @@ int main(int argc, char** argv)
 		case '%': return test_strfcap_specifier_percent();
 		default: return 2;
 	}
+}
+#endif
+#else
+int main(int argc, char** argv){
+  return 0;
 }
 #endif

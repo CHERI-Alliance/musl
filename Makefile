@@ -247,6 +247,9 @@ clean:
 ifeq ($(ARCH),morello)
 	$(MAKE) -C $(testdir) clean
 endif
+ifeq ($(ARCH),riscv64)
+	$(MAKE) -C $(testdir) clean
+endif
 
 distclean: clean
 	rm -f config.mak
@@ -255,6 +258,12 @@ ifeq ($(ARCH),morello)
 test:
 	$(MAKE) -C $(testdir) test
 endif
+
+ifeq ($(ARCH),riscv64)
+test:
+	$(MAKE) -C $(testdir) test
+endif
+
 
 # Turn off implicit rules
 .SUFFIXES:

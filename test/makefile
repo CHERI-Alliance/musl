@@ -8,7 +8,7 @@ CONFIG ?= $(CURDIR)/../config.mak
 
 override SYSROOT = $(prefix)
 override MUSLLIB = $(SYSROOT)/lib
-override TRIPLE = aarch64-linux-musl_purecap
+override TRIPLE = riscv64-codasip-linux-musl
 
 override MUSL_BITS_STATIC = crt1.o crti.o crtn.o libc.a rcrt1.o Scrt1.o
 override MUSL_BITS_DYNAMIC = crt1.o crti.o crtn.o libc.so rcrt1.o Scrt1.o
@@ -18,7 +18,7 @@ CFLAGS += ${TEST_CFLAGS}
 CFLAGS += $(CFLAGS_MORELLO)
 CFLAGS += -g -fno-builtin-mempcpy
 CFLAGS += -Wall -Wpedantic -Werror
-CFLAGS += -Wno-gnu-empty-initializer -Wno-gnu-folding-constant -Wno-gnu-statement-expression
+CFLAGS += -Wno-gnu-folding-constant -Wno-gnu-statement-expression -Wno-strict-prototypes -Wno-c2x-extensions
 
 LDFLAGS += --target=$(TRIPLE) --sysroot=$(SYSROOT) $(LDFLAGS_MORELLO)
 LDFLAGS += ${TEST_LDFLAGS}
@@ -57,6 +57,8 @@ ifndef TEST_DRIVER
 	$(error TEST_DRIVER is undefined - please supply a path to a valid test driver)
 else ifeq ("$(wildcard $(TEST_DRIVER))", "")
 	$(error TEST_DRIVER file does not exist - please supply a path to a valid test driver)
+else
+	$(info Using TEST_DRIVER=$(TEST_DRIVER))
 endif
 
 %.o: %.c
@@ -103,9 +105,11 @@ $(BUNDLE_NAME).tar: $(EXE_STATIC) $(EXE_DYNAMIC) src/$(TEST_RUNNER_SHELL_SCRIPT_
 	find $(BUNDLE_NAME) -type f -name \*-dynamic.exe -exec patchelf --set-rpath '$$ORIGIN/lib' {} \;
 	tar -cf $@ $(BUNDLE_NAME)
 	@rm -rf $(BUNDLE_NAME)
+	@rm -f src/$(TEST_RUNNER_SHELL_SCRIPT_NAME)
 
 src/$(TEST_RUNNER_SHELL_SCRIPT_NAME): $(EXE_STATIC) $(EXE_DYNAMIC) runner.py shell-runner-gen.py morello-tests.json
 	python3 shell-runner-gen.py $@ $(CURDIR)/src morello-tests.json custom $(TEST_RUNNER_TAGS)
+	chmod +x src/$(TEST_RUNNER_SHELL_SCRIPT_NAME)
 
 .PHONY: clean check-test-driver test build test-static test-dynamic shared-libraries
 .PNONY: shell-script bundle-tests

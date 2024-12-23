@@ -19,13 +19,33 @@ static void test_ptr_size(void** ptr, int is_read_only)
         exit(capability_tag_cleared);
     }
     unsigned long perm = __builtin_cheri_perms_get(*ptr);
+#ifdef __riscv_zcheripurecap
+    unsigned long perm_primitive_type = __CHERI_CAP_PERMISSION_READ__ | __CHERI_CAP_PERMISSION_WRITE__;
+    unsigned long perm_capability_type = __CHERI_CAP_PERMISSION_CAPABILITY__;
+#else
     unsigned long perm_primitive_type = __CHERI_CAP_PERMISSION_PERMIT_LOAD__ | __CHERI_CAP_PERMISSION_PERMIT_STORE__;
     unsigned long perm_capability_type = __CHERI_CAP_PERMISSION_PERMIT_LOAD_CAPABILITY__ | __CHERI_CAP_PERMISSION_PERMIT_STORE_CAPABILITY__;
+#endif
     unsigned long minimal_perm = perm_primitive_type | perm_capability_type;
 
+#ifdef __riscv_zcheripurecap
+    if (is_read_only) minimal_perm &= !(__CHERI_CAP_PERMISSION_WRITE__ | __CHERI_CAP_PERMISSION_CAPABILITY__);
+#else
     if (is_read_only) minimal_perm &= !(__CHERI_CAP_PERMISSION_PERMIT_STORE__ | __CHERI_CAP_PERMISSION_PERMIT_STORE_CAPABILITY__);
+#endif
 
     if((perm & minimal_perm) != minimal_perm){
+#ifdef __riscv_zcheripurecap
+        if(!(perm & __CHERI_CAP_PERMISSION_READ__)) {
+            printf("ptr is missing load\n");
+        }
+        if(!(perm & __CHERI_CAP_PERMISSION_WRITE__)) {
+            printf("ptr is missing store\n");
+        }
+        if(!(perm & __CHERI_CAP_PERMISSION_CAPABILITY__)) {
+            printf("ptr is missing capability load\n");
+        }
+#else
         if(!(perm & __CHERI_CAP_PERMISSION_PERMIT_LOAD__)) {
             printf("ptr is missing load\n");
         }
@@ -38,6 +58,7 @@ static void test_ptr_size(void** ptr, int is_read_only)
         if(!(perm & __CHERI_CAP_PERMISSION_PERMIT_STORE_CAPABILITY__)) {
             printf("ptr is missing capability store\n");
         }
+#endif
         exit(incorrect_permission);
     }
 }

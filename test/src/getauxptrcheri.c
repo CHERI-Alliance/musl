@@ -21,7 +21,9 @@ int main (void) {
 		AT_CHERI_INTERP_RX_CAP,
 #endif
 		AT_CHERI_STACK_CAP,
+#ifndef __riscv_zcheripurecap
 		AT_CHERI_SEAL_CAP,
+#endif
 #ifdef CMPT_ID_PERMS
 		AT_CHERI_CID_CAP
 #endif
@@ -47,7 +49,9 @@ int main (void) {
 		RX_PERMS,
 #endif
 		RW_PERMS,
+#ifndef __riscv_zcheripurecap
 		SEAL_CAP_PERMS,
+#endif
 #ifdef CMPT_ID_PERMS
 		CMPT_ID_PERMS
 #endif
@@ -61,7 +65,9 @@ int main (void) {
 		"AT_CHERI_INTERP_RX_CAP",
 #endif
 		"AT_CHERI_STACK_CAP",
+#ifndef __riscv_zcheripurecap
 		"AT_CHERI_SEAL_CAP",
+#endif
 #ifdef CMPT_ID_PERMS
 		"AT_CHERI_CID_CAP"
 #endif
@@ -95,6 +101,9 @@ static int check(void *cap, uint64_t req_perms, const char name[])
 			name,
 			__print_perms(actual, __perms_buffer1),
 			__print_perms(req_perms, __perms_buffer2));
+		printf("Actual perms as hex is %#lx\n", actual);
+		printf("Expected perms as hex is %#lx\n", req_perms);
+		printf("RW_PERMS = %s\n", __print_perms(RW_PERMS, __perms_buffer1));
 		return 2;
 	}
 	if (__builtin_cheri_sealed_get(cap)) {

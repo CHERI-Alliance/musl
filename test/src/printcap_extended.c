@@ -24,7 +24,11 @@ int test_pcc(void) {
 int test_local(void) {
 	int x;
 	int *p = &x;
+#if defined(__riscv_zcherilevels)
+	p = cheri_perms_clear(p, CHERI_PERM_CAPABILITY_LEVEL);
+#elif !defined (__riscv_zcheripurecap)
 	p = cheri_perms_clear(p, CHERI_PERM_GLOBAL);
+#endif
 	int n = printf("%+#p\n", (void *) p); 
 	if (n < 0) return 1;
 
@@ -35,22 +39,38 @@ int test_sentry(void) {
 	void *sentry = (void *)test_local;
 	int m =  printf("%+#lp\n", sentry);
 	if(m < 0) return 2;
+#ifdef __riscv_zcheripurecap
+  void *sentry_invalid = cheri_high_set(sentry, cheri_high_get(sentry));
+#else
 	void *sentry_invalid = cheri_tag_clear(sentry);
+#endif
 	m =  printf("%+#lp\n", sentry_invalid);
 	if(m < 0) return 2;
+#if defined(__riscv_zcherilevels)
+	void *sentry_invalid_local = cheri_perms_clear(sentry_invalid, CHERI_PERM_CAPABILITY_LEVEL);
+	m =  printf("%+#lp\n", sentry_invalid_local);
+	if(m < 0) return 2;
+#elif !defined (__riscv_zcheripurecap)
 	void *sentry_invalid_local = cheri_perms_clear(sentry_invalid, CHERI_PERM_GLOBAL);
 	m =  printf("%+#lp\n", sentry_invalid_local);
 	if(m < 0) return 2;
+#endif
 	return 0;
 }
 
 int test_auxv(void) {
-	void *entry = getauxptr(AT_CHERI_SEAL_CAP);
+	void *entry;
+	(void)entry;
+#ifndef __riscv_zcheripurecap
+	entry = getauxptr(AT_CHERI_SEAL_CAP);
 	int m =  printf("%+#lp\n", entry);
 	if(m < 0) return 2;
+#endif
+#ifdef CMPT_ID_PERMS
 	entry = getauxptr(AT_CHERI_CID_CAP);
 	m =  printf("%+#lp\n", entry);
 	if(m < 0) return 2;
+#endif
 	return 0;
 }
 

@@ -18,6 +18,8 @@ static void *copy_bytes(register void * c0, register void *c1, register size_t x
 	__asm__ volatile ("b memcpy\n");
 #elif defined(__x86_64__)
 	__asm__ volatile ("jmp memcpy\n");
+#elif defined(__riscv)
+	__asm__ volatile ("tail memcpy\n");
 #else
 #error "Not implemented"
 #endif

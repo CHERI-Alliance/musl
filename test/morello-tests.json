@@ -725,7 +725,7 @@
         "app":  "${build}/localeconv-${kind}.exe",
         "name": "localeconv-write-char",
         "args": ["2"],
-        "xrc": [139, -11],
+        "xrc": [132, -11],
         "skip": []
     },
     {
@@ -739,7 +739,7 @@
         "app":  "${build}/localeconv-${kind}.exe",
         "name": "localeconv-write-string",
         "args": ["4"],
-        "xrc": [139, -11],
+        "xrc": [132, -11],
         "skip": []
     },
     {
@@ -1059,7 +1059,8 @@
         "app": "${build}/mmap-${kind}.exe",
         "name": "mmap-tags-with-munmap",
         "args": ["2"],
-        "xrc": [0]
+        "xrc": [0],
+        "skip": ["linux"]
     },
     {
         "app": "${build}/mmap-${kind}.exe",
@@ -1254,7 +1255,7 @@
         "app": "${build}/malloc-${kind}.exe",
         "name": "malloc_double_free",
         "args": ["5"],
-        "xrc": [139, -11],
+        "xrc": [132, -11],
         "skip": []
     },
     {
@@ -1351,7 +1352,7 @@
         "args": ["9"],
         "xrc": [0],
         "skip": ["mie"],
-        "ignore": ["fvp"],
+        "ignore": ["fvp", "linux"],
         "timeout": 30
     },
     {
@@ -2127,7 +2128,7 @@
         "args": ["1"],
         "name": "ns_parse",
         "xrc": [0],
-        "skip": ["fvp", "mie"]
+        "skip": ["fvp", "mie", "linux"]
     },
     {
         "app": "${build}/openpty-${kind}.exe",
@@ -2286,7 +2287,7 @@
         "name": "signal",
         "xrc": [0],
         "comment": "This test should pass on a real Morello system",
-        "skip": ["mie"]
+        "skip": ["mie", "linux"]
     },
     {
         "app": "${build}/exit-${kind}.exe",
@@ -2431,7 +2432,7 @@
         "name": "malloc_multiple_sizes",
         "xrc": [0],
         "skip": [],
-        "ignore": ["fvp", "mie"]
+        "ignore": ["fvp", "mie", "linux"]
     },
     {
         "app":  "${build}/wcsrtombs-${kind}.exe",

@@ -1,3 +1,4 @@
+#ifdef CMPT_SUPPORTED
 #include <cmpt.h>
 #include <stdio.h>
 #include <sys/auxv.h>
@@ -102,3 +103,9 @@ int main(int argc, char** argv)
 	printf("CMPT DONE\n");
 	return 0;
 }
+#else
+int main(int argc, char** argv) {
+	// CHERI-RISCV does not support c18n yet so deliberately fail here for visibility.
+	return 1;
+}
+#endif

@@ -24,12 +24,22 @@ int main(int argc, char *argv[])
 	 * so we load it and keep going forward to reach the PLT
 	 */
 	char **plt;
+#if defined(__arch64__)
 	__asm__ (
 	".weak __dso_handle\n"
 	".hidden __dso_handle\n"
 	"	adrp %0, __dso_handle\n"
 	"	add %0, %0, #:lo12:__dso_handle\n"
 	: "=C" (plt) : : "memory");
+#elif defined(__riscv)
+  __asm__(
+	".weak __dso_handle\n"
+	".hidden __dso_handle\n"
+	" llc %0, __dso_handle\n"
+	: "=C"(plt) : : "memory");
+#else
+#error "Not implemented"
+#endif
 
 	plt = __builtin_align_up(plt, 16);
 	while (*plt != (char *) printf) {plt++;}

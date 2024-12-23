@@ -25,6 +25,11 @@ static void jump_to_c(void) {
 #define UC_MCONTEXT_REGS(__ctx) (__ctx.gregs)
 #define UC_MCONTEXT_PC(__ctx) (UC_MCONTEXT_REGS(__ctx)[REG_RIP])
 #define UC_MCONTEXT_SP(__ctx) (UC_MCONTEXT_REGS(__ctx)[REG_RSP])
+#elif defined(__riscv)
+#define UC_MCONTEXT_NREGS 32
+#define UC_MCONTEXT_REGS(__ctx) (__ctx.__gregs)
+#define UC_MCONTEXT_PC(__ctx) (UC_MCONTEXT_REGS(__ctx)[REG_PC])
+#define UC_MCONTEXT_SP(__ctx) (UC_MCONTEXT_REGS(__ctx)[REG_SP])
 #else
 #error "Please add support for this architecture"
 #endif
@@ -35,10 +40,10 @@ static void catcher(int sig, siginfo_t *si, void *ctx) {
 	ucontext_t *uc = ctx;
 
 	for (int k = 0; k < UC_MCONTEXT_NREGS; k++) {
-		printf("r%02d = %016lx\n", k, UC_MCONTEXT_REGS(uc->uc_mcontext)[k]);
+		printf("r%02d = %016lx\n", k, (unsigned long)UC_MCONTEXT_REGS(uc->uc_mcontext)[k]);
 	}
-	printf("xsp = %016lx\n", UC_MCONTEXT_SP(uc->uc_mcontext));
-	printf(" pc = %016lx\n", UC_MCONTEXT_PC(uc->uc_mcontext));
+	printf("xsp = %016lx\n", (unsigned long)UC_MCONTEXT_SP(uc->uc_mcontext));
+	printf(" pc = %016lx\n", (unsigned long)UC_MCONTEXT_PC(uc->uc_mcontext));
 
 #if defined(__aarch64__)
 	unsigned long *data = (unsigned long *)uc->uc_mcontext.__reserved;
@@ -62,12 +67,16 @@ static void catcher(int sig, siginfo_t *si, void *ctx) {
 //	}
 #endif
 
+#if defined(__aarch64__)
 	/* The LSB of the PC should not be set otherwise an instruction abort will occur.
 	 * PSTATE.C64 is correct as:
 	 * C64 ISA - Remove LSB but PSTATE.C64 would have been set already by signal handler.
 	 * A64 ISA - LSB not set and PSTATE.C64 would not have been set by signal handler.
 	 */
 	UC_MCONTEXT_PC(uc->uc_mcontext) = (unsigned long) __builtin_cheri_address_get(jump_to_c) & ~0x1;
+#else
+	UC_MCONTEXT_PC(uc->uc_mcontext) = (uintptr_t)&jump_to_c;
+#endif
 }
 
 int main(void) {

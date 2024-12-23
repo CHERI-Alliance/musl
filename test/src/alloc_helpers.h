@@ -15,6 +15,12 @@
 #define BAD_TEST_NUMBER 10
 
 static const unsigned long USER_PTR_PERMS_PRESENT =
+#if defined(__riscv_zcheripurecap)
+    __CHERI_CAP_PERMISSION_READ__ |
+    __CHERI_CAP_PERMISSION_WRITE__ |
+    __CHERI_CAP_PERMISSION_CAPABILITY__ |
+    __CHERI_CAP_PERMISSION_LOAD_MUTABLE__;
+#else
 #ifdef __ARM_CAP_PERMISSION_MUTABLE_LOAD__
     __ARM_CAP_PERMISSION_MUTABLE_LOAD__ |
 #endif
@@ -22,8 +28,12 @@ static const unsigned long USER_PTR_PERMS_PRESENT =
     __CHERI_CAP_PERMISSION_PERMIT_STORE__ |
     __CHERI_CAP_PERMISSION_PERMIT_STORE_CAPABILITY__ |
     __CHERI_CAP_PERMISSION_PERMIT_LOAD_CAPABILITY__;
+#endif
 
 static const unsigned long USER_PTR_PERMS_REMOVED =
+#if defined(__riscv_zcheripurecap)
+	__CHERI_CAP_PERMISSION_EXECUTE__;
+#else
 #ifdef __ARM_CAP_PERMISSION_EXECUTIVE__
 	__ARM_CAP_PERMISSION_EXECUTIVE__ |
 #endif
@@ -33,7 +43,8 @@ static const unsigned long USER_PTR_PERMS_REMOVED =
 #ifdef __ARM_CAP_PERMISSION_BRANCH_SEALED_PAIR__
 	__ARM_CAP_PERMISSION_BRANCH_SEALED_PAIR__ |
 #endif
-    __CHERI_CAP_PERMISSION_PERMIT_EXECUTE__;
+	__CHERI_CAP_PERMISSION_PERMIT_EXECUTE__;
+#endif
 
 inline static void testptr_aligned(void* ptr, size_t alloc_size, size_t alignment) {
     if (!ptr) {

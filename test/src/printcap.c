@@ -53,13 +53,13 @@ static int test_cap_max(void)
 static int test_cap_sealed(void)
 {
 	void *fun;
-#if defined(__CHERI_PURE_CAPABILITY__)
+#if defined(__CHERI_PURE_CAPABILITY__) && defined(__aarch64__)
 	__asm__ volatile ("adrp    %0, test_cap_sealed" : "+C"(fun));
 	__asm__ volatile ("add     %0, %0, :lo12:test_cap_sealed" : "+C"(fun));
 	__asm__ volatile ("seal %0, %0, LPB" : "+C"(fun));
 #else
 	// This is not LPB but RB.
-	fun = (void*)__builtin_cheri_seal_entry(fun);
+	fun = (void*)__builtin_cheri_seal_entry(test_cap_sealed);
 #endif
 	int n = printf("%#p\n", fun);
 	if(n < 0) return 1;
@@ -84,8 +84,12 @@ static int test_cap_sentry(void)
 static int test_cap_sealed_invalid(void)
 {
 	void *fun = (void *)test_cap_sealed;
+#ifdef __riscv_zcheripurecap
+	fun = __builtin_cheri_copy_to_high(fun, __builtin_cheri_copy_from_high(fun));
+#else
 	fun = __builtin_cheri_tag_clear(fun);
-#if defined(__CHERI_PURE_CAPABILITY__)
+#endif
+#if defined(__CHERI_PURE_CAPABILITY__) && defined(__aarch64__)
 	__asm__ volatile ("seal %0, %0, LPB" : "+C"(fun));
 #else
 	// This is not LPB but RB.

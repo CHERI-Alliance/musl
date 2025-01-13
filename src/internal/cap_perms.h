@@ -13,6 +13,12 @@
 #endif
 #endif
 
+#if !defined(__riscv_zcherilevels)
+#define __CHERI_CAP_PERMISSION_ELEVATE_LEVEL__ 0
+#define __CHERI_CAP_PERMISSION_STORE_LEVEL__ 0
+#define __CHERI_CAP_PERMISSION_CAPABILITY_LEVEL__ 0
+#endif
+
 /**
  * ROOT_CAP_PERMS
  */
@@ -29,6 +35,11 @@
  */
 #if defined(__riscv_zcheripurecap)
 
+/*
+ * These are masks for acperm. __CHERI_CAP_PERMISSION_CAPABILITY_LEVEL__
+ * means that we don't strip CL from the input capability. It doesn't mean
+ * that CL is required.
+ */
 #ifdef __CHERI_BW_CAP_PERMISSION_CAPABILITY__
 #define READ_CAP_PERMS \
 	(__CHERI_BW_CAP_PERMISSION_READ__ | \
@@ -36,6 +47,8 @@
 #else
 #define READ_CAP_PERMS \
 	(__CHERI_CAP_PERMISSION_LOAD_MUTABLE__ | \
+	 __CHERI_CAP_PERMISSION_ELEVATE_LEVEL__ | \
+	 __CHERI_CAP_PERMISSION_CAPABILITY_LEVEL__ | \
 	 __CHERI_CAP_PERMISSION_READ__ | \
 	 __CHERI_CAP_PERMISSION_CAPABILITY__)
 #endif
@@ -63,6 +76,8 @@
 #else
 #define WRITE_CAP_PERMS \
 	(__CHERI_CAP_PERMISSION_WRITE__ | \
+	 __CHERI_CAP_PERMISSION_STORE_LEVEL__ | \
+	 __CHERI_CAP_PERMISSION_CAPABILITY_LEVEL__ | \
 	 __CHERI_CAP_PERMISSION_CAPABILITY__)
 #endif
 #else

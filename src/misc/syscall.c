@@ -6,7 +6,7 @@
 
 #undef syscall
 
-intptr_t syscall(long n, ...)
+intptr_t __real_syscall(long n, ...)
 {
 	va_list ap;
 	syscall_arg_t a,b,c,d,e,f;

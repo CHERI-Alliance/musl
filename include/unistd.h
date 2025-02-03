@@ -177,7 +177,19 @@ void setusershell(void);
 void endusershell(void);
 char *getusershell(void);
 int acct(const char *);
+#ifndef __CHERI_PURE_CAPABILITY__
 intptr_t syscall(long, ...);
+#define __real_syscall syscall
+#else
+intptr_t __real_syscall(long, ...);
+#define __chericast_sc(X) ((intptr_t)(X))
+#define __chericast_syscall(nr, a, b, c, d, e, f, ...) \
+	__real_syscall(__chericast_sc(nr), __chericast_sc(a), \
+		__chericast_sc(b), __chericast_sc(c), __chericast_sc(d), \
+		__chericast_sc(e), __chericast_sc(f))
+#define syscall(nr, args...) __chericast_syscall(nr, ##args, \
+		0, 0, 0, 0, 0, 0, 0)
+#endif
 int execvpe(const char *, char *const [], char *const []);
 int issetugid(void);
 int getentropy(void *, size_t);

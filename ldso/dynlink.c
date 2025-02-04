@@ -1752,7 +1752,14 @@ static void reloc_all(struct dso *p)
 	dynv_entry dyn_null = {0}, *dyn[DYN_CNT];
 	for (; p; p=p->next) {
 		if (p->relocated) continue;
-		PROCESS_CAPRELOCS((void *)p->dynv, p->base, p->rw_capability, p->base);
+		/*
+		 * Cap relocs for ldso where processed in _dlstart_c().
+		 * Doing this again would reset global variables. All
+		 * other objects are properly protected by ->relocated.
+		 * and statically linked programs never get here.
+		 */
+		if (p != &ldso)
+			PROCESS_CAPRELOCS((void *)p->dynv, p->base, p->rw_capability, p->base);
 		decode_dyn_vec(p->dynv, dyn, DYN_CNT, &dyn_null);
 
 #ifdef __CHERI_PURE_CAPABILITY__

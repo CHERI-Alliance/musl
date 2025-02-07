@@ -1509,7 +1509,7 @@ static struct dso *load_library(const char *name, struct dso *needed_by)
 	 * threads to obtain copies of both the new TLS, and an
 	 * extended DTV capable of storing an additional slot for
 	 * the newly-loaded DSO. */
-	alloc_size = sizeof *p + strlen(pathname) + 1;
+	alloc_size = sizeof *p + strlen(pathname) + sizeof(uintptr_t);
 	if (runtime && temp_dso.tls.image) {
 		size_t per_th = temp_dso.tls.size + temp_dso.tls.align
 			+ sizeof(void *) * (tls_cnt+3);

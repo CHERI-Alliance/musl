@@ -3326,6 +3326,8 @@ enum
 #define R_RISCV_CHERI_CJAL                     199
 #define R_RISCV_CHERI_CCALL                    200
 #define R_RISCV_CHERI_RVC_CJUMP                201
+#define R_RISCV_CHERI_RELATIVE                 202
+#define R_RISCV_CHERI_JUMP_SLOT                203
 
 #ifdef __cplusplus
 }

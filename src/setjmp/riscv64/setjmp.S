@@ -76,3 +76,6 @@ setjmp:
 	li a0, 0
 	ret
 #endif
+.size __setjmp, .-__setjmp
+.size _setjmp,  .-_setjmp
+.size setjmp,   .-setjmp

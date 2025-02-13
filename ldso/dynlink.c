@@ -58,7 +58,7 @@ static void (*error)(const char *, ...) = error_noop;
 struct debug {
 	int ver;
 	void *head;
-	void (*bp)(void);
+	unsigned long bp;
 	int state;
 	void *base;
 };
@@ -2493,7 +2493,7 @@ void __dls3(uintptr_t *sp, size_t *auxv)
 	runtime = 1;
 
 	debug.ver = 1;
-	debug.bp = dl_debug_state;
+	debug.bp = (unsigned long)dl_debug_state;
 	debug.head = head;
 	debug.base = ldso.base;
 	debug.state = RT_CONSISTENT;

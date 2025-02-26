@@ -38,6 +38,8 @@ static int fstatat_statx(int fd, const char *restrict path, struct stat *restric
 
 	int ret = __syscall(SYS_statx, fd, path, flag, 0x7ff, &stx);
 	if (ret) return ret;
+	if (!st)
+		return -EFAULT;
 
 	*st = (struct stat){
 		.st_dev = makedev(stx.stx_dev_major, stx.stx_dev_minor),
@@ -103,6 +105,8 @@ static int fstatat_kstat(int fd, const char *restrict path, struct stat *restric
 	else ret = __syscall(SYS_fstatat, fd, path, &kst, flag);
 
 	if (ret) return ret;
+	if (!st)
+		return -EFAULT;
 
 	*st = (struct stat){
 		.st_dev = kst.st_dev,

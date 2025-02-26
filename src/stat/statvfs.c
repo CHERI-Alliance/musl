@@ -4,7 +4,6 @@
 
 static int __statfs(const char *path, struct statfs *buf)
 {
-	*buf = (struct statfs){0};
 #ifdef SYS_statfs64
 	return syscall(SYS_statfs64, path, sizeof *buf, buf);
 #else
@@ -14,7 +13,6 @@ static int __statfs(const char *path, struct statfs *buf)
 
 static int __fstatfs(int fd, struct statfs *buf)
 {
-	*buf = (struct statfs){0};
 #ifdef SYS_fstatfs64
 	return syscall(SYS_fstatfs64, fd, sizeof *buf, buf);
 #else
@@ -45,6 +43,8 @@ int statvfs(const char *restrict path, struct statvfs *restrict buf)
 {
 	struct statfs kbuf;
 	if (__statfs(path, &kbuf)<0) return -1;
+	if (!buf)
+		return -EFAULT;
 	fixup(buf, &kbuf);
 	return 0;
 }
@@ -53,6 +53,8 @@ int fstatvfs(int fd, struct statvfs *buf)
 {
 	struct statfs kbuf;
 	if (__fstatfs(fd, &kbuf)<0) return -1;
+	if (!buf)
+		return -EFAULT;
 	fixup(buf, &kbuf);
 	return 0;
 }

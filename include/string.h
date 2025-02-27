@@ -108,7 +108,7 @@ char *strcasestr(const char *, const char *);
 void *memrchr(const void *, int, size_t);
 void *mempcpy(void *, const void *, size_t);
 #ifndef __cplusplus
-char *basename();
+char *basename(const char *);
 #endif
 #endif
 

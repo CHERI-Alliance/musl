@@ -3,7 +3,7 @@
 #include <limits.h>
 #include "cheri_helpers.h"
 
-char *basename(char *s)
+char *basename(const char *s)
 {
 	size_t i, sz;
 	static char d[PATH_MAX];

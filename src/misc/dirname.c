@@ -3,7 +3,7 @@
 #include <limits.h>
 #include "cheri_helpers.h"
 
-char *dirname(char *s)
+char *dirname(const char *s)
 {
 	size_t i;
 	static char d[PATH_MAX];

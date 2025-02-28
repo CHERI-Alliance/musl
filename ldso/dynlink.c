@@ -2608,6 +2608,7 @@ static void *addr2dso(size_t a)
 static void *do_dlsym(struct dso *p, const char *s, void *ra)
 {
 	int use_deps = 0;
+	void *ret;
 	if (p == head || p == RTLD_DEFAULT) {
 		p = head;
 	} else if (p == RTLD_NEXT) {
@@ -2627,7 +2628,15 @@ static void *do_dlsym(struct dso *p, const char *s, void *ra)
 		return __tls_get_addr((tls_mod_off_t []){def.dso->tls_id, def.sym->st_value-DTP_OFFSET});
 	if (DL_FDPIC && (def.sym->st_info&0xf) == STT_FUNC)
 		return def.dso->funcdescs + (def.sym - def.dso->syms);
-	return laddr(def.dso, def.sym->st_value);
+	ret = laddr(def.dso, def.sym->st_value);
+	if (is_sym_in_writable_segment(def.dso, def.sym))
+		ret = set_rw_cap(def.dso, ret);
+#if defined(__CHERI_PURE_CAPABILITY__)
+	/* FIXCHERI: This is wrong with tight function bounds. */
+	if ((def.sym->st_info & 0xf) != STT_FUNC)
+		ret = __builtin_cheri_bounds_set(ret, def.sym->st_size);
+#endif
+	return ret;
 }
 
 int dladdr(const void *addr_arg, Dl_info *info)

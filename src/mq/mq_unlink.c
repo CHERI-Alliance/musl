@@ -5,7 +5,7 @@
 int mq_unlink(const char *name)
 {
 	int ret;
-	if (*name == '/') name++;
+	if (name && *name == '/') name++;
 	ret = __syscall(SYS_mq_unlink, name);
 	if (ret < 0) {
 		if (ret == -EPERM) ret = -EACCES;

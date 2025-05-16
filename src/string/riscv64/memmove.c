@@ -1,3 +1,3 @@
 #if !defined(__CHERI_PURE_CAPABILITY__)
-#include "../memcpy.c"
+#include "../memmove.c"
 #endif

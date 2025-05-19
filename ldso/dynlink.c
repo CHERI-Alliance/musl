@@ -652,29 +652,31 @@ static void do_relocs(struct dso *dso, size_t *rel, size_t rel_size, size_t stri
 			reloc_addr = set_rw_cap(dso, reloc_addr);
 			*reloc_addr = cap;
 #else
-			char *v_addr = base_rx + ((bakewell_reloc_cap_t *)reloc_addr)->address;
-			size_t len = ((bakewell_reloc_cap_t *)reloc_addr)->length;
-			size_t perms = ((bakewell_reloc_cap_t *)reloc_addr)->perms;
+			size_t offset = __builtin_cheri_address_get(*(void **)reloc_addr);
+			size_t len = __builtin_cheri_length_get(*(void **)reloc_addr);
+			size_t perms = __builtin_cheri_perms_get(*(void **)reloc_addr);
+			size_t is_sealed = __builtin_cheri_sealed_get(*(void **)reloc_addr);
+			char *v_addr = base_rx + offset;
+			const bool is_fn = perms & __CHERI_CAP_PERMISSION_EXECUTE__;
+			const bool is_rw = perms & __CHERI_CAP_PERMISSION_WRITE__;
 			char *cap;
-			char *cap_rx = __builtin_cheri_bounds_set_exact(v_addr, len);
-			char *cap_rw = __builtin_cheri_bounds_set_exact(set_rw_cap(dso, v_addr), len);
+			char *cap_rx = v_addr;
+			char *cap_rw = set_rw_cap(dso, v_addr);
 
-			switch (perms) {
-				case BAKEWELL_RELA_PERM_R:
-					cap = __builtin_cheri_perms_and(cap_rx, READ_CAP_PERMS);
-					break;
-				case BAKEWELL_RELA_PERM_RW:
-					cap = __builtin_cheri_perms_and(cap_rw, READ_CAP_PERMS | WRITE_CAP_PERMS);
-					break;
-				case BAKEWELL_RELA_PERM_RX:
-					cap = __builtin_cheri_perms_and(cap_rx, READ_CAP_PERMS | EXEC_CAP_PERMS);
-					break;
-				default:
-					cap = __builtin_cheri_perms_and(cap_rx, 0);
+			if (is_fn){
+				cap = __builtin_cheri_perms_and(cap_rx, READ_CAP_PERMS | EXEC_CAP_PERMS);
+			} else if (is_rw) {
+				cap = __builtin_cheri_perms_and(cap_rw, READ_CAP_PERMS | WRITE_CAP_PERMS);
+			} else {
+				cap = __builtin_cheri_perms_and(cap_rx, READ_CAP_PERMS);
 			}
+
+			if (!is_fn)
+				cap = __builtin_cheri_bounds_set(cap, len);
+
 			cap += addend;
 
-			if(perms == BAKEWELL_RELA_PERM_RX)
+			if (is_fn && is_sealed)
 				cap = __builtin_cheri_seal_entry(cap);
 
 			reloc_addr = set_rw_cap(dso, reloc_addr);

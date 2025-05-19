@@ -197,27 +197,34 @@ hidden void _dlstart_c(uintptr_t *sp, size_t *dynv_raw)
 #if !defined(__CHERI_PURE_CAPABILITY__)
 		*rel_addr = base_rx + rela_ptr->r_addend;
 #else
-		rel_addr = __builtin_cheri_address_set(rw_cap, rel_addr);
-		char *v_address = base_rx + ((struct capreloc *)rel_addr)->capability_location;
-		size_t len = ((struct capreloc *)rel_addr)->size;
-		size_t perms = ((struct capreloc *)rel_addr)->permissions;
+		rel_addr = __builtin_cheri_address_set(rw_cap, rel_addr);	
+		size_t offset = __builtin_cheri_address_get(*(void **)rel_addr);
+		size_t len = __builtin_cheri_length_get(*(void **)rel_addr);
+		size_t perms = __builtin_cheri_perms_get(*(void **)rel_addr);
+		size_t is_sealed = __builtin_cheri_sealed_get(*(void **)rel_addr);
+		char *v_addr = base_rx + offset;
+		const bool is_fn = perms & __CHERI_CAP_PERMISSION_EXECUTE__;
+		const bool is_rw = perms & __CHERI_CAP_PERMISSION_WRITE__;
 		char *cap;
-		char *cap_rx = __builtin_cheri_bounds_set_exact(v_address, len);
-		char *cap_rw = __builtin_cheri_bounds_set_exact(
-			__builtin_cheri_address_set(rw_cap, v_address), len);
-		/* TODO are these the correct permissions? */
-		if ((perms & function_reloc_flag) == function_reloc_flag) {
-		    cap = __builtin_cheri_perms_and(cap_rx,
-				function_pointer_permissions_mask);
-		} else if ((perms &constant_reloc_flag) == constant_reloc_flag) {
-		    cap = __builtin_cheri_perms_and(cap_rx,
-				constant_pointer_permissions_mask);
+		char *cap_rx = v_addr;
+		char *cap_rw = __builtin_cheri_address_set(rw_cap, v_addr);
+
+		if (is_fn){
+			cap = __builtin_cheri_perms_and(cap_rx, READ_CAP_PERMS | EXEC_CAP_PERMS);
+		} else if (is_rw) {
+			cap = __builtin_cheri_perms_and(cap_rw, READ_CAP_PERMS | WRITE_CAP_PERMS);
+		} else {
+			cap = __builtin_cheri_perms_and(cap_rx, READ_CAP_PERMS);
 		}
-		else {
-		    cap = __builtin_cheri_perms_and(cap_rw,
-				global_pointer_permissions_mask);
-		}
+
+		if (!is_fn)
+			cap = __builtin_cheri_bounds_set(cap, len);
+
 		cap += rela_ptr->r_addend;
+
+		if (is_fn && is_sealed)
+			cap = __builtin_cheri_seal_entry(cap);
+
 		*rel_addr = cap;
 #endif
 	}

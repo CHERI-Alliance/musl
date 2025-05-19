@@ -82,6 +82,7 @@ __bakewell_init_static(int argc, char **argv, char **envp, auxv_entry *auxv)
 	}
 
 	cheri_init_globals_3(rw, rx, rx);
+	cheri_init_globals_cbuildcap(rw, rx, rx);
 }
 #endif
 

@@ -22,12 +22,18 @@ uintmax_t strtoumax(const char *__restrict, char **__restrict, int);
 intmax_t wcstoimax(const wchar_t *__restrict, wchar_t **__restrict, int);
 uintmax_t wcstoumax(const wchar_t *__restrict, wchar_t **__restrict, int);
 
-#if UINTPTR_MAX == UINT64_MAX
-#define __PRI64  "l"
+#ifdef __CHERI_PURE_CAPABILITY__
+#define __PRIPTR "P"
+#elif UINTPTR_MAX == UINT64_MAX
 #define __PRIPTR "l"
 #else
-#define __PRI64  "ll"
 #define __PRIPTR ""
+#endif
+
+#if UINTPTR_MAX == UINT64_MAX
+#define __PRI64  "l"
+#else
+#define __PRI64  "ll"
 #endif
 
 #define PRId8  "d"

@@ -34,7 +34,7 @@
 
 enum {
 	BARE, LPRE, LLPRE, HPRE, HHPRE, BIGLPRE,
-	ZTPRE, JPRE,
+	ZTPRE, JPRE, BIGPPRE,
 	STOP,
 	PTR, INT, UINT, ULLONG,
 	LONG, ULONG,
@@ -58,6 +58,7 @@ static const unsigned char states[]['z'-'A'+1] = {
 		S('m') = NOARG,
 		S('l') = LPRE, S('h') = HPRE, S('L') = BIGLPRE,
 		S('z') = ZTPRE, S('j') = JPRE, S('t') = ZTPRE,
+		S('P') = BIGPPRE,
 	}, { /* 1: l-prefixed */
 		S('d') = LONG, S('i') = LONG,
 		S('o') = ULONG, S('u') = ULONG, S('x') = ULONG, S('X') = ULONG,
@@ -95,6 +96,11 @@ static const unsigned char states[]['z'-'A'+1] = {
 		S('o') = UMAX, S('u') = UMAX,
 		S('x') = UMAX, S('X') = UMAX,
 		S('n') = PTR,
+	}, { /* 8: P-prefixed */
+		S('d') = UIPTR, S('i') = UIPTR,
+		S('o') = UIPTR, S('u') = UIPTR,
+		S('x') = UIPTR, S('X') = UIPTR,
+		S('n') = UIPTR,
 	}
 };
 

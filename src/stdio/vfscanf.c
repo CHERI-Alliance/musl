@@ -18,6 +18,7 @@
 #define SIZE_l   1
 #define SIZE_L   2
 #define SIZE_ll  3
+#define SIZE_P   4
 
 static void store_int(void *dest, int size, unsigned long long i)
 {
@@ -37,6 +38,9 @@ static void store_int(void *dest, int size, unsigned long long i)
 		break;
 	case SIZE_ll:
 		*(long long *)dest = i;
+		break;
+	case SIZE_P:
+		*(uintptr_t *)dest = i;
 		break;
 	}
 }
@@ -149,6 +153,9 @@ int vfscanf(FILE *restrict f, const char *restrict fmt, va_list ap)
 			break;
 		case 'L':
 			size = SIZE_L;
+			break;
+		case 'P':
+			size = SIZE_P;
 			break;
 		case 'd': case 'i': case 'o': case 'u': case 'x':
 		case 'a': case 'e': case 'f': case 'g':

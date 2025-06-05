@@ -276,29 +276,6 @@ struct fsxattr {
 					 SYNC_FILE_RANGE_WAIT_BEFORE | \
 					 SYNC_FILE_RANGE_WAIT_AFTER)
 
-/*
- * Flags for preadv2/pwritev2:
- */
-
 typedef int __bitwise __kernel_rwf_t;
-
-/* high priority request, poll if possible */
-#define RWF_HIPRI	((__kernel_rwf_t)0x00000001)
-
-/* per-IO O_DSYNC */
-#define RWF_DSYNC	((__kernel_rwf_t)0x00000002)
-
-/* per-IO O_SYNC */
-#define RWF_SYNC	((__kernel_rwf_t)0x00000004)
-
-/* per-IO, return -EAGAIN if operation would block */
-#define RWF_NOWAIT	((__kernel_rwf_t)0x00000008)
-
-/* per-IO O_APPEND */
-#define RWF_APPEND	((__kernel_rwf_t)0x00000010)
-
-/* mask of flags supported by the kernel */
-#define RWF_SUPPORTED	(RWF_HIPRI | RWF_DSYNC | RWF_SYNC | RWF_NOWAIT |\
-			 RWF_APPEND)
 
 #endif /* _LINUX_FS_H */

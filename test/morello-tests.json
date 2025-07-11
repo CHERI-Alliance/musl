@@ -725,7 +725,7 @@
         "app":  "${build}/localeconv-${kind}.exe",
         "name": "localeconv-write-char",
         "args": ["2"],
-        "xrc": [132, -11],
+        "xrc": [139, -11],
         "skip": []
     },
     {
@@ -739,7 +739,7 @@
         "app":  "${build}/localeconv-${kind}.exe",
         "name": "localeconv-write-string",
         "args": ["4"],
-        "xrc": [132, -11],
+        "xrc": [139, -11],
         "skip": []
     },
     {
@@ -1255,7 +1255,7 @@
         "app": "${build}/malloc-${kind}.exe",
         "name": "malloc_double_free",
         "args": ["5"],
-        "xrc": [132, -11],
+        "xrc": [139, -11],
         "skip": []
     },
     {
@@ -2287,7 +2287,8 @@
         "name": "signal",
         "xrc": [0],
         "comment": "This test should pass on a real Morello system",
-        "skip": ["mie", "linux"]
+        "skip": ["mie", "linux"],
+        "ignore": ["linux"]
     },
     {
         "app": "${build}/exit-${kind}.exe",

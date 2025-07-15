@@ -6,7 +6,11 @@
 
 #undef syscall
 
+#ifndef __CHERI_PURE_CAPABILITY__
+intptr_t syscall(long n, ...)
+#else
 intptr_t __real_syscall(long n, ...)
+#endif
 {
 	va_list ap;
 	syscall_arg_t a,b,c,d,e,f;

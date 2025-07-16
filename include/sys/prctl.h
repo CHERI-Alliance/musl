@@ -177,7 +177,17 @@ struct prctl_mm_map {
 #define PR_PAC_SET_ENABLED_KEYS 60
 #define PR_PAC_GET_ENABLED_KEYS 61
 
+#ifndef __CHERI_PURE_CAPABILITY__
 int prctl (int, ...);
+#else
+int __real_prctl (int, ...);
+#define __chericast_uptr(X) ((uintptr_t)(X))
+#define __chericast_prctl(op, a, b, c, d, ...)		 \
+	__real_prctl(op, __chericast_uptr(a),			 \
+		__chericast_uptr(b), __chericast_uptr(c),	 \
+		__chericast_uptr(d))
+#define prctl(op, args...) __chericast_prctl(op, ##args, 0, 0, 0, 0)
+#endif
 
 #ifdef __cplusplus
 }

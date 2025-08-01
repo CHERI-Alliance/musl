@@ -588,6 +588,14 @@ static void do_relocs(struct dso *dso, size_t *rel, size_t rel_size, size_t stri
 				if (ELF64_ST_TYPE(def.sym->st_info) == STT_GNU_IFUNC)
 					break;
 
+#ifdef __aarch64__
+				/*
+				 * Morello JUMP_SLOT addend is part of a RELATIVE-style
+				 * fragment for the PLT header, not the actual target.
+				 */
+				if (type == REL_PLT)
+					addend = 0;
+#endif
 				char *cap_rx = set_rx_cap(def.dso, sym_val);
 				char *cap_rw = set_rw_cap(def.dso, cap_rx);
 				char *cap;

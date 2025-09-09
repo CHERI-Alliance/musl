@@ -3,11 +3,16 @@ override SHELL = /bin/bash
 MORELLO_TESTS_PROCS = 8
 
 CONFIG ?= $(CURDIR)/../config.mak
+YOCTO ?= no
 
 -include $(CONFIG)
 
 override SYSROOT = $(prefix)
-override MUSLLIB = $(SYSROOT)/lib
+ifeq ($(YOCTO),yes)
+	override MUSLLIB = $(SYSROOT)/usr/lib
+else
+	override MUSLLIB = ${SYSROOT}/lib
+endif
 override TRIPLE = riscv64-codasip-linux-musl
 
 override MUSL_BITS_STATIC = crt1.o crti.o crtn.o libc.a rcrt1.o Scrt1.o

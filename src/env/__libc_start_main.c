@@ -82,7 +82,7 @@ weak_alias(libc_start_init, __libc_start_init);
 typedef int lsm2_fn(int (*)(int,char **,char **), int, char **, char **);
 static lsm2_fn libc_start_main_stage2;
 
-int __libc_start_main(int (*main)(int,char **,char **, char**), int argc,
+int __libc_start_main(int (*main)(int,char **,char **), int argc,
 	char **argv, char **envp, auxv_entry *auxv,
 	void (*init_dummy)(), void(*fini_dummy)(), void(*ldso_dummy)())
 {

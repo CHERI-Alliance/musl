@@ -92,7 +92,11 @@ TYPEDEF struct __mbstate_t { unsigned __opaque1, __opaque2; } mbstate_t;
 
 TYPEDEF struct __locale_struct * locale_t;
 
+#if defined(__CHERI_PURE_CAPABILITY) && defined(__linux)
+TYPEDEF struct __sigset_t { unsigned long __bits[128/sizeof(long)-2]; } sigset_t;
+#else
 TYPEDEF struct __sigset_t { unsigned long __bits[128/sizeof(long)]; } sigset_t;
+#endif
 
 STRUCT iovec { void *iov_base; size_t iov_len; };
 

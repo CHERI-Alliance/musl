@@ -557,6 +557,9 @@ typedef struct {
 } Elf64_Rela;
 
 
+typedef Elf32_Word	Elf32_Relr;
+typedef Elf64_Xword	Elf64_Relr;
+
 
 #define ELF32_R_SYM(val)		((val) >> 8)
 #define ELF32_R_TYPE(val)		((val) & 0xff)

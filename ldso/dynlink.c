@@ -1742,6 +1742,16 @@ void __libc_exit_fini()
 		if (dyn[DT_FINI_ARRAY] != &dyn_null) {
 			size_t n = DYN_VAL(dyn[DT_FINI_ARRAYSZ])/sizeof(char *);
 			char **fn = (char **)laddr(p, DYN_VAL(dyn[DT_FINI_ARRAY]))+n;
+#if defined(__CHERI_PURE_CAPABILITY__)
+			/*
+			 * Compiler workaround (problem observed with LLVM 18).
+			 * fn is derived from p->base, which for the main executable is
+			 * likely to be 0. Prevent the compiler reordering the pre-decrement
+			 * (below) and the +n (above) as this takes fn outside the
+			 * representable range.
+			 */
+			__asm__ __volatile__("" : "=C"(fn) : "0"(fn));
+#endif
 			while (n--) ((void (*)(void))*--fn)();
 		}
 #ifndef NO_LEGACY_INITFINI

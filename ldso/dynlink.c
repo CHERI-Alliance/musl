@@ -711,7 +711,7 @@ static void do_relocs(struct dso *dso, size_t *rel, size_t rel_size, size_t stri
 			*(size_t *)reloc_addr = def.dso->tls_id;
 			break;
 		case REL_DTPOFF:
-			*reloc_addr = tls_val + addend - DTP_OFFSET;
+			*(size_t *)reloc_addr = tls_val + addend - DTP_OFFSET;
 			break;
 #ifdef TLS_ABOVE_TP
 		case REL_TPOFF:

@@ -50,11 +50,12 @@ these options in your `cmake` command line:
 
 ### Setup the sysroot Environment
 
-For the linux kernel headers compile the kernel for CHERI.
-Then run
+To install the kernel headers, run the command below from the kernel's
+top-level directory. There is no need to configure or build the kernel
+before.
 
 ```
-	make <...> INSTALL_HDR_PATH=$SYSROOT/usr headers_install
+	make ARCH=riscv INSTALL_HDR_PATH=$SYSROOT/usr headers_install
 ```
 
 To build the musl headers go to the musl source directory and
@@ -107,12 +108,13 @@ runtime like this:
 		-DLLVM_ENABLE_PER_TARGET_RUNTIME_DIR=ON \
 		-DCMAKE_POSITION_INDEPENDENT_CODE=ON \
 		-DLLVM_LIBDIR_SUFFIX= \
+		-DLLVM_CMAKE_DIR=$INSTALL/lib/cmake/llvm \
 		-DCOMPILER_RT_INCLUDE_TESTS=OFF \
 		-DCOMPILER_RT_BUILD_XRAY=OFF \
 		-DCOMPILER_RT_BUILD_SANITIZERS=OFF \
 		-DCOMPILER_RT_BUILD_MEMPROF=OFF \
 		-DCOMPILER_RT_BUILD_LIBFUZZER=OFF \
-		-DCOMPILER_RT_BUILD_PROFILE=OFF \
+		-DCOMPILER_RT_BUILD_PROFILE=OFF
 	ninja -C buildrt install
 ```
 
@@ -126,11 +128,12 @@ In the musl source directory run
 		$MARCH $MABI -mlittle-endian \
 		--sysroot=$SYSROOT \
 		-isystem $INC \
-		-fused-ld=lld"
+		-fuse-ld=lld"
 	./configure \
 		CC="$INSTALL/bin/clang $XFLAGS" \
 		LD=$INSTALL/bin/lld \
-		--enable-shared --enable-static
+		--enable-shared --enable-static \
+		--prefix=/
 	make \
 		CC="$INSTALL/bin/clang $XFLAGS" \
 		LD=$INSTALL/bin/lld \

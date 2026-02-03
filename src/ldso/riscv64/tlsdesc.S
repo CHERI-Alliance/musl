@@ -1,3 +1,17 @@
+#ifdef __CHERI_PURE_CAPABILITY__
+.text
+.global __tlsdesc_static
+.hidden __tlsdesc_static
+.type __tlsdesc_static,%function
+__tlsdesc_static:
+    mv ca0, cnull
+    jr ct0
+
+.global __tlsdesc_dynamic
+.hidden __tlsdesc_dynamic
+.type __tlsdesc_dynamic,%function
+.set __tlsdesc_dynamic, __tlsdesc_static
+#else
 .text
 .global __tlsdesc_static
 .hidden __tlsdesc_static
@@ -30,3 +44,4 @@ __tlsdesc_dynamic:
 	ld t2,8(sp)
 	add sp,sp,16
 	jr t0
+#endif

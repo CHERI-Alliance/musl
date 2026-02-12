@@ -10,6 +10,7 @@
 __clone:
 #ifndef __CHERI_PURE_CAPABILITY__
 	# Save func and arg to stack
+	andi a1, a1, -16
 	addi a1, a1, -16
 	sd a0, 0(a1)
 	sd a3, 8(a1)

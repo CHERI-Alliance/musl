@@ -11,7 +11,7 @@ typedef Elf32_auxv_t auxv_entry;
 
 #include <features.h>
 
-hidden unsigned long __getauxval(unsigned long);
+unsigned long __getauxval(unsigned long);
 #ifdef __CHERI__
 hidden void *__getauxptr(unsigned long);
 #endif

@@ -4,6 +4,11 @@
 size_t malloc_usable_size(void *p)
 {
 	if (!p) return 0;
+#ifdef __CHERI_PURE_CAPABILITY__
+	rdlock();
+	p = expand_bounds(p);
+	unlock();
+#endif
 	struct meta *g = get_meta(p);
 	int idx = get_slot_index(p);
 	size_t stride = get_stride(g);

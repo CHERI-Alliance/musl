@@ -51,7 +51,7 @@ static inline int pntz(size_t p[2]) {
 
 static void cycle(size_t width, unsigned char* ar[], int n)
 {
-	unsigned char tmp[256];
+	void* tmp[16 * sizeof(void*)];
 	size_t l;
 	int i;
 

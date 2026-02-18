@@ -2011,7 +2011,11 @@ hidden void __dls2(unsigned char *base, uintptr_t *sp)
 	ldso.phnum = ehdr->e_phnum;
 	ldso.phdr = laddr(&ldso, ehdr->e_phoff);
 	ldso.phentsize = ehdr->e_phentsize;
-	search_aux_vec(auxv, &ldso_page_size, AT_PAGESZ);
+
+	auxv_entry* a;
+	if (!search_aux_vec(auxv, &a, AT_PAGESZ)) a_crash();
+	ldso_page_size = AUX_VAL(a);
+
 	kernel_mapped_dso(&ldso);
 	decode_dyn(&ldso);
 

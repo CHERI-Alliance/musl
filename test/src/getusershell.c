@@ -6,29 +6,30 @@
 int main(int argc, char **argv)
 {
     char *shell;
-    char *buffer = malloc(4096);
     FILE *shellFile = fopen("/etc/shells", "r");
 
     if(shellFile)
     {
-        while(fgets(buffer, 4096, shellFile) != NULL)
+        char buffer[1024];
+        shell = getusershell();
+        if(!shell) return 2;
+
+        while(fgets(buffer, sizeof(buffer), shellFile))
         {
             /* Remove trailing new line character from fgets. */
             buffer[strcspn(buffer, "\n")] = 0;
 
-            shell = getusershell();
-
-            if(shell == NULL) return 1;
-
-            /* getusershell returned something not found in /etc/shells. */
-            if(strcmp(buffer, shell) != 0)
+            /* We found a line in /etc/shells containing what getusershell() returned. */
+            if(!strcmp(buffer, shell))
             {
-                fprintf(stderr, "getusershell returned an unexpected result.\n");
-                return 2;
+                fclose(shellFile);
+                return 0;
             }
         }
 
         fclose(shellFile);
+        /* We did not find an entry in /etc/shells matching what getsuershell() returned. */
+        return 2;
     }
     else
     {
@@ -38,8 +39,6 @@ int main(int argc, char **argv)
         shell = getusershell();
         if(strcmp(shell, "/bin/csh") != 0) return 4;
     }
-
-    free(buffer);
 
     return 0;
 }

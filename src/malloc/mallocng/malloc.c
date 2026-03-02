@@ -439,6 +439,22 @@ success:
 
 	int r = mallocmap_insert(p, g->mem, &(ctx.capmap));
 	if (!r) {
+		// set the freed bit. we either hold the rdlock or the wrlock
+		// here. in any case, g will stay the active group and only be
+		// potentially replaced after we release the lock and a wrlock()
+		// is aquired subsequently. in a subsequent alloc path, freed_mask
+		// bits will be transferred to avail_mask. or, in the free path,
+		// the group will be potentially destroyed.
+		first = 1u<<idx;
+		if (MT) {
+			for (;;) {
+				mask = g->freed_mask;
+				if (a_cas(&g->freed_mask,mask,mask+first)==mask) break;
+			}
+		} else
+			g->freed_mask += first;
+
+		unlock();
 		return 0;
 	}
 #endif

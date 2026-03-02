@@ -22,7 +22,7 @@ hidden void _start_c(intptr_t *p, void *x, int argc, char *argv[], char *envp[],
 	__libc_start_main(main, argc, argv, envp, auxv);
 }
 #else
-hidden void_start_c(intptr_t *p)
+hidden void _start_c(intptr_t *p)
 {
 	int argc = p[0];
 	char **argv = (void *)(p+1);

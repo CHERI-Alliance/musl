@@ -691,6 +691,9 @@ static void do_relocs(struct dso *dso, size_t *rel, size_t rel_size, size_t stri
 			else *reloc_addr = base_rx + addend;
 			break;
 		case REL_COPY:
+#if defined(__CHERI_PURE_CAPABILITY__)
+			reloc_addr = set_rw_cap(dso, reloc_addr);
+#endif
 			memcpy(reloc_addr, sym_val, sym->st_size);
 			break;
 		case REL_OFFSET32:

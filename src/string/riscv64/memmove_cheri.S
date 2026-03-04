@@ -5,24 +5,7 @@
 
 #if defined(__CHERI_PURE_CAPABILITY__)
 
-#define __ASM_STR(x)	x
-
-#if __riscv_xlen == 64
-#define __REG_SEL(a, b)	__ASM_STR(a)
-#elif __riscv_xlen == 32
-#define __REG_SEL(a, b)	__ASM_STR(b)
-#else
-#error "Unexpected __riscv_xlen"
-#endif
-
-#define REG_L		__REG_SEL(ld, lw)
-#define REG_S		__REG_SEL(sd, sw)
-
-#define SZREG		__REG_SEL(8, 4)
-#define LGREG		__REG_SEL(3, 2)
-
-#define CSZREG		__REG_SEL(16, 8)
-#define CLGREG		__REG_SEL(4, 3)
+#include "asmdefs.h"
 
 .global memmove
 .type memmove,%function

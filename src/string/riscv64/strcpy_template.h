@@ -1,0 +1,354 @@
+/* SPDX-License-Identifier: GPL-2.0-only */
+
+#include "asmdefs.h"
+
+/*
+ * Template for the efficient ZBB based implementation
+ * of string copy functions:
+ * strcpy(), strncpy(), stpcpy(), stpncpy()
+ *
+ * Template arguments:
+ * - FUNCNAME: The name of the function to implement.
+ * - LIMITREG: If defined the register that contains the maximum
+ *       number of bytes to look at. If not defined only the NUL
+ *       byte terminates the loop.
+ * - RETEND: If defined return a pointer to the end of the string,
+ *       i.e. a pointer to the terminating NUL byte (if any) or
+ *       one byte after the end of the buffer. Otherwise the
+ *       return value points to the start of the original buffer.
+ * - ZEROPAD: If defined LIMITREG must be defined as well and the
+ *       remainder of the buffer is padded with zeros (even after
+ *       the first NUL byte. This is the required behaviour for
+ *       strncpy() and stpncpy().
+ *
+ * Stack usage:
+ * If ZEROPAD is defined the function must be called with a valid
+ * stack.
+ *
+ * Result:
+ * The template implements the entire function. If a limit is given
+ * you will get strncpy semantics, i.e. there is no forced NUL byte
+ * at the end.
+ *
+ * Registers:
+ * All temporary and all argument registers may be clobbered.
+ */
+
+#if defined(ZEROPAD) && !defined(LIMITREG)
+#error "Cannot ZEROPAD without LIMITREG"
+#endif
+
+#if defined(__CHERI_PURE_CAPABILITY__) || defined(LIMITREG)
+#define HAS_WORDLOOP_LIMIT	1
+#else
+#define HAS_WORDLOOP_LIMIT	0
+#endif
+
+#ifdef LIMITREG
+#define HAS_BYTELOOP_LIMIT	1
+#else
+#define HAS_BYTELOOP_LIMIT	0
+#endif
+
+#ifdef __CHERI_PURE_CAPABILITY__
+/*
+ * Calculate the number of bytes accessible by the capability
+ * \cap starting from its current address. If the capability
+ * address is beyond the end of the capability range jump to
+ * .Lpost_loop.
+ * Note that for capabilities where the bounds wrap around
+ * zero the byte at the current address may still be accessible.
+ */
+.macro capsize target cap tmp
+	gcbase		\target, c\cap
+	gclen		\tmp, c\cap
+	add		\target, \target, \tmp
+	bltu		\target, \cap, .Lpost_loop
+	sub		\target, \target, \cap
+.endm
+#endif	/* __CHERI_PURE_CAPABILITY__ */
+
+/*
+ * Calculate the number of bytes that can be accessed without
+ * crossing capability of ca0 or ca1. If given, the user provided
+ * limit is taken into account, too. If LIMITREG is defined target
+ * should initially contain the number of remaining bytes
+ * according to the user limit.
+ */
+.macro limit target tmp0 tmp1 tmp2
+#ifdef __CHERI_PURE_CAPABILITY__
+	capsize		\tmp0, t0, \tmp2
+	capsize		\tmp1, a1, \tmp2
+#ifndef LIMITREG
+	minu		\target, \tmp0, \tmp1
+#else
+	minu		\tmp0, \tmp0, \tmp1
+	minu		\target, \target, \tmp0
+#endif
+#endif
+.endm
+
+/*
+ * Copy one byte at a time until one of at most two
+ * conditions are met:
+ * - The address of the pointer in t0 reaches the address limit
+ *   in \limit (only if \haslimit is true).
+ * - The copied byte is NUL.
+ * If the limit is reached execution continues after the loop.
+ * Otherwise execution continues at .Ldone.
+ */
+.macro byte_loop haslimit limit
+.align 3
+100:
+.if \haslimit
+	beq		t0, \limit, 101f
+.endif
+	lbu		t6, (CREG(a1))
+	CINSN(addi)	CREG(t0), CREG(t0), 1
+	CINSN(addi)	CREG(a1), CREG(a1), 1
+	sb		t6, -1(CREG(t0))
+	bnez		t6, 100b
+#ifdef RETEND
+	CINSN(addi)	CREG(t0), CREG(t0), -1
+#endif
+	j		.Ldone
+101:
+.endm
+
+
+/* Actual function implementation. */
+.align 3
+SYM_FUNC_START(FUNCNAME)
+	/*
+	 * Use t0 for the destination pointer. We must return the
+	 * original value of a0 when done.
+	 */
+	mv		CREG(t0), CREG(a0)
+
+#if defined(ZEROPAD)
+	/*
+	 * We will call memset and thus must save the origin return
+	 * address. If RETEND is not defined we must also save the
+	 * original value of ca0 because we need that as the return value.
+	 */
+	CINSN(addi)	CREG(sp), CREG(sp), -2*CSZREG
+#ifndef RETEND
+	CREG_S		CREG(a0), (CREG(sp))
+#endif
+	CREG_S		CREG(ra), CSZREG(CREG(sp))
+#endif
+
+#ifdef LIMITREG
+	/*
+	 * Calculate user provided limit address for the destination
+	 * in t2. If the addtion overflows use the byte wise loop.
+	 */
+	add		t2, t0, LIMITREG
+	bltu		t2, t0, .Lpost_loop
+#endif	/* LIMITREG */
+
+.option push
+.option arch,+zbb
+	/* Align t0 to a machine word boundary. */
+	add		t1, t0, SZREG-1
+	andi		t1, t1, -SZREG
+	beqz		t1, .Lpost_loop
+#ifdef LIMITREG
+	bleu		t2, t1, .Lpost_loop
+#endif	/* LIMITREG */
+	byte_loop	1, t1
+
+	/* Check if the strings are aligned. */
+	addi		t1, a1, SZREG-1
+	andi		t1, t1, -SZREG
+	bne		t1, a1, .Lunaligned
+
+	/* Calculate end address for word sized aligned loop. */
+#ifdef LIMITREG
+	sub		t1, t2, t0
+#endif
+	limit		t1, t3, t4, t5
+#if HAS_WORDLOOP_LIMIT
+	andi		t1, t1, -SZREG
+	add		t1, t1, t0
+#endif
+
+	li		t3, -1
+.align 3
+.Lword_loop:
+#ifdef HAS_WORDLOOP_LIMIT
+	beq		t0, t1, .Lpost_loop
+#endif
+	REG_L		t6, (CREG(a1))
+	orc.b		t4, t6
+	bne		t4, t3, .Ldo_partial
+	REG_S		t6, (CREG(t0))
+	CINSN(addi)	CREG(t0), CREG(t0), SZREG
+	CINSN(addi)	CREG(a1), CREG(a1), SZREG
+	j		.Lword_loop
+
+.Lunaligned:
+	/*
+	 * On entry t0 is aligned, and the alignment boundary for
+	 * a1 is in t1. Calculate the byte difference in a3.
+	 */
+	sub		a3, t1, a1
+
+	/*
+	 * Calculate the number of available bytes in a2. If this
+	 * does not allow us to read enough bytes to align a1
+	 * use the standard bytewise loop.
+	 */
+#ifdef LIMITREG
+	sub		a2, t2, t0
+#endif
+#if HAS_WORDLOOP_LIMIT
+	limit		a2, t6, t4, t5
+	bleu		a2, a3, .Lpost_loop
+#endif
+
+	/*
+	 * Align _only_ a1 reading bytes into the word in t5.
+	 * Unused bits are set to one.
+	 */
+	li		t5, -1
+	beq		a1, t1, .Lunaligned_main
+.align 3
+.Lunaligned_pre_loop:
+	lbu		t6, (CREG(a1))
+	CINSN(addi)	CREG(a1), CREG(a1), 1
+#if __BYTE_ORDER != __LITTLE_ENDIAN
+	sll		t5, t5, 8
+	or		t5, t5, t6
+#else
+	xori		t5, t5, 255
+	or		t5, t5, t6
+	rori		t5, t5, 8
+#endif
+	bne		a1, t1, .Lunaligned_pre_loop
+
+.Lunaligned_main:
+	/*
+	 * Adjust available bytes by the alignment then convert
+	 * a3 from valid bytes to valid bits and caculate the number
+	 * of invalid bits in a4.
+	 */
+	sub		a2, a2, a3
+	sll		a3, a3, 3
+	li		a4, 8 * SZREG
+	sub		a4, a4, a3
+
+	/*
+	 * Calculate limit for the word sized loop.
+	 */
+#ifdef HAS_WORDLOOP_LIMIT
+	andi		a2, a2, -SZREG
+	add		a2, t0, a2
+#endif
+
+	/*
+	 * This is the main word at a time loop for unaligned strings.
+	 * Check that t5 does not contain a NUL byte before we enter
+	 * the loop
+	 */
+	li		t3, -1
+	orc.b		t6, t5
+	bne		t6, t3, .Lunaligned_post
+.align 3
+.Lunaligned_main_loop:
+#ifdef HAS_WORDLOOP_LIMIT
+	beq		t0, a2, .Lunaligned_post
+#endif
+	/*
+	 * Construct the next unaligned word in t6 by
+	 * combining the leftover high bits in t5 with the low bits
+	 * in the next word and store it.
+	 */
+#if __BYTE_ORDER != __LITTLE_ENDIAN
+	sll		t6, t5, a4
+#else
+	srl		t6, t5, a4
+#endif
+	REG_L		t5, (CREG(a1))
+	orc.b		t4, t5
+	bne		t4, t3, .Lunaligned_post
+#if __BYTE_ORDER != __LITTLE_ENDIAN
+	srl		t4, t5, a3
+#else
+	sll		t4, t5, a3
+#endif
+	or		t6, t6, t4
+
+	/* Now, store the word in t6. It cannot contain NUL bytes. */
+	REG_S		t6, (CREG(t0))
+	CINSN(addi)	CREG(t0), CREG(t0), SZREG
+	CINSN(addi)	CREG(a1), CREG(a1), SZREG
+	j		.Lunaligned_main_loop
+
+.Lunaligned_post:
+	srli		a3, a3, 3
+	neg		a3, a3
+	add		CREG(a1), CREG(a1), a3
+	j		.Lpost_loop
+
+.Ldo_partial:
+	/*
+	 * We have a NUL byte somewhere in t6. Store one byte at a time.
+	 * We were allowed to read the entire data, i.e. no range checks
+	 * are necessary.
+	 */
+#if __BYTE_ORDER != __LITTLE_ENDIAN
+	rev8		t6, t6
+#endif
+	zext.b		t5, t6
+	sb		t5, (CREG(t0))
+	beqz		t5, .Ldone
+.align 3
+.Lpartial_loop:
+	srli		t6, t6, 8
+	CINSN(addi)	CREG(t0), CREG(t0), 1
+	zext.b		t5, t6
+	sb		t5, (CREG(t0))
+	bnez		t5, .Lpartial_loop
+	j		.Ldone
+
+.option pop
+
+.align 3
+.Lpost_loop:
+	/* For the rest do a bytewise search. */
+	byte_loop	HAS_BYTELOOP_LIMIT, t2
+
+.Ldone:
+#if defined(ZEROPAD) || defined(RETEND)
+	mv		CREG(a0), CREG(t0)
+#endif
+
+#if defined(ZEROPAD)
+	/*
+	 * Call memset. a0 is already set. Assume that we can do a
+	 * relative call to memset here. This is required for the __pi
+	 * version, too.
+	 */
+	sub		a2, t2, a0
+	beqz		a2, .Lpad_done
+	mv		a1, x0
+	call		memset
+.Lpad_done:
+#endif	/* ZEROPAD */
+
+#if defined(ZEROPAD)
+	/*
+	 * Restore original value of ca0 as the return value if globbered
+	 * by memset. For the RETEND version, the return value of
+	 * memset is the correct return value of this function, too.
+	 */
+	CREG_L		CREG(ra), CSZREG(CREG(sp))
+#ifndef RETEND
+	CREG_L		CREG(a0), (CREG(sp))
+#endif
+	CINSN(addi)	CREG(sp), CREG(sp), 2*CSZREG
+#endif
+	ret
+
+SYM_FUNC_END(FUNCNAME)

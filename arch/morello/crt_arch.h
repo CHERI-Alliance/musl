@@ -109,7 +109,7 @@ __do_morello_relative_relocs(void *rw, void *rx)
 		"add	%1, %1, :lo12:__rela_dyn_end"  : "=C"(__rela_dyn_start), "=C"(__rela_dyn_end));
 
 	for (const Elf64_Rela *r = __rela_dyn_start; r != __rela_dyn_end; r++) {
-		if (r->r_info != R_MORELLO_RELATIVE) continue;
+		if (r->r_info != R_MORELLO_RELATIVE && r->r_info != R_MORELLO_FUNC_RELATIVE) continue;
 		void *cap = NULL;
 		void **loc = __builtin_cheri_address_set(rw, r->r_offset);
 		const morello_reloc_cap_t *u = (morello_reloc_cap_t *)loc;

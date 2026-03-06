@@ -639,6 +639,7 @@ static void do_relocs(struct dso *dso, size_t *rel, size_t rel_size, size_t stri
 			break;
 #ifdef __CHERI_PURE_CAPABILITY__
 		case REL_CAP_RELATIVE:
+		case REL_CAP_FUNC_RELATIVE:
 			cheri_do_caprelative(reloc_addr, addend, dso->base,
 					     dso->rx_capability, dso->rw_capability);
 			break;

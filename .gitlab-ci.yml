@@ -1,0 +1,4 @@
+include:
+  - local: .gitlab-ci-codasip.yml
+    rules:
+      - if: $CI_SERVER_HOST == "gitlab.codasip.com"

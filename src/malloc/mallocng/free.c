@@ -102,7 +102,7 @@ void free(void *p)
 {
 	if (!p) return;
 
-#ifdef __CHERI_PURE_CAPABILITY__
+#if defined(__CHERI_PURE_CAPABILITY__) && !defined(MALLOCNG_CHERI_UNRESTRICTED)
 	void *g_mem;
 	mallocmap_wrlock();
 	g_mem = mallocmap_delete(p, &(ctx.capmap));

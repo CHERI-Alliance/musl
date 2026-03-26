@@ -120,6 +120,11 @@ static const unsigned long USER_PTR_PERMS_REMOVED =
 	__CHERI_CAP_PERMISSION_PERMIT_EXECUTE__;
 #endif
 
+#ifdef MALLOCNG_CHERI_UNRESTRICTED
+static inline void *expand_bounds(void *p) {
+	return p;
+}
+#else
 static inline void *expand_bounds(void *p) {
 	mallocmap_rdlock();
 	struct group *g = (struct group *) mallocmap_find(p, &(ctx.capmap));
@@ -128,6 +133,7 @@ static inline void *expand_bounds(void *p) {
 
 	return __builtin_cheri_address_set(g, (size_t) p);
 }
+#endif
 
 static inline void *restrict_user_ptr(void *p, size_t len) {
 	return __builtin_cheri_perms_and(__builtin_cheri_bounds_set(p, len),
@@ -268,7 +274,11 @@ static inline void *enframe(struct meta *g, int idx, size_t n, int ctr, size_t a
 {
 	size_t stride = get_stride(g);
 	size_t slack = (stride-IB-n)/UNIT;
+#ifdef MALLOCNG_CHERI_UNRESTRICTED
+	unsigned char *p = (unsigned char *)g->mem + GRP_SIZE + stride*idx;
+#else
 	unsigned char *p = g->mem->storage + stride*idx;
+#endif
 	unsigned char *end = p+stride-IB;
 	// cycle offset within slot to increase interval to address
 	// reuse, facilitate trapping double-free.

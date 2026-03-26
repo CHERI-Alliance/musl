@@ -42,7 +42,7 @@ void *realloc(void *p, size_t n)
 	    && size_to_class(n)+1 >= g->sizeclass) {
 		set_size(p, end, n);
 
-#ifdef __CHERI_PURE_CAPABILITY__
+#if defined(__CHERI_PURE_CAPABILITY__) && !defined(MALLOCNG_CHERI_UNRESTRICTED)
 		p = restrict_user_ptr(p, n);
 		mallocmap_wrlock();
 		// XXX: mallocmap_update
@@ -70,7 +70,7 @@ void *realloc(void *p, size_t n)
 			end = g->mem->storage + (needed - GRP_SIZE) - IB;
 			*end = 0;
 			set_size(p, end, n);
-#ifdef __CHERI_PURE_CAPABILITY__
+#if defined(__CHERI_PURE_CAPABILITY__) && !defined(MALLOCNG_CHERI_UNRESTRICTED)
 			p = restrict_user_ptr(p, n);
 			mallocmap_wrlock();
 			// XXX: mallocmap_update

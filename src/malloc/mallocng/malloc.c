@@ -69,7 +69,7 @@ struct meta *alloc_meta(void)
 		ctx.pagesize = get_page_size();
 #endif
 
-#ifdef __CHERI_PURE_CAPABILITY__
+#if defined(__CHERI_PURE_CAPABILITY__) && !defined(MALLOCNG_CHERI_UNRESTRICTED)
 		mallocmap_create(1024, &(ctx.capmap));
 #endif
 
@@ -435,6 +435,7 @@ success:
 
 #ifdef __CHERI_PURE_CAPABILITY__
 	void *p = enframe(g, idx, n, ctr, align);
+#ifndef MALLOCNG_CHERI_UNRESTRICTED
 	p = restrict_user_ptr(p, n);
 
 	mallocmap_wrlock();
@@ -459,6 +460,7 @@ success:
 		unlock();
 		return 0;
 	}
+#endif
 #endif
 
 	unlock();

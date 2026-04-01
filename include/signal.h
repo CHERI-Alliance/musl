@@ -77,6 +77,11 @@ typedef struct sigaltstack stack_t;
 #define SEGV_PKUERR 4
 #define SEGV_MTEAERR 8
 #define SEGV_MTESERR 9
+#define SEGV_CAPTAGERR 10	/* Capability tag fault */
+#define SEGV_CAPSEALEDERR 11	/* Capability sealed fault */
+#define SEGV_CAPBOUNDSERR 12	/* Capability bounds fault */
+#define SEGV_CAPPERMERR 13	/* Capability permission fault */
+#define SEGV_CAPACCESSERR 14	/* Capability access fault */
 
 #define BUS_ADRALN 1
 #define BUS_ADRERR 2

@@ -1684,6 +1684,7 @@ static void reloc_all(struct dso *p)
 			long ret = __syscall(SYS_mprotect, laddr(p, p->relro_start),
 				p->relro_end-p->relro_start, PROT_READ);
 			if (ret != 0 && ret != -ENOSYS) {
+				errno = -ret;
 				error("Error relocating %s: RELRO protection failed: %m",
 					p->name);
 				if (runtime) longjmp(*rtld_fail, 1);

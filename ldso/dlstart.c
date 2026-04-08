@@ -214,9 +214,7 @@ hidden void _dlstart_c(uintptr_t *sp, size_t *dynv_raw)
 	/* Already sealed in the zcheripurecap case. */
 	dls2 = __builtin_cheri_seal_entry(dls2);
 #endif
-	/* FIXCHERI: This might bring "map" out of bounds. */
-	map = __builtin_cheri_address_set(map, base);
-	dls2((void *)map, (void *)rw_cap, sp, argc, argv, envp, (uintptr_t *)auxv);
+	dls2(base, (void *)map, (void *)rw_cap, sp, argc, argv, envp, (uintptr_t *)auxv);
 #else
 	dls2(base, sp);
 #endif

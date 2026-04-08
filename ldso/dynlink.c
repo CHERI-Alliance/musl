@@ -1907,11 +1907,15 @@ static void install_new_tls(void)
  * replaced later due to copy relocations in the main program. */
 
 #if defined(__CHERI_PURE_CAPABILITY__)
-hidden void __dls2(unsigned char *base, unsigned char *rw_cap, uintptr_t *sp, int argc, char **argv, char **envp, uintptr_t *auxv)
+hidden void __dls2(size_t base, unsigned char *map,
+		   unsigned char *rw_cap, uintptr_t *sp,
+		   int argc, char **argv, char **envp, uintptr_t *auxv)
 #else
-hidden void __dls2(unsigned char *base, uintptr_t *sp)
+hidden void __dls2(size_t base, uintptr_t *sp)
 #endif
 {
+	/* FIXCHERI: This may be out of bounds. */
+	__builtin_cheri_address_set(map, base);
 #if !defined(__CHERI_PURE_CAPABILITY__)
 	uintptr_t *auxv;
 	size_t argc = *sp;
@@ -1934,7 +1938,7 @@ hidden void __dls2(unsigned char *base, uintptr_t *sp)
 		ldso.loadmap = p2 ? p2 : p1;
 		ldso.base = laddr(&ldso, 0);
 	} else {
-		ldso.base = base;
+		ldso.base = map;
 #if defined(__CHERI_PURE_CAPABILITY__)
 		ldso.rw_capability = rw_cap;
 #endif

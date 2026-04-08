@@ -488,8 +488,7 @@ static void do_relocs(struct dso *dso, size_t *rel, size_t rel_size, size_t stri
 		if (skip_relative && IS_RELATIVE(rel[1], dso->syms)) continue;
 		type = R_TYPE(rel[1]);
 		if (type == REL_NONE) continue;
-
-		reloc_addr = laddr(dso, rel[0]);
+		reloc_addr = set_rw_cap(dso, laddr(dso, rel[0]));
 
 		if (stride > 2) {
 			addend = rel[2];
@@ -609,83 +608,13 @@ static void do_relocs(struct dso *dso, size_t *rel, size_t rel_size, size_t stri
 			do_reloc(dso, reloc_addr, sym_val + addend);
 #endif
 			break;
-		case REL_USYMBOLIC: {
-			size_t *temp = sym_val + addend;
-			memcpy(reloc_addr, &temp, sizeof(size_t *));
+		case REL_USYMBOLIC:
+			memcpy(reloc_addr, &(size_t){(size_t)sym_val + addend}, sizeof(size_t));
 			break;
-		}
-		case REL_RELATIVE: {
-#if defined(__CHERI_PURE_CAPABILITY__)
-#if !defined(__riscv_zcheripurecap)
-			/* aaelf64-morello reference on Elf64_Rela encoding:
-			https://github.com/ARM-software/abi-aa/blob/main/aaelf64-morello/aaelf64-morello.rst#445dynamic-linking-with-morello
-			*/
-			char *v_addr = base_rx + ((morello_reloc_cap_t *)reloc_addr)->address;
-			size_t len = ((morello_reloc_cap_t *)reloc_addr)->length;
-			size_t perms = ((morello_reloc_cap_t *)reloc_addr)->perms;
-			char *cap;
-			char *cap_rx = __builtin_cheri_bounds_set_exact(v_addr, len);
-			char *cap_rw = __builtin_cheri_bounds_set_exact(set_rw_cap(dso, v_addr), len);
-
-			switch (perms) {
-				case MORELLO_RELA_PERM_R:
-					cap = __builtin_cheri_perms_and(cap_rx,
-						__CHERI_CAP_PERMISSION_GLOBAL__ | READ_CAP_PERMS);
-					break;
-				case MORELLO_RELA_PERM_RW:
-					cap = __builtin_cheri_perms_and(cap_rw,
-						__CHERI_CAP_PERMISSION_GLOBAL__ | READ_CAP_PERMS | WRITE_CAP_PERMS);
-					break;
-				case MORELLO_RELA_PERM_RX:
-					cap = __builtin_cheri_perms_and(cap_rx,
-						__CHERI_CAP_PERMISSION_GLOBAL__ | READ_CAP_PERMS | EXEC_CAP_PERMS);
-					break;
-				default:
-					cap = __builtin_cheri_perms_and(cap_rx, 0);
-			}
-			cap += addend;
-
-			if(perms == MORELLO_RELA_PERM_RX)
-				cap = __builtin_cheri_seal_entry(cap);
-
-			reloc_addr = set_rw_cap(dso, reloc_addr);
-			*reloc_addr = cap;
-#else
-			size_t offset = __builtin_cheri_address_get(*(void **)reloc_addr);
-			size_t len = __builtin_cheri_length_get(*(void **)reloc_addr);
-			size_t perms = __builtin_cheri_perms_get(*(void **)reloc_addr);
-			size_t is_sealed = __builtin_cheri_sealed_get(*(void **)reloc_addr);
-			char *v_addr = base_rx + offset;
-			const bool is_fn = perms & __CHERI_CAP_PERMISSION_EXECUTE__;
-			const bool is_rw = perms & __CHERI_CAP_PERMISSION_WRITE__;
-			char *cap;
-			char *cap_rx = v_addr;
-			char *cap_rw = set_rw_cap(dso, v_addr);
-
-			if (is_fn){
-				cap = __builtin_cheri_perms_and(cap_rx, READ_CAP_PERMS | EXEC_CAP_PERMS);
-			} else if (is_rw) {
-				cap = __builtin_cheri_perms_and(cap_rw, READ_CAP_PERMS | WRITE_CAP_PERMS);
-			} else {
-				cap = __builtin_cheri_perms_and(cap_rx, READ_CAP_PERMS);
-			}
-
-			if (!is_fn)
-				cap = __builtin_cheri_bounds_set(cap, len);
-
-			cap += addend;
-
-			if (is_fn && is_sealed)
-				cap = __builtin_cheri_seal_entry(cap);
-
-			reloc_addr = set_rw_cap(dso, reloc_addr);
-			*reloc_addr = cap;
-#endif
-#else
-			do_reloc(dso, reloc_addr, base_rx + addend);
-#endif
+		case REL_RELATIVE:
+		case REL_FUNCREL:
+			*(size_t *)reloc_addr = dso->base + addend;
 			break;
-		}
 		case REL_SYM_OR_REL:
 			if (sym) *reloc_addr = sym_val + addend;
 			else *reloc_addr = base_rx + addend;

@@ -3341,7 +3341,7 @@ enum
 
 #define R_RISCV_CHERI_CAPTAB_PCREL_HI20        192
 #define R_RISCV_CHERI_CAPABILITY               193
-// 194 reserved for R_RISCV_CHERI_CAPABILITY_CALL
+#define R_RISCV_FUNC_RELATIVE                  194
 #define R_RISCV_CHERI_SIZE                     195
 #define R_RISCV_CHERI_TPREL_CINCOFFSET         196
 #define R_RISCV_CHERI_TLS_IE_CAPTAB_PCREL_HI20 197
@@ -3349,7 +3349,7 @@ enum
 #define R_RISCV_CHERI_CJAL                     199
 #define R_RISCV_CHERI_CCALL                    200
 #define R_RISCV_CHERI_RVC_CJUMP                201
-#define R_RISCV_CHERI_RELATIVE                 202
+// 202 reserved for deprecated R_RISCV_CHERI_RELATIVE
 
 #define EF_LARCH_ABI_MODIFIER_MASK    0x07
 #define EF_LARCH_ABI_SOFT_FLOAT       0x01

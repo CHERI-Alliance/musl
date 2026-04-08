@@ -9,7 +9,7 @@
 #include "reloc.h"
 #endif
 
-#include "cheri_init_globals_bw.h"
+#include "cheri_init_globals.h"
 
 /*
  * For CHERI the kernel passes most useful information in registers

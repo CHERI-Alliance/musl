@@ -2,7 +2,7 @@
 
 #if defined(__riscv_zcheripurecap)
 
-#include "cheri_init_globals_bw.h"
+#include "cheri_init_globals.h"
 
 #if defined(__CHERI_CAPABILITY_TABLE__) && (__CHERI_CAPABILITY_TABLE__ > 3)
 #define CAPRELOC_TIGHT_BOUNDS	1

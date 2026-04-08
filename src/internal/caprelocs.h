@@ -43,8 +43,25 @@
 	}									\
 } while (0)
 
+
+#ifdef __CHERI_CAP_PERMISSION_GLOBAL__
+#define __SANITIZE_DEFAULT_PERMS __CHERI_CAP_PERMISSION_GLOBAL__
+#else
+#define __SANITIZE_DEFAULT_PERMS 0
+#endif
+#define __SANITIZE_RX_PERMS \
+	(READ_CAP_PERMS | EXEC_CAP_PERMS | __SANITIZE_DEFAULT_PERMS)
+#define __SANITIZE_RW_PERMS \
+	(READ_CAP_PERMS | WRITE_CAP_PERMS | __SANITIZE_DEFAULT_PERMS)
+
+#define SANITIZE_CAPS(RX, RW) do {						\
+	(RX) = __builtin_cheri_perms_and((RX), __SANITIZE_RX_PERMS);		\
+	(RW) = __builtin_cheri_perms_and((RW), __SANITIZE_RW_PERMS);		\
+} while (0)
+
 #else
 
 #define PROCESS_CAPRELOCS(DYN, BASE, CAPRW, CAPRO)
+#define SANITIZE_CAPS(RX, RW)
 
 #endif

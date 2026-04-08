@@ -41,7 +41,7 @@ hidden void _dlstart_c(uintptr_t *sp, size_t *dynv_raw)
 	size_t *rel, rel_size, rel_count;
 	Rel_t *rel_ptr;
 	Rela_t *rela_ptr;
-	char *base_rx;
+	size_t base;
 #if !defined(__CHERI_PURE_CAPABILITY__)
 	auxv_entry *auxv;
 	int argc = *sp;
@@ -57,13 +57,20 @@ hidden void _dlstart_c(uintptr_t *sp, size_t *dynv_raw)
 		aux[auxv[i].a_type] = auxv + i;
 
 #ifdef __CHERI_PURE_CAPABILITY__
+	/*
+	 * We assume that AT_CHERI_{EXEC,INTERP}_RX_CAP is owning and that
+	 * AT_CHERI_RW_CAP includes all potentially writable sections
+	 * including RELO.
+	 */
 	const _Bool is_interpreter = (AUX_PTR(aux[AT_CHERI_INTERP_RW_CAP]) != NULL);
-	char *const rw_cap = AUX_PTR(aux[is_interpreter ?
+	char *rw_cap = AUX_PTR(aux[is_interpreter ?
 	                                 AT_CHERI_INTERP_RW_CAP :
 	                                 AT_CHERI_EXEC_RW_CAP]);
-	char *const rx_cap = AUX_PTR(aux[is_interpreter ?
+	char *map = AUX_PTR(aux[is_interpreter ?
 	                                 AT_CHERI_INTERP_RX_CAP :
 	                                 AT_CHERI_EXEC_RX_CAP]);
+	char *rx_cap = map;
+	SANITIZE_CAPS(rx_cap, rw_cap);
 #endif
 
 #if DL_FDPIC
@@ -80,21 +87,21 @@ hidden void _dlstart_c(uintptr_t *sp, size_t *dynv_raw)
 		 * displacement ELF loading was performed, but when ldso was
 		 * run as a command, finding the Ehdr is a heuristic: we
 		 * have to assume Phdrs start in the first 4k of the file. */
-		base_rx = AUX_PTR(aux[AT_BASE]);
-		if (!base_rx) {
-			base_rx = __builtin_align_down(AUX_PTR(aux[AT_PHDR]), 4096);
+		base = AUX_PTR(aux[AT_BASE]);
+		if (!base) {
+			base = __builtin_align_down(AUX_PTR(aux[AT_PHDR]), 4096);
 		}
 		segs = &fakeseg;
-		segs[0].addr = base_rx;
+		segs[0].addr = base;
 		segs[0].p_vaddr = 0;
 		segs[0].p_memsz = -1;
-		Ehdr *eh = (void *)base_rx;
-		Phdr *ph = (void *)(base_rx + eh->e_phoff);
+		Ehdr *eh = (void *)base;
+		Phdr *ph = (void *)(base + eh->e_phoff);
 		size_t phnum = eh->e_phnum;
 		size_t phent = eh->e_phentsize;
 		while (phnum-- && ph->p_type != PT_DYNAMIC)
 			ph = (void *)((size_t)ph + phent);
-		dynv = (void *)(base_rx + ph->p_vaddr);
+		dynv = (void *)(base + ph->p_vaddr);
 	}
 #endif
 
@@ -108,7 +115,7 @@ hidden void _dlstart_c(uintptr_t *sp, size_t *dynv_raw)
 		for (j=0; DYN_VAL(dyn[i])-segs[j].p_vaddr >= segs[j].p_memsz; j++);
 		DYN_VAL(dyn[i]) += segs[j].addr - segs[j].p_vaddr;
 	}
-	base_rx = 0;
+	base = 0;
 
 	const Sym *syms = DYN_PTR(dyn[DT_SYMTAB]);
 
@@ -137,14 +144,9 @@ hidden void _dlstart_c(uintptr_t *sp, size_t *dynv_raw)
 	 * virtual address in the PT_DYNAMIC program header. */
 
 	// AT_BASE is always a raw 64-bit value.
-	base_rx = AUX_PTR(aux[AT_BASE]);
-#ifdef __CHERI_PURE_CAPABILITY__
-	if (is_interpreter)
-		base_rx = __builtin_cheri_address_set(rx_cap,
-						      AUX_VAL(aux[AT_BASE]));
-#endif
+	base = (size_t)AUX_PTR(aux[AT_BASE]);
 
-	if (!base_rx) {
+	if (!base) {
 		size_t phnum = AUX_VAL(aux[AT_PHNUM]);
 		size_t phentsize = AUX_VAL(aux[AT_PHENT]);
 		Phdr *ph = AUX_PTR(aux[AT_PHDR]);
@@ -154,66 +156,68 @@ hidden void _dlstart_c(uintptr_t *sp, size_t *dynv_raw)
 #endif
 		for (i=phnum; i--; ph = (void *)((char *)ph + phentsize)) {
 			if (ph->p_type == PT_DYNAMIC) {
-				base_rx = (char*)dynv - ph->p_vaddr;
+				base = (size_t)dynv - ph->p_vaddr;
 				break;
 			}
 		}
 	}
 
-	PROCESS_CAPRELOCS(dynv, base_rx, rw_cap, rx_cap);
+	PROCESS_CAPRELOCS(dynv, base, rw_cap, rx_cap);
 
 	/* MIPS uses an ugly packed form for GOT relocations. Since we
 	 * can't make function calls yet and the code is tiny anyway,
 	 * it's simply inlined here. */
 	if (NEED_MIPS_GOT_RELOCS) {
 		size_t local_cnt = 0;
-		size_t *got = (void *)(base_rx + DYN_VAL(dyn[DT_PLTGOT]));
+		size_t *got = (void *)(base + DYN_VAL(dyn[DT_PLTGOT]));
 		for (i=0; dynv[i].d_tag; i++) if (dynv[i].d_tag==DT_MIPS_LOCAL_GOTNO)
 			local_cnt = dynv[i].d_tag;
-		for (i=0; i<local_cnt; i++) got[i] += (size_t)base_rx;
+		for (i=0; i<local_cnt; i++) got[i] += (size_t)base;
 	}
 
-	rel_ptr = (void *)(base_rx + DYN_VAL(dyn[DT_REL]));
+	rel_ptr = (void *)__builtin_cheri_address_set(rx_cap, (base + DYN_VAL(dyn[DT_REL])));
 	rel_count = DYN_VAL(dyn[DT_RELSZ]) / sizeof(Rel_t);
 	for (; rel_count; rel_count--, rel_ptr++) {
 		if (!IS_RELATIVE(rel_ptr->r_info, 0)) continue;
-		size_t **rel_addr = (void *)(base_rx + rel_ptr->r_offset);
-		*rel_addr = (void *)(base_rx + (size_t)*rel_addr);
+		size_t *rel_addr = (void *)__builtin_cheri_address_set(rw_cap, base + rel_ptr->r_offset);
+		*rel_addr = base + *rel_addr;
 	}
 
-	rela_ptr = (void *)(base_rx + DYN_VAL(dyn[DT_RELA]));
+	rela_ptr = (void *)__builtin_cheri_address_set(rx_cap, base+ DYN_VAL(dyn[DT_RELA]));
 	rel_count = DYN_VAL(dyn[DT_RELASZ]) / sizeof(Rela_t);
 	for (; rel_count; rel_count--, rela_ptr++) {
 		if (!IS_RELATIVE(rela_ptr->r_info, 0)) continue;
-		size_t *rel_addr = (void *)__builtin_cheri_address_set(rw_cap, base_rx + rela_ptr->r_offset);
-		*rel_addr = base_rx + rela_ptr->r_addend;
+		size_t *rel_addr = (void *)__builtin_cheri_address_set(rw_cap, base + rela_ptr->r_offset);
+		*rel_addr = base + rela_ptr->r_addend;
 	}
 
-	rel = (void *)(base_rx+DYN_VAL(dyn[DT_RELR]));
+	rel = (void *)__builtin_cheri_address_set(rx_cap, base+DYN_VAL(dyn[DT_RELR]));
 	rel_size = DYN_VAL(dyn[DT_RELRSZ]);
 	size_t *relr_addr = 0;
 	for (; rel_size; rel++, rel_size-=sizeof(size_t)) {
 		if ((rel[0]&1) == 0) {
-			relr_addr = (void *)(base_rx + rel[0]);
-			*relr_addr++ += (size_t)base_rx;
+			relr_addr = (void *)__builtin_cheri_address_set(rw_cap, base + rel[0]);
+			*relr_addr++ += (size_t)base;
 		} else {
 			for (size_t i=0, bitmap=rel[0]; bitmap>>=1; i++)
 				if (bitmap&1)
-					relr_addr[i] += (size_t)base_rx;
+					relr_addr[i] += (size_t)base;
 			relr_addr += 8*sizeof(size_t)-1;
 		}
 	}
 #endif
 
 	stage2_func dls2;
-	GETFUNCSYM(&dls2, __dls2, base_rx+DYN_VAL(dyn[DT_PLTGOT]));
+	GETFUNCSYM(&dls2, __dls2, base+DYN_VAL(dyn[DT_PLTGOT]));
 #if defined(__CHERI_PURE_CAPABILITY__)
 #if !defined(__riscv_zcheripurecap)
 	/* Already sealed in the zcheripurecap case. */
 	dls2 = __builtin_cheri_seal_entry(dls2);
 #endif
-	dls2((void *)base_rx, (void *)rw_cap, sp, argc, argv, envp, (uintptr_t *)auxv);
+	/* FIXCHERI: This might bring "map" out of bounds. */
+	map = __builtin_cheri_address_set(map, base);
+	dls2((void *)map, (void *)rw_cap, sp, argc, argv, envp, (uintptr_t *)auxv);
 #else
-	dls2((void *)base_rx, sp);
+	dls2(base, sp);
 #endif
 }

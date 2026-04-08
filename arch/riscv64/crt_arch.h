@@ -11,6 +11,31 @@
 
 #include "cheri_init_globals_bw.h"
 
+/*
+ * For CHERI the kernel passes most useful information in registers
+ * because that gives us correct bounds on argv, auxv and envp.
+ * Thus the registers passed by the kernel are
+ * - a0: int argc
+ * - a1: char **argv
+ * - a2: char **envp
+ * - a3: AUX vector
+ * Additionally, all of this is passed in the traditional way
+ * on the stack, too. But there is no guarantee that the stack
+ * pointer is sufficient to access all of argv/envp/auxv and even
+ * if it was we would have to set bounds manually. Thus we rely
+ * on the kernel provided values except for argc because some kernel
+ * versions globber a0 with the "return value" of exec() after it is
+ * set by startup code.
+ *
+ * In addition to the kernel this entry point is also called by the
+ * interpreter (i.e. the runtime linker). This can either
+ * happen implicitly because the kernel loads the interpreter and jumps
+ * into its entry point or explicitly because someone calls
+ * /lib/ld.so /path/to/my/binary. In the latter case the interpreter is
+ * responsible to mangle argc, argv and the aux vector in a way that
+ * makes the program think it is being started the normal way.
+ */
+
 __asm__(
 ".section .sdata,\"aw\"\n"
 ".text \n"
@@ -21,26 +46,22 @@ START ":\n"
 ".hidden __global_pointer$\n"
 "       llc cgp, __global_pointer$\n"
 #ifndef SHARED
-"	mv  s2,  a0\n"
 "	cmv cs3, ca1\n"
 "	cmv cs4, ca2\n"
 "	cmv cs5, ca3\n"
-"	llc ct0, __bakewell_init_static\n"
+"	llc ct0, __cheri_init_static\n"
 "	jalr ct0\n"
 #else
 "	cmv ca5, ca3\n"
 "	cmv ca4, ca2\n"
 "	cmv ca3, ca1\n"
-"	mv  a2,  a0\n"
 #endif
 "	cmv ca0, csp\n"
 ".weak _DYNAMIC\n"
 ".hidden _DYNAMIC\n"
 "	llc ca1, _DYNAMIC\n"
-"	andi s6, sp, -16\n\t"
-"	scaddr csp, csp, s6\n\t"
+"	lw  a2, 0(csp)\n"
 #ifndef SHARED
-"	mv  a2,  s2\n"
 "	cmv ca3, cs3\n"
 "	cmv ca4, cs4\n"
 "	cmv ca5, cs5\n"
@@ -51,8 +72,13 @@ START ":\n"
 );
 
 #ifndef SHARED
+
+/*
+ * The dummy argument allows the call above to re-use existing values
+ * in a1-a3 without moving them.
+ */
 void
-__bakewell_init_static(int argc, char **argv, char **envp, auxv_entry *auxv)
+__cheri_init_static(int dummy, char **argv, char **envp, auxv_entry *auxv)
 {
 	void *rw = NULL, *rx = NULL;
 	size_t phnum = 0, phent = 0;
@@ -74,6 +100,10 @@ __bakewell_init_static(int argc, char **argv, char **envp, auxv_entry *auxv)
 		}
 	}
 
+	/*
+	 * If we are not a standalone binary the interpreter is
+	 * responsible for capability relocations.
+	 */
 	while(phnum--) {
 		if (ph->p_type == PT_INTERP) {
 			return;

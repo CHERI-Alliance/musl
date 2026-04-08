@@ -2229,9 +2229,8 @@ void __dls3(uintptr_t *sp, size_t *auxv)
 		}
 
 		argc -= (argv-argv_orig);
-#if !defined(__CHERI_PURE_CAPABILITY__)
 		argv[-1] = (size_t)(argc);
-#endif
+		sp = __builtin_cheri_address_set(sp, (size_t)&(argv[-1]));
 		if (!argv[0]) {
 			dprintf(2, "musl libc (" LDSO_ARCH ")\n"
 				"Version %s\n"

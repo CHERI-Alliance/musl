@@ -38,12 +38,17 @@ typedef struct {
 #define CRTJMP(pc,sp) __asm__ __volatile__( \
 	"cmv csp, %1 ; jr %0" : : "C"(pc), "C"(sp) : "memory" )
 
+/*
+ * The on-stack value of argc at 0(csp) must be set by the caller.
+ * The value in a0 will be ignored.
+ */
 #define CRTJMPCHERI(pc, sp, argc, argv, envp, auxv) __asm__ __volatile__ ( \
 	"mv a0, %0\n" \
-	"cmv ca1, %1\n" \
-	"cmv ca2, %2\n" \
-	"cmv ca3, %3\n" \
-	"cmv csp,%4 ; jr %5\n" \
+	"mv ca1, %1\n" \
+	"mv ca2, %2\n" \
+	"mv ca3, %3\n" \
+	"mv csp, %4\n" \
+	"jr %5\n" \
 	: : "r" (argc), "C" (argv), "C" (envp), "C" (auxv), "C"(sp), "C"(AUX_PTR(aux[AT_ENTRY])) \
 	: "ca0", "ca1", "ca2", "ca3", "memory")
 #else

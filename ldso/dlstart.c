@@ -56,14 +56,6 @@ hidden void _dlstart_c(uintptr_t *sp, size_t *dynv_raw)
 	for (i=0; auxv[i].a_type; i++) if (auxv[i].a_type<AUX_CNT)
 		aux[auxv[i].a_type] = auxv + i;
 
-	/*
-	 * Take argc from the aux vector if present. The kernel provided
-	 * value is not reliable because its register conflicts with the
-	 * return value.
-	 */
-	if (AT_ARGC < AUX_CNT && aux[AT_ARGC]->a_type == AT_ARGC)
-		argc = AUX_VAL(aux[AT_ARGC]);
-
 #ifdef __CHERI_PURE_CAPABILITY__
 	const _Bool is_interpreter = (AUX_PTR(aux[AT_CHERI_INTERP_RW_CAP]) != NULL);
 	char *const rw_cap = AUX_PTR(aux[is_interpreter ?

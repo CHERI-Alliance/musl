@@ -2183,6 +2183,13 @@ void __dls3(uintptr_t *sp, size_t *auxv)
 		ldso.name = ldname;
 		app.name = argv[0];
 		AUX_PTR(aux[AT_ENTRY]) = laddr(&app, ehdr->e_entry);
+		AUX_PTR(aux[AT_PHDR]) = app.phdr;
+		AUX_PTR(aux[AT_PHNUM]) = app.phnum;
+		AUX_PTR(aux[AT_EXECFN]) = app.name;
+		AUX_PTR(aux[AT_CHERI_EXEC_RX_CAP]) = app.map;
+		AUX_PTR(aux[AT_CHERI_EXEC_RW_CAP]) = app.rw_capability;
+		AUX_VAL(aux[AT_ARGC]) = argc;
+		AUX_VAL(aux[AT_ARGV]) = argv;
 		/* Find the name that would have been used for the dynamic
 		 * linker had ldd not taken its place. */
 		if (ldd_mode) {

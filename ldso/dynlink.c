@@ -861,7 +861,7 @@ static void unmap_library(struct dso *dso)
 	}
 }
 
-static void *map_library(int fd, struct dso *dso)
+static void *map_library(int fd, struct dso *dso, int need_interp)
 {
 	Ehdr buf[(896+sizeof(Ehdr))/sizeof(Ehdr)];
 	void *allocated_buf=0;
@@ -917,6 +917,8 @@ static void *map_library(int fd, struct dso *dso)
 					ph->p_memsz < DEFAULT_STACK_MAX ?
 					ph->p_memsz : DEFAULT_STACK_MAX;
 			}
+		} else if (ph->p_type == PT_INTERP) {
+			need_interp = 0;
 		}
 		if (ph->p_type != PT_LOAD) continue;
 		nsegs++;
@@ -932,6 +934,8 @@ static void *map_library(int fd, struct dso *dso)
 		}
 	}
 	if (!dyn) goto noexec;
+	if (need_interp)
+		goto noexec;
 	if (DL_FDPIC && !(eh->e_flags & FDPIC_CONSTDISP_FLAG)) {
 		dso->loadmap = calloc(1, sizeof *dso->loadmap
 			+ nsegs * sizeof *dso->loadmap->segs);
@@ -1371,7 +1375,7 @@ static struct dso *load_library(const char *name, struct dso *needed_by)
 			return p;
 		}
 	}
-	map = noload ? 0 : map_library(fd, &temp_dso);
+	map = noload ? 0 : map_library(fd, &temp_dso, 0);
 	close(fd);
 	if (!map) return 0;
 
@@ -2207,7 +2211,12 @@ void __dls3(uintptr_t *sp, size_t *auxv)
 			dprintf(2, "%s: cannot load %s: %s\n", ldname, argv[0], strerror(errno));
 			_exit(1);
 		}
-		Ehdr *ehdr = map_library(fd, &app);
+		/*
+		 * We are running in explicit interpreter mode. Thus tell
+		 * map_library() to reject binaries that do not need an
+		 * interpreter.
+		 */
+		Ehdr *ehdr = map_library(fd, &app, 1);
 		if (!ehdr) {
 			dprintf(2, "%s: %s: Not a valid dynamic program\n", ldname, argv[0]);
 			_exit(1);

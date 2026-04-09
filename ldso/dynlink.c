@@ -70,27 +70,26 @@ struct td_index {
 	struct td_index *next;
 };
 
+/*
+ * The first fields of this structure must have the same layout as
+ * "struct link_map". A list of all objects known to the dynamic loader
+ * is made available to the debugger through a linked list starting
+ * at the "head" field of "struct debug".
+ */
 struct dso {
 #if DL_FDPIC
 	struct fdpic_loadmap *loadmap;
 #else
-	/**
-	 * Non CHERI: Load address of DSO
-	 *
-	 * CHERI: rx capability with address set to load address, with bounds encompassing
-	 * all loadable segments. Ref: https://git.morello-project.org/morello/kernel/linux/-/wikis/Morello-pure-capability-kernel-user-Linux-ABI-specification#purecap-elf-executables
-	 *
+	/*
+	 * Load address of DSO: Never a capability because it may be
+	 * out of bounds.
 	 */
-	unsigned char *base;
+	size_t base;
 #endif
 	char *name;
 	size_t *dynv;
 	struct dso *next, *prev;
 
-#ifdef __CHERI_PURE_CAPABILITY__
-	/* CHERI: rw capability encompassing all writable load segments.  */
-	unsigned char *rw_capability;
-#endif
 	Phdr *phdr;
 	int phnum;
 	size_t phentsize;
@@ -101,8 +100,35 @@ struct dso {
 	char *strings;
 	struct dso *syms_next, *lazy_next;
 	size_t *lazy, lazy_cnt;
+	/*
+	 * A capability that is owning (i.e. it has enough permissions
+	 * to change the mapping) for the entire address range. This
+	 * capability has read and execute permission but might not be
+	 * have write permission. Additionally, being an owning capability
+	 * it has the VMEM permission. The capability address points to the
+	 * start of the mapped range. It may differ from base if the first
+	 * loaded segment has a non-zero ->p_vaddr.
+	 */
 	unsigned char *map;
 	size_t map_len;
+#ifdef __CHERI_PURE_CAPABILITY__
+	/*
+	 * A capability that includes all mapped sections. It has
+	 * read and execute permission but should not have VMEM
+	 * permission. Use this as a base to derive read-only or
+	 * read-execute capabilities. Despite its name this capability
+	 * has fewer permissions than the capability passed in through
+	 * AT_CHERI_{EXEC,INTERP}_RX_CAP because in "rx_capability" the
+	 * VMEM permission is stripped.
+	 */
+	unsigned char *rx_capability;
+	/*
+	 * A read/write capability that includes all writable sections.
+	 * This also includes the GNU RELRO sections if present. Use
+	 * this to derive capabilities that must be writable.
+	 */
+	unsigned char *rw_capability;
+#endif
 	dev_t dev;
 	ino_t ino;
 	char relocated;
@@ -235,15 +261,17 @@ static void (*fdbarrier(void *p))()
 #define fpaddr(p, v) fdbarrier((&(struct funcdesc){ \
 	laddr(p, v), (p)->got }))
 #else
-#define laddr(p, v) (void *)((p)->base + (v))
+#define laddr(p, v) set_rx_cap(p, ((p)->base + (size_t)(v)))
 #define laddr_pg(p, v) laddr(p, v)
 #define fpaddr(p, v) ((void (*)())laddr(p, v))
 #endif
 
 /* set address of rw capability and return it */
 #ifdef __CHERI_PURE_CAPABILITY__
+#define set_rx_cap(dso, addr) __builtin_cheri_address_set((dso)->rx_capability, addr)
 #define set_rw_cap(dso, addr) __builtin_cheri_address_set((dso)->rw_capability, addr)
 #else
+#define set_rx_cap(dso, addr) (addr)
 #define set_rw_cap(dso, addr) (addr)
 #endif
 
@@ -458,7 +486,6 @@ nomatch:
 
 static void do_relocs(struct dso *dso, size_t *rel, size_t rel_size, size_t stride)
 {
-	unsigned char *base_rx = dso->base;
 	Sym *syms = dso->syms;
 	char *strings = dso->strings;
 	Sym *sym;
@@ -561,7 +588,7 @@ static void do_relocs(struct dso *dso, size_t *rel, size_t rel_size, size_t stri
 				if (ELF64_ST_TYPE(def.sym->st_info) == STT_GNU_IFUNC)
 					break;
 
-				char *cap_rx = sym_val;
+				char *cap_rx = set_rx_cap(def.dso, sym_val);
 				char *cap_rw = set_rw_cap(def.dso, cap_rx);
 				char *cap;
 
@@ -612,7 +639,7 @@ static void do_relocs(struct dso *dso, size_t *rel, size_t rel_size, size_t stri
 			break;
 		case REL_SYM_OR_REL:
 			if (sym) *reloc_addr = sym_val + addend;
-			else *reloc_addr = base_rx + addend;
+			else *reloc_addr = set_rx_cap(dso, addend);
 			break;
 		case REL_COPY:
 			memcpy(reloc_addr, sym_val, sym->st_size);
@@ -846,7 +873,8 @@ static void *map_library(int fd, struct dso *dso)
 	Ehdr *eh;
 	Phdr *ph, *ph0;
 	unsigned prot;
-	unsigned char *map=MAP_FAILED, *base;
+	unsigned char *map=MAP_FAILED;
+	unsigned long base;
 	size_t dyn=0;
 	size_t tls_image=0;
 	size_t i;
@@ -967,17 +995,27 @@ static void *map_library(int fd, struct dso *dso)
 		errno = EBUSY;
 		goto error;
 	}
-	base = map - addr_min;
+	base = (size_t)map - addr_min;
 	dso->phdr = 0;
 	dso->phnum = 0;
+	/*
+	 * Set ->base, ->rx_capability and ->rw_capability early so that laddr()
+	 * and set_r[wx]_cap() works.
+	 */
+	dso->base = base;
+#ifdef __CHERI_PURE_CAPABILITY__
+	dso->rx_capability = map;
+	dso->rw_capability = map;
+	SANITIZE_CAPS(dso->rx_capability, dso->rw_capability);
+#endif
 	for (ph=ph0, i=eh->e_phnum; i; i--, ph=(void *)((char *)ph+eh->e_phentsize)) {
 		if (ph->p_type != PT_LOAD) continue;
 		/* Check if the programs headers are in this load segment, and
 		 * if so, record the address for use by dl_iterate_phdr. */
 		if (!dso->phdr && eh->e_phoff >= ph->p_offset
 		    && eh->e_phoff+phsize <= ph->p_offset+ph->p_filesz) {
-			dso->phdr = (void *)(base + ph->p_vaddr
-				+ (eh->e_phoff-ph->p_offset));
+			dso->phdr = (void *)laddr(dso,
+					ph->p_vaddr + eh->e_phoff-ph->p_offset);
 			dso->phnum = eh->e_phnum;
 			dso->phentsize = eh->e_phentsize;
 		}
@@ -989,32 +1027,27 @@ static void *map_library(int fd, struct dso *dso)
 			((ph->p_flags&PF_X) ? PROT_EXEC : 0));
 		/* Reuse the existing mapping for the lowest-address LOAD */
 		if ((ph->p_vaddr & -PAGE_SIZE) != addr_min || DL_NOMMU_SUPPORT)
-			if (mmap_fixed(base+this_min, this_max-this_min, prot, MAP_PRIVATE|MAP_FIXED, fd, off_start) == MAP_FAILED)
+			if (mmap_fixed(__builtin_cheri_address_set(map, base+this_min),
+				       this_max-this_min, prot,
+				       MAP_PRIVATE|MAP_FIXED,
+				       fd, off_start) == MAP_FAILED)
 				goto error;
 		if (ph->p_memsz > ph->p_filesz && (ph->p_flags&PF_W)) {
-			unsigned char *brk = base+ph->p_vaddr+ph->p_filesz;
+			unsigned char *brk = __builtin_cheri_address_set(map, base + ph->p_vaddr+ph->p_filesz);
 			unsigned char *pgbrk = (unsigned char *)ALIGN((uintptr_t)brk, PAGE_SIZE);
 			memset(brk, 0, pgbrk - brk & PAGE_SIZE-1);
-			if ((pgbrk - base) < this_max && mmap_fixed(pgbrk, base+this_max-pgbrk, prot, MAP_PRIVATE|MAP_FIXED|MAP_ANONYMOUS, -1, 0) == MAP_FAILED)
+			if (((size_t)pgbrk - base) < this_max && mmap_fixed(pgbrk, base+this_max-(size_t)pgbrk, prot, MAP_PRIVATE|MAP_FIXED|MAP_ANONYMOUS, -1, 0) == MAP_FAILED)
 				goto error;
 		}
 	}
-	for (i=0; DYN_TAG((dynv_entry *)(base+dyn) + i); i++)
-		if (DYN_TAG((dynv_entry *)(base+dyn) + i)==DT_TEXTREL) {
+	for (i=0; DYN_TAG(((dynv_entry *)laddr(dso, dyn)) + i); i++)
+		if (DYN_TAG((dynv_entry *)laddr(dso, dyn) + i)==DT_TEXTREL) {
 			if (mprotect(map, map_len, PROT_READ|PROT_WRITE|PROT_EXEC)
 			    && errno != ENOSYS)
 				goto error;
 			break;
 		}
 done_mapping:
-	dso->base = base;
-#ifdef __CHERI_PURE_CAPABILITY__
-#if defined(__riscv_zcheripurecap)
-	dso->rw_capability = __builtin_cheri_perms_and(base, READ_CAP_PERMS | WRITE_CAP_PERMS);
-#else
-	dso->rw_capability = __builtin_cheri_perms_and(base, __CHERI_CAP_PERMISSION_GLOBAL__ | READ_CAP_PERMS | WRITE_CAP_PERMS);
-#endif
-#endif
 	dso->dynv = laddr(dso, dyn);
 	if (dso->tls.size) dso->tls.image = laddr(dso, tls_image);
 	free(allocated_buf);
@@ -1247,7 +1280,7 @@ static struct dso *load_library(const char *name, struct dso *needed_by)
 					reported |= mask;
 					dprintf(1, "\t%s => %s (%p)\n",
 						name, ldso.name,
-						ldso.base);
+						(void *)ldso.base);
 				}
 			}
 			is_self = 1;
@@ -1417,7 +1450,7 @@ static struct dso *load_library(const char *name, struct dso *needed_by)
 
 	if (DL_FDPIC) makefuncdescs(p);
 
-	if (ldd_mode) dprintf(1, "\t%s => %s (%p)\n", name, pathname, p->base);
+	if (ldd_mode) dprintf(1, "\t%s => %s (%p)\n", name, pathname, (void *)p->base);
 
 	return p;
 }
@@ -1555,21 +1588,21 @@ static void revert_syms(struct dso *old_tail)
 static void do_mips_relocs(struct dso *p, size_t *got)
 {
 	size_t i, j, rel[2];
-	unsigned char *base = p->base;
+	size_t base = p->base;
 	dynv_entry *d = NULL;
 	if (search_dyn_vec(p->dynv, &d, DT_MIPS_LOCAL_GOTNO)) {
 		i=DYN_VAL(d);
 		if (p==&ldso) {
 			got += i;
 		} else {
-			while (i--) *got++ += (size_t)base;
+			while (i--) *got++ += base;
 		}
 	}
 	i=0; j=0;
 	if (search_dyn_vec(p->dynv, &d, DT_MIPS_GOTSYM)) j=DYN_VAL(d);
 	if (search_dyn_vec(p->dynv, &d, DT_MIPS_SYMTABNO)) i=DYN_VAL(d);
 	Sym *sym = p->syms + j;
-	rel[0] = (unsigned char *)got - base;
+	rel[0] = (size_t)got - base;
 	for (i-=j; i; i--, sym++, rel[0]+=sizeof(size_t)) {
 		rel[1] = R_INFO(sym-p->syms, R_MIPS_JUMP_SLOT);
 		do_relocs(p, rel, sizeof rel, 2);
@@ -1589,7 +1622,7 @@ static void reloc_all(struct dso *p)
 		 * and statically linked programs never get here.
 		 */
 		if (p != &ldso)
-			PROCESS_CAPRELOCS((void *)p->dynv, p->base, p->rw_capability, p->base);
+			PROCESS_CAPRELOCS((void *)p->dynv, p->base, p->rw_capability, p->rx_capability);
 		decode_dyn_vec(p->dynv, dyn, DYN_CNT, &dyn_null);
 
 		if (NEED_MIPS_GOT_RELOCS)
@@ -1602,8 +1635,9 @@ static void reloc_all(struct dso *p)
 			do_relr_relocs(p, laddr(p, DYN_VAL(dyn[DT_RELR])), DYN_VAL(dyn[DT_RELRSZ]));
 
 		if (head != &ldso && p->relro_start != p->relro_end) {
-			long ret = __syscall(SYS_mprotect, laddr(p, p->relro_start),
-				p->relro_end-p->relro_start, PROT_READ);
+			void *owning = __builtin_cheri_address_set(p->map, (size_t)laddr(p, p->relro_start));
+			long ret = __syscall(SYS_mprotect, owning,
+					     p->relro_end - p->relro_start, PROT_READ);
 			if (ret != 0 && ret != -ENOSYS) {
 				errno = -ret;
 				error("Error relocating %s: RELRO protection failed: %m",
@@ -1641,7 +1675,7 @@ static void kernel_mapped_dso(struct dso *p)
 	}
 	min_addr &= -PAGE_SIZE;
 	max_addr = (max_addr + PAGE_SIZE-1) & -PAGE_SIZE;
-	p->map = p->base + min_addr;
+	p->map = __builtin_cheri_address_set(p->map, p->base + min_addr);
 	p->map_len = max_addr - min_addr;
 	p->kernel_mapped = 1;
 }
@@ -1906,8 +1940,6 @@ hidden void __dls2(size_t base, unsigned char *map,
 hidden void __dls2(size_t base, uintptr_t *sp)
 #endif
 {
-	/* FIXCHERI: This may be out of bounds. */
-	__builtin_cheri_address_set(map, base);
 #if !defined(__CHERI_PURE_CAPABILITY__)
 	uintptr_t *auxv;
 	size_t argc = *sp;
@@ -1930,12 +1962,15 @@ hidden void __dls2(size_t base, uintptr_t *sp)
 		ldso.loadmap = p2 ? p2 : p1;
 		ldso.base = laddr(&ldso, 0);
 	} else {
-		ldso.base = map;
+		ldso.base = base;
 #if defined(__CHERI_PURE_CAPABILITY__)
-		ldso.rw_capability = rw_cap;
+		ldso.map = map;
+		ldso.rx_capability = map;
+		ldso.rw_capability = rw_cap;;
+		SANITIZE_CAPS(ldso.rx_capability, ldso.rw_capability);
 #endif
 	}
-	Ehdr *ehdr = __ehdr_start ? (void *)__ehdr_start : (void *)ldso.base;
+	Ehdr *ehdr = __ehdr_start ? (void *)__ehdr_start : (void *)set_rx_cap(&ldso, 0);
 	ldso.name = ldso.shortname = "libc.so";
 	ldso.phnum = ehdr->e_phnum;
 	ldso.phdr = laddr(&ldso, ehdr->e_phoff);
@@ -2096,15 +2131,17 @@ void __dls3(uintptr_t *sp, size_t *auxv)
 #else
 		char *exec_rx = AUX_PTR(aux[AT_CHERI_EXEC_RX_CAP]);
 		char *exec_rw = AUX_PTR(aux[AT_CHERI_EXEC_RW_CAP]);
-		Phdr *phdr = app.phdr = __builtin_cheri_address_set(exec_rx, AUX_VAL(aux[AT_PHDR]));
+		app.map = exec_rx;
+		app.rx_capability = exec_rx;
 		app.rw_capability = exec_rw;
+		SANITIZE_CAPS(app.rx_capability, app.rw_capability);
+		Phdr *phdr = app.phdr = set_rx_cap(&app, AUX_VAL(aux[AT_PHDR]));
 #endif
 		app.phnum = AUX_VAL(aux[AT_PHNUM]);
 		app.phentsize = AUX_VAL(aux[AT_PHENT]);
 		for (i=AUX_VAL(aux[AT_PHNUM]); i; i--, phdr=(void *)((char *)phdr + AUX_VAL(aux[AT_PHENT]))) {
-			if (phdr->p_type == PT_PHDR) {
-				app.base = (char *)app.phdr - phdr->p_vaddr;
-			}
+			if (phdr->p_type == PT_PHDR)
+				app.base = (size_t)app.phdr - phdr->p_vaddr;
 			else if (phdr->p_type == PT_INTERP)
 				interp_off = (size_t)phdr->p_vaddr;
 			else if (phdr->p_type == PT_TLS) {
@@ -2182,6 +2219,10 @@ void __dls3(uintptr_t *sp, size_t *auxv)
 		AUX_PTR(aux[AT_PHDR]) = app.phdr;
 		AUX_PTR(aux[AT_PHNUM]) = app.phnum;
 		AUX_PTR(aux[AT_EXECFN]) = app.name;
+		/*
+		 * Use app.map not app.rx_capability because
+		 * AT_CHERI_EXEC_RX_CAP must have the VMEM permission.
+		 */
 		AUX_PTR(aux[AT_CHERI_EXEC_RX_CAP]) = app.map;
 		AUX_PTR(aux[AT_CHERI_EXEC_RW_CAP]) = app.rw_capability;
 		AUX_VAL(aux[AT_ARGC]) = argc;
@@ -2193,7 +2234,7 @@ void __dls3(uintptr_t *sp, size_t *auxv)
 				if (app.phdr[i].p_type == PT_INTERP)
 					ldso.name = laddr(&app, app.phdr[i].p_vaddr);
 			}
-			dprintf(1, "\t%s (%p)\n", ldso.name, ldso.base);
+			dprintf(1, "\t%s (%p)\n", ldso.name, (void *)ldso.base);
 		}
 	}
 	if (app.tls.size) {
@@ -2250,8 +2291,13 @@ void __dls3(uintptr_t *sp, size_t *auxv)
 		for (i=ehdr->e_phnum; i; i--, phdr=(void *)((char *)phdr + ehdr->e_phentsize)) {
 			if (phdr->p_type == PT_DYNAMIC)
 				vdso.dynv = (void *)((char *)vdso_base + phdr->p_offset);
-			if (phdr->p_type == PT_LOAD)
-				vdso.base = (void *)((char *)vdso_base - phdr->p_vaddr + phdr->p_offset);
+			if (phdr->p_type == PT_LOAD) {
+				vdso.map = (void *)vdso_base;
+				vdso.rx_capability = (void *)vdso_base;
+				vdso.rw_capability = (void *)vdso_base;
+				vdso.base = (size_t)((char *)vdso_base - phdr->p_vaddr + phdr->p_offset);
+				SANITIZE_CAPS(vdso.rx_capability, vdso.rw_capability);
+			}
 		}
 		vdso.name = "";
 		vdso.shortname = "linux-gate.so.1";
@@ -2641,7 +2687,7 @@ int dladdr(const void *addr_arg, Dl_info *info)
 	}
 
 	info->dli_fname = p->name;
-	info->dli_fbase = p->map;
+	info->dli_fbase = (void *)p->base;
 
 	if (!best) {
 		info->dli_sname = 0;
@@ -2699,7 +2745,7 @@ int dl_iterate_phdr(int(*callback)(struct dl_phdr_info *info, size_t size, void 
 	struct dl_phdr_info info;
 	int ret = 0;
 	for(current = head; current;) {
-		info.dlpi_addr      = (uintptr_t)current->base;
+		info.dlpi_addr      = (uintptr_t)set_rx_cap(current, current->base);
 		info.dlpi_name      = current->name;
 		info.dlpi_phdr      = current->phdr;
 		info.dlpi_phnum     = current->phnum;

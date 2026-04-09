@@ -394,10 +394,6 @@ static struct symdef find_sym(struct dso *dso, const char *s, int need_def)
 	return find_sym2(dso, s, need_def, 0);
 }
 
-static void do_reloc(struct dso *dso, char **reloc_addr, char *value) {
-	*reloc_addr = value;
-}
-
 /*
  * Check if symbol is in a writable segment. This means the symbol should occur
  * within the bounds of a PT_LOAD segment that has writable permissions but is
@@ -488,7 +484,7 @@ static void do_relocs(struct dso *dso, size_t *rel, size_t rel_size, size_t stri
 		if (skip_relative && IS_RELATIVE(rel[1], dso->syms)) continue;
 		type = R_TYPE(rel[1]);
 		if (type == REL_NONE) continue;
-		reloc_addr = set_rw_cap(dso, laddr(dso, rel[0]));
+		reloc_addr = set_rw_cap(dso, (size_t)laddr(dso, rel[0]));
 
 		if (stride > 2) {
 			addend = rel[2];
@@ -601,11 +597,10 @@ static void do_relocs(struct dso *dso, size_t *rel, size_t rel_size, size_t stri
 					cap += addend;
 				}
 
-				reloc_addr = set_rw_cap(dso, reloc_addr);
 				*reloc_addr = cap;
 			}
 #else
-			do_reloc(dso, reloc_addr, sym_val + addend);
+			*reloc_addr = sym_val + addend;
 #endif
 			break;
 		case REL_USYMBOLIC:
@@ -620,9 +615,6 @@ static void do_relocs(struct dso *dso, size_t *rel, size_t rel_size, size_t stri
 			else *reloc_addr = base_rx + addend;
 			break;
 		case REL_COPY:
-#if defined(__CHERI_PURE_CAPABILITY__)
-			reloc_addr = set_rw_cap(dso, reloc_addr);
-#endif
 			memcpy(reloc_addr, sym_val, sym->st_size);
 			break;
 		case REL_OFFSET32:
@@ -650,7 +642,7 @@ static void do_relocs(struct dso *dso, size_t *rel, size_t rel_size, size_t stri
 			break;
 #else
 		case REL_TPOFF:
-			do_reloc(dso, reloc_addr, tls_val - def.dso->tls.offset + addend);
+			*reloc_addr = tls_val + (addend - def.dso->tls.offset);
 			break;
 		case REL_TPOFF_NEG:
 			*reloc_addr = (tls_val - 2 * (size_t)tls_val) + def.dso->tls.offset + addend;
@@ -706,7 +698,7 @@ static void do_relr_relocs(struct dso *dso, size_t *relr, size_t relr_size)
 	size_t *reloc_addr;
 	for (; relr_size; relr++, relr_size-=sizeof(size_t))
 		if ((relr[0]&1) == 0) {
-			reloc_addr = laddr(dso, relr[0]);
+			reloc_addr = set_rw_cap(dso, (size_t)laddr(dso, relr[0]));
 			*reloc_addr++ += (size_t)base;
 		} else {
 			int i = 0;

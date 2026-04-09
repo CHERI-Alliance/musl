@@ -6,6 +6,7 @@
 __tlsdesc_static:
     mv ca0, cnull
     jr ct0
+.size __tlsdesc_static, . - __tlsdesc_static
 
 .global __tlsdesc_dynamic
 .hidden __tlsdesc_dynamic

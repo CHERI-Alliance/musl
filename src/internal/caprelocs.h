@@ -59,9 +59,81 @@
 	(RW) = __builtin_cheri_perms_and((RW), __SANITIZE_RW_PERMS);		\
 } while (0)
 
+#ifdef __riscv_zcheripurecap
+
+static inline void
+cheri_do_caprelative(void *reloc_addr, size_t addend,
+		     size_t base, void *rx, void *rw)
+{
+	size_t offset = __builtin_cheri_address_get(*(void **)reloc_addr);
+	size_t len = __builtin_cheri_length_get(*(void **)reloc_addr);
+	size_t perms = __builtin_cheri_perms_get(*(void **)reloc_addr);
+	size_t is_sealed = __builtin_cheri_sealed_get(*(void **)reloc_addr);
+	size_t v_addr = base + offset;
+	const bool is_fn = perms & __CHERI_CAP_PERMISSION_EXECUTE__;
+	const bool is_rw = perms & __CHERI_CAP_PERMISSION_WRITE__;
+	char *cap;
+	char *cap_rx = __builtin_cheri_address_set(rx, v_addr);
+	char *cap_rw = __builtin_cheri_address_set(rw, v_addr);
+
+	if (is_fn)
+		cap = __builtin_cheri_perms_and(cap_rx, READ_CAP_PERMS | EXEC_CAP_PERMS);
+	else if (is_rw)
+		cap = __builtin_cheri_perms_and(cap_rw, READ_CAP_PERMS | WRITE_CAP_PERMS);
+	else
+		cap = __builtin_cheri_perms_and(cap_rx, READ_CAP_PERMS);
+
+	if (!is_fn)
+		cap = __builtin_cheri_bounds_set_exact(cap, len);
+	cap += addend;
+
+	if (is_fn && is_sealed)
+		cap = __builtin_cheri_seal_entry(cap);
+
+	*(char **)reloc_addr = cap;
+}
+
+#else
+
+static inline void
+cheri_do_caprelative(void *reloc_addr, size_t addend,
+		     size_t base, void *rx, void *rw)
+{
+	size_t v_address = base + ((morello_reloc_cap_t *)reloc_addr)->address;
+	size_t len = ((morello_reloc_cap_t *)reloc_addr)->length;
+	size_t perms = ((morello_reloc_cap_t *)reloc_addr)->perms;
+	char *cap;
+	char *cap_rx = __builtin_cheri_bounds_set_exact(
+		__builtin_cheri_address_set(rx, v_address), len);
+	char *cap_rw = __builtin_cheri_bounds_set_exact(
+		__builtin_cheri_address_set(rw, v_address), len);
+	switch (perms) {
+	case MORELLO_RELA_PERM_R:
+		cap = __builtin_cheri_perms_and(cap_rx,
+			__CHERI_CAP_PERMISSION_GLOBAL__ | READ_CAP_PERMS);
+		break;
+	case MORELLO_RELA_PERM_RW:
+		cap = __builtin_cheri_perms_and(cap_rw,
+			__CHERI_CAP_PERMISSION_GLOBAL__ | READ_CAP_PERMS | WRITE_CAP_PERMS);
+		break;
+	case MORELLO_RELA_PERM_RX:
+		cap = __builtin_cheri_perms_and(cap_rx,
+			__CHERI_CAP_PERMISSION_GLOBAL__ | READ_CAP_PERMS | EXEC_CAP_PERMS);
+		break;
+	default:
+		cap = __builtin_cheri_perms_and(cap_rx, 0);
+	}
+	cap += addend;
+
+	*(char **)reloc_addr = cap;
+}
+
+#endif
+
 #else
 
 #define PROCESS_CAPRELOCS(DYN, BASE, CAPRW, CAPRO)
 #define SANITIZE_CAPS(RX, RW)
+#define CHERI_BUILD_CAPRELATIVE(
 
 #endif

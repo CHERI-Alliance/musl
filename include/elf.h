@@ -3349,7 +3349,7 @@ enum
 #define R_RISCV_CHERI_CJAL                     199
 #define R_RISCV_CHERI_CCALL                    200
 #define R_RISCV_CHERI_RVC_CJUMP                201
-// 202 reserved for deprecated R_RISCV_CHERI_RELATIVE
+#define R_RISCV_CHERI_RELATIVE                 202
 
 #define EF_LARCH_ABI_MODIFIER_MASK    0x07
 #define EF_LARCH_ABI_SOFT_FLOAT       0x01

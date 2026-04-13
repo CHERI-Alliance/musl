@@ -60,7 +60,7 @@ hidden void _dlstart_c(uintptr_t *sp, size_t *dynv_raw)
 	/*
 	 * We assume that AT_CHERI_{EXEC,INTERP}_RX_CAP is owning and that
 	 * AT_CHERI_RW_CAP includes all potentially writable sections
-	 * including RELO.
+	 * including RELRO.
 	 */
 	const _Bool is_interpreter = (AUX_PTR(aux[AT_CHERI_INTERP_RW_CAP]) != NULL);
 	char *rw_cap = AUX_PTR(aux[is_interpreter ?
@@ -179,16 +179,26 @@ hidden void _dlstart_c(uintptr_t *sp, size_t *dynv_raw)
 	rel_count = DYN_VAL(dyn[DT_RELSZ]) / sizeof(Rel_t);
 	for (; rel_count; rel_count--, rel_ptr++) {
 		if (!IS_RELATIVE(rel_ptr->r_info, 0)) continue;
-		size_t *rel_addr = (void *)__builtin_cheri_address_set(rw_cap, base + rel_ptr->r_offset);
-		*rel_addr = base + *rel_addr;
+		void *rel_addr = (void *)__builtin_cheri_address_set(rw_cap, base + rel_ptr->r_offset);
+		if (R_TYPE(rel_ptr->r_info) != REL_CAPRELATIVE) {
+			*(size_t *)rel_addr = base + *(size_t *)rel_addr;
+		} else {
+			cheri_do_caprelative(rel_addr, 0,
+					     base, rx_cap, rw_cap);
+		}
 	}
 
 	rela_ptr = (void *)__builtin_cheri_address_set(rx_cap, base+ DYN_VAL(dyn[DT_RELA]));
 	rel_count = DYN_VAL(dyn[DT_RELASZ]) / sizeof(Rela_t);
 	for (; rel_count; rel_count--, rela_ptr++) {
 		if (!IS_RELATIVE(rela_ptr->r_info, 0)) continue;
-		size_t *rel_addr = (void *)__builtin_cheri_address_set(rw_cap, base + rela_ptr->r_offset);
-		*rel_addr = base + rela_ptr->r_addend;
+		void *rel_addr = (void *)__builtin_cheri_address_set(rw_cap, base + rela_ptr->r_offset);
+		if (R_TYPE(rela_ptr->r_info) != REL_CAPRELATIVE) {
+			*(size_t *)rel_addr = base + rela_ptr->r_addend;
+		} else {
+			cheri_do_caprelative(rel_addr, rela_ptr->r_addend,
+					     base, rx_cap, rw_cap);
+		}
 	}
 
 	rel = (void *)__builtin_cheri_address_set(rx_cap, base+DYN_VAL(dyn[DT_RELR]));

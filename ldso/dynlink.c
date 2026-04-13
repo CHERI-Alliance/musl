@@ -637,6 +637,10 @@ static void do_relocs(struct dso *dso, size_t *rel, size_t rel_size, size_t stri
 		case REL_FUNCREL:
 			*(size_t *)reloc_addr = dso->base + addend;
 			break;
+		case REL_CAPRELATIVE:
+			cheri_do_caprelative(reloc_addr, addend, dso->base,
+					     dso->rx_capability, dso->rw_capability);
+			break;
 		case REL_SYM_OR_REL:
 			if (sym) *reloc_addr = sym_val + addend;
 			else *reloc_addr = set_rx_cap(dso, addend);

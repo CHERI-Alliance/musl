@@ -203,8 +203,13 @@ hidden void _dlstart_c(uintptr_t *sp, size_t *dynv_raw)
 		size_t perms = __builtin_cheri_perms_get(*(void **)rel_addr);
 		size_t is_sealed = __builtin_cheri_sealed_get(*(void **)rel_addr);
 		char *v_addr = base_rx + offset;
+#if defined(__riscv_zcheripurecap)
 		const bool is_fn = perms & __CHERI_CAP_PERMISSION_EXECUTE__;
 		const bool is_rw = perms & __CHERI_CAP_PERMISSION_WRITE__;
+#else
+		const int is_fn = perms & __CHERI_CAP_PERMISSION_PERMIT_EXECUTE__;
+		const int is_rw = perms & __CHERI_CAP_PERMISSION_PERMIT_STORE__;
+#endif
 		char *cap;
 		char *cap_rx = v_addr;
 		char *cap_rw = __builtin_cheri_address_set(rw_cap, v_addr);

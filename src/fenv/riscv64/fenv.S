@@ -1,4 +1,4 @@
-#ifdef __riscv_flen
+#ifndef __riscv_float_abi_soft
 
 #ifdef __CHERI_PURE_CAPABILITY__
 #define CA0 ca0

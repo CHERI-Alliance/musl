@@ -134,6 +134,5 @@ cheri_do_caprelative(void *reloc_addr, size_t addend,
 
 #define PROCESS_CAPRELOCS(DYN, BASE, CAPRW, CAPRO)
 #define SANITIZE_CAPS(RX, RW)
-#define CHERI_BUILD_CAPRELATIVE(
 
 #endif

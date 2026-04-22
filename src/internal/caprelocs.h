@@ -59,6 +59,8 @@
 	(RW) = __builtin_cheri_perms_and((RW), __SANITIZE_RW_PERMS);		\
 } while (0)
 
+#define CHERI_CAP(cap, addr) __builtin_cheri_address_set((cap), (addr))
+
 #ifdef __riscv_zcheripurecap
 
 static inline void
@@ -134,5 +136,6 @@ cheri_do_caprelative(void *reloc_addr, size_t addend,
 
 #define PROCESS_CAPRELOCS(DYN, BASE, CAPRW, CAPRO)
 #define SANITIZE_CAPS(RX, RW)
+#define CHERI_CAP(cap, addr) (addr)
 
 #endif

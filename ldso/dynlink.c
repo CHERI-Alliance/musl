@@ -1037,13 +1037,13 @@ static void *map_library(int fd, struct dso *dso, int need_interp)
 			((ph->p_flags&PF_X) ? PROT_EXEC : 0));
 		/* Reuse the existing mapping for the lowest-address LOAD */
 		if ((ph->p_vaddr & -PAGE_SIZE) != addr_min || DL_NOMMU_SUPPORT)
-			if (mmap_fixed(__builtin_cheri_address_set(map, base+this_min),
+			if (mmap_fixed(CHERI_CAP(map, base+this_min),
 				       this_max-this_min, prot,
 				       MAP_PRIVATE|MAP_FIXED,
 				       fd, off_start) == MAP_FAILED)
 				goto error;
 		if (ph->p_memsz > ph->p_filesz && (ph->p_flags&PF_W)) {
-			unsigned char *brk = __builtin_cheri_address_set(map, base + ph->p_vaddr+ph->p_filesz);
+			unsigned char *brk = CHERI_CAP(map, base + ph->p_vaddr+ph->p_filesz);
 			unsigned char *pgbrk = (unsigned char *)ALIGN((uintptr_t)brk, PAGE_SIZE);
 			memset(brk, 0, pgbrk - brk & PAGE_SIZE-1);
 			if (((size_t)pgbrk - base) < this_max && mmap_fixed(pgbrk, base+this_max-(size_t)pgbrk, prot, MAP_PRIVATE|MAP_FIXED|MAP_ANONYMOUS, -1, 0) == MAP_FAILED)
@@ -1645,7 +1645,7 @@ static void reloc_all(struct dso *p)
 			do_relr_relocs(p, laddr(p, DYN_VAL(dyn[DT_RELR])), DYN_VAL(dyn[DT_RELRSZ]));
 
 		if (head != &ldso && p->relro_start != p->relro_end) {
-			void *owning = __builtin_cheri_address_set(p->map, (size_t)laddr(p, p->relro_start));
+			void *owning = CHERI_CAP(p->map, (size_t)laddr(p, p->relro_start));
 			long ret = __syscall(SYS_mprotect, owning,
 					     p->relro_end - p->relro_start, PROT_READ);
 			if (ret != 0 && ret != -ENOSYS) {
@@ -1685,7 +1685,7 @@ static void kernel_mapped_dso(struct dso *p)
 	}
 	min_addr &= -PAGE_SIZE;
 	max_addr = (max_addr + PAGE_SIZE-1) & -PAGE_SIZE;
-	p->map = __builtin_cheri_address_set(p->map, p->base + min_addr);
+	p->map = CHERI_CAP(p->map, p->base + min_addr);
 	p->map_len = max_addr - min_addr;
 	p->kernel_mapped = 1;
 }
@@ -2202,7 +2202,7 @@ void __dls3(uintptr_t *sp, size_t *auxv)
 
 		argc -= (argv-argv_orig);
 		argv[-1] = (size_t)(argc);
-		sp = __builtin_cheri_address_set(sp, (size_t)&(argv[-1]));
+		sp = CHERI_CAP(sp, (size_t)&(argv[-1]));
 		if (!argv[0]) {
 			dprintf(2, "musl libc (" LDSO_ARCH ")\n"
 				"Version %s\n"

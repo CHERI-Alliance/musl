@@ -175,11 +175,11 @@ hidden void _dlstart_c(uintptr_t *sp, size_t *dynv_raw)
 		for (i=0; i<local_cnt; i++) got[i] += (size_t)base;
 	}
 
-	rel_ptr = (void *)__builtin_cheri_address_set(rx_cap, (base + DYN_VAL(dyn[DT_REL])));
+	rel_ptr = CHERI_CAP(rx_cap, (base + DYN_VAL(dyn[DT_REL])));
 	rel_count = DYN_VAL(dyn[DT_RELSZ]) / sizeof(Rel_t);
 	for (; rel_count; rel_count--, rel_ptr++) {
 		if (!IS_RELATIVE(rel_ptr->r_info, 0)) continue;
-		void *rel_addr = (void *)__builtin_cheri_address_set(rw_cap, base + rel_ptr->r_offset);
+		void *rel_addr = CHERI_CAP(rw_cap, base + rel_ptr->r_offset);
 		if (R_TYPE(rel_ptr->r_info) != REL_CAPRELATIVE) {
 			*(size_t *)rel_addr = base + *(size_t *)rel_addr;
 		} else {
@@ -192,11 +192,11 @@ hidden void _dlstart_c(uintptr_t *sp, size_t *dynv_raw)
 		}
 	}
 
-	rela_ptr = (void *)__builtin_cheri_address_set(rx_cap, base+ DYN_VAL(dyn[DT_RELA]));
+	rela_ptr = CHERI_CAP(rx_cap, base + DYN_VAL(dyn[DT_RELA]));
 	rel_count = DYN_VAL(dyn[DT_RELASZ]) / sizeof(Rela_t);
 	for (; rel_count; rel_count--, rela_ptr++) {
 		if (!IS_RELATIVE(rela_ptr->r_info, 0)) continue;
-		void *rel_addr = (void *)__builtin_cheri_address_set(rw_cap, base + rela_ptr->r_offset);
+		void *rel_addr = CHERI_CAP(rw_cap, base + rela_ptr->r_offset);
 		if (R_TYPE(rela_ptr->r_info) != REL_CAPRELATIVE) {
 			*(size_t *)rel_addr = base + rela_ptr->r_addend;
 		} else {
@@ -209,12 +209,12 @@ hidden void _dlstart_c(uintptr_t *sp, size_t *dynv_raw)
 		}
 	}
 
-	rel = (void *)__builtin_cheri_address_set(rx_cap, base+DYN_VAL(dyn[DT_RELR]));
+	rel = CHERI_CAP(rx_cap, base+DYN_VAL(dyn[DT_RELR]));
 	rel_size = DYN_VAL(dyn[DT_RELRSZ]);
 	size_t *relr_addr = 0;
 	for (; rel_size; rel++, rel_size-=sizeof(size_t)) {
 		if ((rel[0]&1) == 0) {
-			relr_addr = (void *)__builtin_cheri_address_set(rw_cap, base + rel[0]);
+			relr_addr = CHERI_CAP(rw_cap, base + rel[0]);
 			*relr_addr++ += (size_t)base;
 		} else {
 			for (size_t i=0, bitmap=rel[0]; bitmap>>=1; i++)

@@ -637,10 +637,12 @@ static void do_relocs(struct dso *dso, size_t *rel, size_t rel_size, size_t stri
 		case REL_FUNCREL:
 			*(size_t *)reloc_addr = dso->base + addend;
 			break;
+#ifdef __CHERI_PURE_CAPABILITY__
 		case REL_CAPRELATIVE:
 			cheri_do_caprelative(reloc_addr, addend, dso->base,
 					     dso->rx_capability, dso->rw_capability);
 			break;
+#endif
 		case REL_SYM_OR_REL:
 			if (sym) *reloc_addr = sym_val + addend;
 			else *reloc_addr = set_rx_cap(dso, addend);
@@ -2229,6 +2231,7 @@ void __dls3(uintptr_t *sp, size_t *auxv)
 		ldso.name = ldname;
 		app.name = argv[0];
 		AUX_PTR(aux[AT_ENTRY]) = laddr(&app, ehdr->e_entry);
+#ifdef __CHERI_PURE_CAPABILITY__
 		AUX_PTR(aux[AT_PHDR]) = app.phdr;
 		AUX_PTR(aux[AT_PHNUM]) = app.phnum;
 		AUX_PTR(aux[AT_EXECFN]) = app.name;
@@ -2240,6 +2243,7 @@ void __dls3(uintptr_t *sp, size_t *auxv)
 		AUX_PTR(aux[AT_CHERI_EXEC_RW_CAP]) = app.rw_capability;
 		AUX_VAL(aux[AT_ARGC]) = argc;
 		AUX_VAL(aux[AT_ARGV]) = argv;
+#endif
 		/* Find the name that would have been used for the dynamic
 		 * linker had ldd not taken its place. */
 		if (ldd_mode) {
@@ -2306,8 +2310,10 @@ void __dls3(uintptr_t *sp, size_t *auxv)
 				vdso.dynv = (void *)((char *)vdso_base + phdr->p_offset);
 			if (phdr->p_type == PT_LOAD) {
 				vdso.map = (void *)vdso_base;
+#ifdef __CHERI_PURE_CAPABILITY__
 				vdso.rx_capability = (void *)vdso_base;
 				vdso.rw_capability = (void *)vdso_base;
+#endif
 				vdso.base = (size_t)((char *)vdso_base - phdr->p_vaddr + phdr->p_offset);
 				SANITIZE_CAPS(vdso.rx_capability, vdso.rw_capability);
 			}

@@ -183,8 +183,12 @@ hidden void _dlstart_c(uintptr_t *sp, size_t *dynv_raw)
 		if (R_TYPE(rel_ptr->r_info) != REL_CAPRELATIVE) {
 			*(size_t *)rel_addr = base + *(size_t *)rel_addr;
 		} else {
+#ifdef __CHERI_PURE_CAPABILITY__
 			cheri_do_caprelative(rel_addr, 0,
 					     base, rx_cap, rw_cap);
+#else
+			a_crash();
+#endif
 		}
 	}
 
@@ -196,8 +200,12 @@ hidden void _dlstart_c(uintptr_t *sp, size_t *dynv_raw)
 		if (R_TYPE(rela_ptr->r_info) != REL_CAPRELATIVE) {
 			*(size_t *)rel_addr = base + rela_ptr->r_addend;
 		} else {
+#ifdef __CHERI_PURE_CAPABILITY__
 			cheri_do_caprelative(rel_addr, rela_ptr->r_addend,
 					     base, rx_cap, rw_cap);
+#else
+			a_crash();
+#endif
 		}
 	}
 

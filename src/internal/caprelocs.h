@@ -1,5 +1,6 @@
 #include <elf.h>
 
+#if defined(__CHERI_PURE_CAPABILITY__)
 #if defined(__riscv_zcheripurecap)
 
 #include "cheri_init_globals.h"
@@ -43,6 +44,11 @@
 	}									\
 } while (0)
 
+#else
+/* Morello does not have caprelocs. */
+#define PROCESS_CAPRELOCS(DYN, BASE, CAPRW, CAPRX)
+
+#endif
 
 #ifdef __CHERI_CAP_PERMISSION_GLOBAL__
 #define __SANITIZE_DEFAULT_PERMS __CHERI_CAP_PERMISSION_GLOBAL__
@@ -63,6 +69,7 @@
 
 #ifdef __riscv_zcheripurecap
 
+/* R_RISCV_CHERI_RELATIVE generated with --local-caprelocs=elf */
 static inline void
 cheri_do_caprelative(void *reloc_addr, size_t addend,
 		     size_t base, void *rx, void *rw)
@@ -97,6 +104,7 @@ cheri_do_caprelative(void *reloc_addr, size_t addend,
 
 #else
 
+/* Morello capability relative relocations. */
 static inline void
 cheri_do_caprelative(void *reloc_addr, size_t addend,
 		     size_t base, void *rx, void *rw)

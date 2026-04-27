@@ -1,5 +1,6 @@
 #include <stddef.h>
 #include <sys/dynv.h>
+#include "atomic.h"
 #include "dynlink.h"
 #include "libc.h"
 #include "caprelocs.h"

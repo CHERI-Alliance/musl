@@ -40,8 +40,8 @@ enum {
 	REL_GOT,
 	REL_PLT,
 	REL_RELATIVE,
-	REL_FUNCREL,
-	REL_CAPRELATIVE,
+	REL_FUNC_RELATIVE,
+	REL_CAP_RELATIVE,
 	REL_CAPINIT,
 	REL_OFFSET,
 	REL_OFFSET32,
@@ -91,8 +91,8 @@ struct fdpic_dummy_loadmap {
 #if !DL_FDPIC
 #define IS_RELATIVE(x,s) ( \
 	(R_TYPE(x) == REL_RELATIVE) || \
-	(R_TYPE(x) == REL_CAPRELATIVE) || \
-	(R_TYPE(x) == REL_FUNCREL) || \
+	(R_TYPE(x) == REL_CAP_RELATIVE) || \
+	(R_TYPE(x) == REL_FUNC_RELATIVE) || \
 	(R_TYPE(x) == REL_SYM_OR_REL && !R_SYM(x)) )
 #else
 #define IS_RELATIVE(x,s) ( ( \

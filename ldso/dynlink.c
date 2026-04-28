@@ -634,11 +634,11 @@ static void do_relocs(struct dso *dso, size_t *rel, size_t rel_size, size_t stri
 			memcpy(reloc_addr, &(size_t){(size_t)sym_val + addend}, sizeof(size_t));
 			break;
 		case REL_RELATIVE:
-		case REL_FUNCREL:
+		case REL_FUNC_RELATIVE:
 			*(size_t *)reloc_addr = dso->base + addend;
 			break;
 #ifdef __CHERI_PURE_CAPABILITY__
-		case REL_CAPRELATIVE:
+		case REL_CAP_RELATIVE:
 			cheri_do_caprelative(reloc_addr, addend, dso->base,
 					     dso->rx_capability, dso->rw_capability);
 			break;

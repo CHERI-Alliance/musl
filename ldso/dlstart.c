@@ -180,7 +180,7 @@ hidden void _dlstart_c(uintptr_t *sp, size_t *dynv_raw)
 	for (; rel_count; rel_count--, rel_ptr++) {
 		if (!IS_RELATIVE(rel_ptr->r_info, 0)) continue;
 		void *rel_addr = CHERI_CAP(rw_cap, base + rel_ptr->r_offset);
-		if (R_TYPE(rel_ptr->r_info) != REL_CAPRELATIVE) {
+		if (R_TYPE(rel_ptr->r_info) != REL_CAP_RELATIVE) {
 			*(size_t *)rel_addr = base + *(size_t *)rel_addr;
 		} else {
 #ifdef __CHERI_PURE_CAPABILITY__
@@ -197,7 +197,7 @@ hidden void _dlstart_c(uintptr_t *sp, size_t *dynv_raw)
 	for (; rel_count; rel_count--, rela_ptr++) {
 		if (!IS_RELATIVE(rela_ptr->r_info, 0)) continue;
 		void *rel_addr = CHERI_CAP(rw_cap, base + rela_ptr->r_offset);
-		if (R_TYPE(rela_ptr->r_info) != REL_CAPRELATIVE) {
+		if (R_TYPE(rela_ptr->r_info) != REL_CAP_RELATIVE) {
 			*(size_t *)rel_addr = base + rela_ptr->r_addend;
 		} else {
 #ifdef __CHERI_PURE_CAPABILITY__

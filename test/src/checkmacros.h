@@ -35,9 +35,6 @@ static inline bool get_mem_tag(ptraddr_t address, void *wide_cap)
 				printf("tag: %016lx %016lx - %lu %lu\n",        \
 					y, x, ty, tx);                              \
 				u = k + 1; break;                               \
-			} else {                                            \
-				printf("tag: %016lx %016lx - %lu %lu\n",        \
-					y, x, ty, tx);                              \
 			}                                                   \
 		}                                                       \
 	}                                                           \

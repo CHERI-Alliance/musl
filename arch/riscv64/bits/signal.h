@@ -51,8 +51,12 @@ typedef struct mcontext_t {
 #endif
 
 #if defined(_GNU_SOURCE) || defined(_BSD_SOURCE)
+#ifdef __CHERI_PURE_CAPABILITY__
+typedef __uintcap_t greg_t;
+#else
 typedef unsigned long greg_t;
-typedef unsigned long gregset_t[32];
+#endif
+typedef greg_t gregset_t[32];
 typedef union __riscv_mc_fp_state fpregset_t;
 struct sigcontext {
 	gregset_t gregs;

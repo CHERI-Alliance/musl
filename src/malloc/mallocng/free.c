@@ -104,9 +104,9 @@ void free(void *p)
 
 #ifdef __CHERI_PURE_CAPABILITY__
 	void *g_mem;
-	wrlock();
+	mallocmap_wrlock();
 	g_mem = mallocmap_delete(p, &(ctx.capmap));
-	unlock();
+	mallocmap_unlock();
 	assert(g_mem);
 	p = __builtin_cheri_address_set(g_mem, (size_t) p);
 #endif

@@ -13,9 +13,7 @@ void *realloc(void *p, size_t n)
 	size_t req_n = n;
 
 #ifdef __CHERI_PURE_CAPABILITY__
-	rdlock();
 	p = expand_bounds(p);
-	unlock();
 #endif
 
 	if (size_overflows(n)) return 0;
@@ -45,11 +43,12 @@ void *realloc(void *p, size_t n)
 		set_size(p, end, n);
 
 #ifdef __CHERI_PURE_CAPABILITY__
-		wrlock();
-		mallocmap_delete(userp, &(ctx.capmap));
 		p = restrict_user_ptr(p, n);
+		mallocmap_wrlock();
+		// XXX: mallocmap_update
+		mallocmap_delete(userp, &(ctx.capmap));
 		mallocmap_insert(p, g->mem, &(ctx.capmap));
-		unlock();
+		mallocmap_unlock();
 #endif
 		return p;
 	}
@@ -72,11 +71,12 @@ void *realloc(void *p, size_t n)
 			*end = 0;
 			set_size(p, end, n);
 #ifdef __CHERI_PURE_CAPABILITY__
-			wrlock();
-			mallocmap_delete(userp, &(ctx.capmap));
 			p = restrict_user_ptr(p, n);
+			mallocmap_wrlock();
+			// XXX: mallocmap_update
+			mallocmap_delete(userp, &(ctx.capmap));
 			mallocmap_insert(p, g->mem, &(ctx.capmap));
-			unlock();
+			mallocmap_unlock();
 #endif
 			return p;
 		}

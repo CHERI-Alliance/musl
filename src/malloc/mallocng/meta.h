@@ -121,7 +121,9 @@ static const unsigned long USER_PTR_PERMS_REMOVED =
 #endif
 
 static inline void *expand_bounds(void *p) {
+	mallocmap_rdlock();
 	struct group *g = (struct group *) mallocmap_find(p, &(ctx.capmap));
+	mallocmap_unlock();
 	assert(g);
 
 	return __builtin_cheri_address_set(g, (size_t) p);

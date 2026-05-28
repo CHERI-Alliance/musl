@@ -62,8 +62,6 @@ static inline uint64_t get_random_secret()
 
 #define MT (libc.need_locks)
 
-#define RDLOCK_IS_EXCLUSIVE 1
-
 #define FUTEX_WAIT_BITSET   9
 #define FUTEX_WAKE_BITSET   10
 #define FUTEX_PRIVATE_FLAG  128
@@ -253,12 +251,26 @@ static inline void ll_unlock(int *lock) {
 	}
 }
 
+#if !defined(MALLOCNG_LOCK_MUTEX) && !defined(MALLOCNG_LOCK_RWLOCK)
+#define MALLOCNG_LOCK_MUTEX
+#endif
+
 __attribute__((__visibility__("hidden")))
 extern int __malloc_lock[1];
 
+__attribute__((__visibility__("hidden")))
+extern int __mallocmap_lock[1];
+
 #define LOCK_OBJ_DEF \
 void __malloc_atfork(int who) { malloc_atfork(who); } \
-int __malloc_lock[1]
+int __malloc_lock[1];								  \
+int __mallocmap_lock[1]
+
+#if defined(MALLOCNG_LOCK_MUTEX) && defined(MALLOCNG_LOCK_RWLOCK)
+#error "Cannot define both MALLOCNG_LOCK_MUTEX and MALLOCNG_LOCK_RWLOCK"
+#elif defined(MALLOCNG_LOCK_MUTEX)
+
+#define RDLOCK_IS_EXCLUSIVE 1
 
 static inline void rdlock()
 {
@@ -275,16 +287,80 @@ static inline void unlock()
 static inline void upgradelock()
 {
 }
+static inline void mallocmap_rdlock()
+{
+	if (MT) LOCK(__mallocmap_lock);
+}
+static inline void mallocmap_wrlock()
+{
+	if (MT) LOCK(__mallocmap_lock);
+}
+static inline void mallocmap_unlock()
+{
+	UNLOCK(__mallocmap_lock);
+}
+
+#elif defined(MALLOCNG_LOCK_RWLOCK)
+
+#define RDLOCK_IS_EXCLUSIVE 0
+
+#if !defined(LL_RDLOCK_MAX_TRIES)
+#define LL_RDLOCK_MAX_TRIES 50
+#endif
+
+#if !defined(LL_WRLOCK_MAX_TRIES)
+#define LL_WRLOCK_MAX_TRIES 50
+#endif
+
+static inline void rdlock() {
+	if (MT) ll_rdlock(__malloc_lock, LL_RDLOCK_MAX_TRIES);
+}
+
+static inline void wrlock() {
+	if (MT) ll_wrlock(__malloc_lock, LL_WRLOCK_MAX_TRIES);
+}
+
+static inline void unlock() {
+	if (MT) ll_unlock(__malloc_lock);
+}
+
+static inline void upgradelock(void) {
+	if (!MT) return;
+
+	if (ll_try_upgradelock(__malloc_lock))
+		return;
+
+	unlock();
+	wrlock();
+}
+
+static inline void mallocmap_rdlock() {
+	ll_rdlock(__mallocmap_lock, LL_WRLOCK_MAX_TRIES);
+}
+
+static inline void mallocmap_wrlock() {
+	ll_wrlock(__mallocmap_lock, LL_WRLOCK_MAX_TRIES);
+}
+
+static inline void mallocmap_unlock() {
+	ll_unlock(__mallocmap_lock);
+}
+
+#else
+#error "A lock implementation must be selected"
+#endif
+
 static inline void resetlock()
 {
 	__malloc_lock[0] = 0;
+	__mallocmap_lock[0] = 0;
 }
 
 static inline void malloc_atfork(int who)
 {
-	if (who<0) rdlock();
+	if (who<0) { rdlock(); mallocmap_rdlock(); }
 	else if (who>0) resetlock();
-	else unlock();
+	else { unlock(); mallocmap_unlock(); };
 }
 
 void *malloc_aligned(size_t n, size_t align);

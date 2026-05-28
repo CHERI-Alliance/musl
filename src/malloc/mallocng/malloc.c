@@ -437,7 +437,9 @@ success:
 	void *p = enframe(g, idx, n, ctr, align);
 	p = restrict_user_ptr(p, n);
 
+	mallocmap_wrlock();
 	int r = mallocmap_insert(p, g->mem, &(ctx.capmap));
+	mallocmap_unlock();
 	if (!r) {
 		// set the freed bit. we either hold the rdlock or the wrlock
 		// here. in any case, g will stay the active group and only be
@@ -485,9 +487,7 @@ void *malloc(size_t n) {
 int is_allzero(void *p)
 {
 #ifdef __CHERI_PURE_CAPABILITY__
-	rdlock();
 	p = expand_bounds(p);
-	unlock();
 #endif
 
 	struct meta *g = get_meta(p);

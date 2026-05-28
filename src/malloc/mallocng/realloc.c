@@ -44,11 +44,12 @@ void *realloc(void *p, size_t n)
 
 #if defined(__CHERI_PURE_CAPABILITY__) && !defined(MALLOCNG_CHERI_UNRESTRICTED)
 		p = restrict_user_ptr(p, n);
-		mallocmap_wrlock();
-		// XXX: mallocmap_update
-		mallocmap_delete(userp, &(ctx.capmap));
-		mallocmap_insert(p, g->mem, &(ctx.capmap));
-		mallocmap_unlock();
+		int err = mallocmap_update(userp, p, g->mem, &(ctx.capmap));
+		assert(!err || err == ENOMEM);
+		if (err == ENOMEM)
+			// Cannot update mallocmap due out-of-memory.
+			// Fall back to malloc_then_free.
+			goto malloc_then_free;
 #endif
 		return p;
 	}
@@ -72,11 +73,13 @@ void *realloc(void *p, size_t n)
 			set_size(p, end, n);
 #if defined(__CHERI_PURE_CAPABILITY__) && !defined(MALLOCNG_CHERI_UNRESTRICTED)
 			p = restrict_user_ptr(p, n);
-			mallocmap_wrlock();
-			// XXX: mallocmap_update
-			mallocmap_delete(userp, &(ctx.capmap));
-			mallocmap_insert(p, g->mem, &(ctx.capmap));
-			mallocmap_unlock();
+			int err = mallocmap_update(userp, p, g->mem, &(ctx.capmap));
+			// This is an edge case when it comes to CHERI. We could
+			// consider dropping the MREMAP_MAYMOVE flag above. Then
+			// mallocmap_update should never fail with ENOMEM
+			// here. And, if mremap() fails, the code will fall back
+			// to malloc_then_free.
+			assert(!err);
 #endif
 			return p;
 		}

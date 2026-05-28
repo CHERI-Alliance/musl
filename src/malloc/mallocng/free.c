@@ -104,10 +104,8 @@ void free(void *p)
 
 #if defined(__CHERI_PURE_CAPABILITY__) && !defined(MALLOCNG_CHERI_UNRESTRICTED)
 	void *g_mem;
-	mallocmap_wrlock();
-	g_mem = mallocmap_delete(p, &(ctx.capmap));
-	mallocmap_unlock();
-	assert(g_mem);
+	int err = mallocmap_delete(p, &g_mem, &(ctx.capmap));
+	assert(!err);
 	p = __builtin_cheri_address_set(g_mem, (size_t) p);
 #endif
 
@@ -134,6 +132,14 @@ void free(void *p)
 			errno = e;
 		}
 	}
+
+	__free_slot(g, idx);
+}
+
+__attribute__((__visibility__("hidden")))
+void __free_slot(struct meta *g, int idx)
+{
+	uint32_t self = 1u<<idx, all = (2u<<g->last_idx)-1;
 
 	// atomic free without locking if this is neither first or last slot
 	for (;;) {

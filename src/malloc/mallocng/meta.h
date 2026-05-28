@@ -94,6 +94,9 @@ struct meta *alloc_meta(void);
 __attribute__((__visibility__("hidden")))
 int is_allzero(void *);
 
+__attribute__((__visibility__("hidden")))
+void __free_slot(struct meta *g, int idx);
+
 #ifdef __CHERI_PURE_CAPABILITY__
 static const unsigned long USER_PTR_PERMS_REMOVED =
 #ifdef __riscv_zcheripurecap
@@ -126,9 +129,7 @@ static inline void *expand_bounds(void *p) {
 }
 #else
 static inline void *expand_bounds(void *p) {
-	mallocmap_rdlock();
 	struct group *g = (struct group *) mallocmap_find(p, &(ctx.capmap));
-	mallocmap_unlock();
 	assert(g);
 
 	return __builtin_cheri_address_set(g, (size_t) p);

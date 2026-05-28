@@ -70,7 +70,8 @@ struct meta *alloc_meta(void)
 #endif
 
 #if defined(__CHERI_PURE_CAPABILITY__) && !defined(MALLOCNG_CHERI_UNRESTRICTED)
-		mallocmap_create(1024, &(ctx.capmap));
+		int err = mallocmap_create(1024, &(ctx.capmap));
+		assert(!err);
 #endif
 
 		ctx.secret = get_random_secret();
@@ -432,44 +433,23 @@ void *malloc_aligned(size_t n, size_t align)
 
 success:
 	ctr = ctx.mmap_counter;
-
-#ifdef __CHERI_PURE_CAPABILITY__
+	unlock();
 	void *p = enframe(g, idx, n, ctr, align);
-#ifndef MALLOCNG_CHERI_UNRESTRICTED
+#if defined(__CHERI_PURE_CAPABILITY__) && !defined(MALLOCNG_CHERI_UNRESTRICTED)
 	p = restrict_user_ptr(p, n);
 
-	mallocmap_wrlock();
-	int r = mallocmap_insert(p, g->mem, &(ctx.capmap));
-	mallocmap_unlock();
-	if (!r) {
-		// set the freed bit. we either hold the rdlock or the wrlock
-		// here. in any case, g will stay the active group and only be
-		// potentially replaced after we release the lock and a wrlock()
-		// is aquired subsequently. in a subsequent alloc path, freed_mask
-		// bits will be transferred to avail_mask. or, in the free path,
-		// the group will be potentially destroyed.
-		first = 1u<<idx;
-		if (MT) {
-			for (;;) {
-				mask = g->freed_mask;
-				if (a_cas(&g->freed_mask,mask,mask+first)==mask) break;
-			}
-		} else
-			g->freed_mask += first;
-
-		unlock();
+	int err = mallocmap_insert(p, g->mem, &(ctx.capmap));
+	assert(!err || err == ENOMEM);
+	if (err == ENOMEM) {
+		// Slot capability map insertion failed. Safely tear down the
+		// logical slot allocation using standard free logic to prevent
+		// stranding the active group or leaking an empty unmapped region.
+		__free_slot(g, idx);
 		return 0;
 	}
 #endif
-#endif
 
-	unlock();
-
-#ifdef __CHERI_PURE_CAPABILITY__
 	return p;
-#else
-	return enframe(g, idx, n, ctr, align);
-#endif
 }
 
 void *malloc(size_t n) {

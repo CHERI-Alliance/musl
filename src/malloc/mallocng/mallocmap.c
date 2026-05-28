@@ -6,259 +6,465 @@
 #include <sys/mman.h>
 #include <stddef.h>
 #include "cheri_helpers.h"
+#include "glue.h"
+#include "meta.h"
 
 #include "mallocmap.h"
 
 
 /*
-Open addressing hash table with 2^n table size
-
-Quadratic probing is used in case of hash collision
-
-Tab indices and hash are size_t
-
-Only the key's address is used for calculating the hash - the
- capability is simply preserved for validation against the provided
- capability once the entry is found.
-
-Lazy deletion is used to avoid overly expensive deletions.
-
-There are some special values that can be used for key:
- - When an element is not present (never been inserted or deleted),
-    NOT_PRESENT (= NULL) is used.
- - When an element has been deleted, the key is preserved but the
-    value is set to NOT_PRESENT (= NULL).
-
-// TODO: Potentially use Robin Hood hashing for better performance.
-*/
+ * Sharded hash-map implementation.
+ *
+ * 1. Sharded Concurrency:
+ * Each shard maintains its own read/write lock, capacity limit, and entry array.
+ *
+ * 2. Hashing
+ * - Hightest bits (SHARD_SHIFT) of the resulting hash determine the shard index.
+ * - Middle-high bits dictate the ideal bucket index within that shard.
+ *
+ * 3. Open Addressing
+ * Dynamic allocations required by hash-map implementations using
+ * chaining create a catch-22 problem when the hash-map is supposed to
+ * be used by an allocator. Therefore, we use open addressing, which
+ * also increases cache locality.
+ *
+ * 4. Collision Resolution: Linear Probing
+ * The hash map uses open addressing with linear probing. If a bucket
+ * is occupied, it probes the next adjacent bucket until an empty slot
+ * is found.
+ *
+ * 5. Backward-Shift Deletion (No Tombstones):
+ * Traditional open-addressing hash-maps use "tombstones" for deleted
+ * elements, which slowly degrade read performance and trigger
+ * rehashes. This map uses a Backward-Shift Deletion algorithm
+ * instead. When an entry is deleted, subsequent entries in the
+ * cluster are evaluated and shifted backwards to close the gap
+ * (unless they would jump ahead of their ideal index). This keeps the
+ * map optimally clean and balances the work between insert and delete
+ * operations. For comparison, a previous tombstone-based
+ * implementation of mallocmap spent 8.9% of execution time on inserts
+ * and 1.0% on deletes (9.9% total) during the SPEC omnetpp_r
+ * benchmark. This backward-shift approach balances the workload,
+ * spending 4.1% on inserts and 5.1% on deletes, which reduces the
+ * total overhead to 9.2%.
+ *
+ * 6. Dynamic Localized Resizing:
+ * Shards resize independently. When an individual shard's load factor
+ * exceeds 75%, it allocates a new double-sized map and linear probes
+ * the old entries into the new map, and unmaps the old memory.
+ */
 
 #define NOT_PRESENT ((void *) NULL)
 
 #define MINSIZE 8
 #define MAXSIZE ((size_t)-1/2 + 1)
 
-inline static size_t mallocmap_keyhash_impl(ptraddr_t k)
-{
-	size_t r;
+#if !defined(MALLOCMAP_SHARD_BITS)
+#define MALLOCMAP_SHARD_BITS 4
+#endif
+#define NUM_SHARDS (1 << MALLOCMAP_SHARD_BITS)
+#define SHARD_MASK (NUM_SHARDS - 1)
+#define SHARD_SHIFT (64 - MALLOCMAP_SHARD_BITS)
+
+#if !defined(MALLOCMAP_SHARD_RDLOCK_MAX_TRIES)
+#define MALLOCMAP_SHARD_RDLOCK_MAX_TRIES 50
+#endif
+
+#if !defined(MALLOCMAP_SHARD_WRLOCK_MAX_TRIES)
+#define MALLOCMAP_SHARD_WRLOCK_MAX_TRIES 50
+#endif
+
+#define GOLDEN_RATIO_64 11400714819323198485ull
+
+typedef struct shard {
+	int lock[1];
+	size_t mask;
+	size_t used;
+	MALLOCMAP_ENTRY *entries;
+} __attribute__((__aligned__(64))) shard_t;
+
+static inline void shard_rdlock(shard_t *s) {
+	if (MT) ll_rdlock(s->lock, MALLOCMAP_SHARD_RDLOCK_MAX_TRIES);
+}
+
+static inline void shard_wrlock(shard_t *s) {
+	if (MT) ll_wrlock(s->lock, MALLOCMAP_SHARD_WRLOCK_MAX_TRIES);
+}
+
+static inline void shard_unlock(shard_t *s) {
+	if (MT) ll_unlock(s->lock);
+}
+
+static inline int shard_upgradelock(shard_t *s) {
+	if (!MT) return 1;
+
+	if (ll_try_upgradelock(s->lock)) return 1;
+
+	int max_tries = 10;
+	ll_unlock(s->lock);
+	ll_wrlock(s->lock, max_tries);
+	return 0;
+}
+
+
+inline static uint64_t mallocmap_keyhash_impl(ptraddr_t k) {
 #if defined(__aarch64__) && defined(__ARM_FEATURE_CRC32)
+	uint32_t r;
 	unsigned x = 42;
 	__asm__ volatile(
 		"crc32cx %w0, %w1, %x2" : "=r"(r) : "r"(x), "r"(k)
 	);
+	return ((uint64_t)r | ((uint64_t)r << 32)) * GOLDEN_RATIO_64;
 #elif defined(__x86_64__)
-	r = 42;
+	uint32_t r = 42;
 	__asm__ volatile(
 		"crc32 %1, %0" : "+r"(r) : "r"(k)
 	);
+	return ((uint64_t)r | ((uint64_t)r << 32)) * GOLDEN_RATIO_64;
 #else
-	// A very simple "hash" function: the value of 'k' can be used as a key.
-	r = k & 0xfffffffful;
+	// Fibonacci hashing
+	return (uint64_t)k * GOLDEN_RATIO_64;
 #endif
-	return r;
 }
 
-inline static size_t mallocmap_keyhash(void *k) {
+inline static uint64_t mallocmap_keyhash(void *k) {
 	return mallocmap_keyhash_impl(__builtin_cheri_address_get(k));
 }
 
-static int mallocmap_resize(size_t nel, struct __mallocmap_tab *htab)
-{
-	size_t newsize;
-	size_t i, j;
-	MALLOCMAP_ENTRY *e, *newe;
-	MALLOCMAP_ENTRY *oldtab = htab->entries;
-	MALLOCMAP_ENTRY *oldend = htab->entries + htab->mask + 1;
-
+/*
+ * Resizes an individual shard. Must be called with the shard write lock held.
+ */
+static int shard_resize(shard_t *shard, size_t nel) {
+	size_t newsize = MINSIZE;
 	if (nel > MAXSIZE) nel = MAXSIZE;
+	while (newsize < nel) newsize *= 2;
 
-	// Ensure newsize is a power of 2, and greater than MINSIZE.
-	for (newsize = MINSIZE; newsize < nel; newsize *= 2);
+	size_t map_size = ((newsize * sizeof(MALLOCMAP_ENTRY)) + PGSZ - 1) & -PGSZ;
+	MALLOCMAP_ENTRY *new_entries = mmap(0, map_size,
+		PROT_READ | PROT_WRITE, MAP_PRIVATE | MAP_ANON, -1, 0);
 
-	// Reset tombstones as we are rebuilding the hash table
-	htab->tombs = 0;
-
-	// Round up new size to nearest 4096 for mmap.
-	size_t map_size = ((newsize * (sizeof *htab->entries)) + 4096 - 1) & -4096;
-
-	htab->entries = mmap(0, map_size,
-		PROT_READ|PROT_WRITE, MAP_PRIVATE|MAP_ANON, -1, 0);
-
-	if (htab->entries == MAP_FAILED) {
-		htab->entries = oldtab;
-		return 0;
-	}
+	if (new_entries == MAP_FAILED) return errno;
 
 #ifdef __CHERI_PURE_CAPABILITY__
-	htab->entries = __builtin_cheri_bounds_set(htab->entries, map_size);
-	htab->entries = __builtin_cheri_perms_and(htab->entries, MUSL_CAP_PROT_MALLOC);
+	new_entries = __builtin_cheri_bounds_set(new_entries, map_size);
+	new_entries = __builtin_cheri_perms_and(new_entries, MUSL_CAP_PROT_MALLOC);
 #endif
 
-	htab->mask = newsize - 1;
+	size_t old_mask = shard->mask;
+	MALLOCMAP_ENTRY *old_entries = shard->entries;
 
-	// If this is the initial setup, return now.
-	if (!oldtab) return 1;
+	shard->mask = newsize - 1;
+	shard->entries = new_entries;
+	shard->used = 0;
 
-	// Now that our table has been resized, we must repopulate it
-	//  with new hashes.
-	// TODO: Avoidable with prime number magic?
-	for (e = oldtab; e < oldend; e++) {
-		if (e->key != NOT_PRESENT && e->data != NOT_PRESENT) {
-			// Insert into new hashmap
-			for (i = mallocmap_keyhash(e->key), j=1; ; i += j++) {
-				newe = htab->entries + (i & htab->mask);
-				if (newe->key == NOT_PRESENT)
-					break;
+	if (!old_entries) return 0;
+
+	// Repopulate using linear probing without tombstones
+	for (size_t i = 0; i <= old_mask; i++) {
+		if (old_entries[i].key != NOT_PRESENT) {
+			uint64_t hash = mallocmap_keyhash(old_entries[i].key);
+			size_t idx = (hash >> 32) & shard->mask; // Middle-high bits for bucket
+
+			while (shard->entries[idx].key != NOT_PRESENT) {
+				idx = (idx + 1) & shard->mask;
 			}
-
-			newe->key = e->key;
-			newe->data = e->data;
+			shard->entries[idx] = old_entries[i];
+			shard->used++;
 		}
 	}
 
-	if (oldtab) {
-		// Now that the old data has been copied into the new hash table, we
-		//  can unmap the old table.
-		map_size = ((oldend - oldtab) + 4096 - 1) & -4096;
-		munmap(oldtab, map_size);
-	}
+	size_t old_map_size = (((old_mask + 1) * sizeof(MALLOCMAP_ENTRY)) + PGSZ - 1) & -PGSZ;
+	int err = munmap(old_entries, old_map_size);
+	if (err)
+		return errno;
 
-	return 1;
-}
-
-int mallocmap_create(size_t nel, struct __mallocmap_tab *htab)
-{
-	int r = mallocmap_resize(nel, htab);
-
-	return r;
+	return 0;
 }
 
 /*
- * Returns a value for the given key.
- *
- * Returns NULL if no value exists.
+ * Create a new mallocmap, returns zero on success.
+ */
+int mallocmap_create(size_t nel, struct __mallocmap_tab *htab) {
+	size_t map_size = ((NUM_SHARDS * sizeof(shard_t)) + PGSZ - 1) & -PGSZ;
+	shard_t *shards = mmap(0, map_size,
+		PROT_READ | PROT_WRITE, MAP_PRIVATE | MAP_ANON, -1, 0);
+
+	if (shards == MAP_FAILED) return ENOMEM;
+
+#ifdef __CHERI_PURE_CAPABILITY__
+	shards = __builtin_cheri_bounds_set(shards, map_size);
+	shards = __builtin_cheri_perms_and(shards, MUSL_CAP_PROT_MALLOC);
+#endif
+
+	size_t per_shard_nel = nel / NUM_SHARDS;
+	if (per_shard_nel < MINSIZE) per_shard_nel = MINSIZE;
+
+	for (int i = 0; i < NUM_SHARDS; i++) {
+		shards[i].lock[0] = 0;
+		shards[i].used = 0;
+		shards[i].entries = NULL;
+		int err = shard_resize(&shards[i], per_shard_nel);
+		if (err) {
+			for (int j = 0; j < i; j++) {
+				size_t old_map_size = (((shards[j].mask + 1) * sizeof(MALLOCMAP_ENTRY)) + PGSZ - 1) & -PGSZ;
+				munmap(shards[j].entries, old_map_size);
+			}
+			munmap(shards, map_size);
+			return ENOMEM;
+		}
+	}
+
+	htab->entries = (MALLOCMAP_ENTRY *)shards;
+	return 0;
+}
+
+/*
+ * Returns a value for the given key. Uses read-side lock exclusively.
  */
 void *mallocmap_find(void *key, struct __mallocmap_tab *htab) {
-	size_t hash = mallocmap_keyhash(key);
-
 	MALLOCMAP_ENTRY *e;
-	MALLOCMAP_ENTRY *tomb = 0;
-	size_t probe = 1;
+	void *res = NULL;
+	shard_t *shards = (shard_t *)htab->entries;
+	uint64_t hash = mallocmap_keyhash(key);
+	shard_t *shard = &shards[hash >> SHARD_SHIFT]; // Top bits for shard
 
-	while ((e = htab->entries + (hash & htab->mask))->key != key) {
-		if (e->key == NOT_PRESENT) {
-			return NULL;
+	shard_rdlock(shard);
+
+	size_t idx = (hash >> 32) & shard->mask; // Middle-high bits for bucket
+	while ((e = &shard->entries[idx])->key != NOT_PRESENT) {
+		if (__builtin_cheri_equal_exact(key, e->key)) {
+			res = e->data;
+			goto out;
 		}
-
-		if (!tomb && e->data == NOT_PRESENT) {
-			// Remember this tombstone so we can shift it with our found value.
-			tomb = e;
-		}
-
-		// Quadratic probing.
-		hash += probe++;
+		idx = (idx + 1) & shard->mask;
 	}
 
-	if (tomb) {
-		// Overwrite the tomb to improve time on any future searches
-		tomb->key = key;
-		tomb->data = e->data;
-
-		e->data = NULL;
-
-		e = tomb;
-	}
-
-	if(!__builtin_cheri_equal_exact(key, e->key)) {
-		// The provided capability is different to when it was inserted.
-		return NULL;
-	}
-
-	return e->data;
+ out:
+	shard_unlock(shard);
+	return res;
 }
 
 /*
  * Inserts a new value.
- *
- * Returns 1 on success, 0 on failure.
+ * Takes a direct write lock because malloc() almost always inserts a new pointer,
+ * making read-lock upgrades an unnecessary atomic overhead.
+ * Returns zero on success. Non zero return values include EEXIST if an entry with
+ * the given key already exists and ENOMEM if out of memory.
  */
 int mallocmap_insert(void *key, void *data, struct __mallocmap_tab *htab) {
-	size_t hash = mallocmap_keyhash(key);
-
 	MALLOCMAP_ENTRY *e;
-	size_t probe = 1;
+	shard_t *shards = (shard_t *)htab->entries;
+	uint64_t hash = mallocmap_keyhash(key);
+	shard_t *shard = &shards[hash >> SHARD_SHIFT]; // Top bits for shard
 
-	while ((e = htab->entries + (hash & htab->mask))) {
-		if (e->key == NOT_PRESENT) {
-			// New insertion
-			break;
+	shard_wrlock(shard);
+
+	// Double capacity if load factor exceeds 75%. We resize before
+	// checking for duplicates, as for mallocmap's use case, there
+	// should not be any duplicates on insertion. Otherwise, we would
+	// need to recalculate the index after the resize operation again.
+	if (shard->used + 1 > shard->mask - (shard->mask / 4)) {
+		int err = shard_resize(shard, (shard->mask + 1) * 2);
+		if (err) {
+			shard_unlock(shard);
+			return err;
 		}
-
-		if (e->data == NOT_PRESENT) {
-			// Replace tombstone
-			htab->tombs--;
-
-			break;
-		}
-
-		if (e->key == key) {
-			// Key already exists in map
-			return 0;
-		}
-
-		// Quadratic probing
-		hash += probe++;
 	}
 
-	// Insert new entry into hash table.
+	size_t idx = (hash >> 32) & shard->mask; // Middle-high bits for bucket
+	// Read phase: Ensure the key doesn't already exist
+	while ((e = &shard->entries[idx])->key != NOT_PRESENT) {
+		if (e->key == key) {
+			shard_unlock(shard);
+			return EEXIST;
+		}
+		idx = (idx + 1) & shard->mask;
+	}
+
 	e->key = key;
 	e->data = data;
+	shard->used++;
 
-	// Double hashmap size if our hashmap is too full now.
-	if (++htab->used > htab->mask - htab->mask/4) {
-		if (!mallocmap_resize(2 * htab->used, htab)) {
-			// Resize failed, return error.
-			htab->used--;
-			e->key = NOT_PRESENT;
-
-			return 0;
-		}
-	}
-
-	return 1;
+	shard_unlock(shard);
+	return 0;
 }
 
 /*
- * Delete item from hashmap.
- *
- * Returns the value of the deleted item on success, 0 on failure.
+ * Updates an existing value. Does not insert the data if no
+ * existing key could be found. Takes read lock to find, upgrades to
+ * write lock to execute the swap.
  */
-void *mallocmap_delete(void *key, struct __mallocmap_tab *htab) {
-	size_t hash = mallocmap_keyhash(key);
-
+int mallocmap_update(void *old_key, void *new_key, void *new_data, struct __mallocmap_tab *htab) {
 	MALLOCMAP_ENTRY *e;
+	shard_t *shards = (shard_t *)htab->entries;
+	ptraddr_t old_addr = __builtin_cheri_address_get(old_key);
+	ptraddr_t new_addr = __builtin_cheri_address_get(new_key);
+	uint64_t old_hash = mallocmap_keyhash(old_key);
 
-	size_t probe = 1;
-	size_t index = hash;
-	while ((e = htab->entries + (index & htab->mask))->key != key) {
-		if (e->key == NOT_PRESENT) {
+	// Fast Path: In-place update (Address is identical, only bounds/perms changed)
+	// Safe to update within the exact same bucket.
+	if (old_addr == new_addr) {
+		uint64_t hash = old_hash;
+		shard_t *shard = &shards[old_hash >> SHARD_SHIFT];
+		size_t idx = (hash >> 32) & shard->mask;
+
+		shard_rdlock(shard);
+
+		while ((e = &shard->entries[idx])->key != NOT_PRESENT) {
+			if (!__builtin_cheri_equal_exact(old_key, e->key)) {
+				idx = (idx + 1) & shard->mask;
+				continue;
+			}
+
+			if (!shard_upgradelock(shard)) {
+				// Lock upgrade was non-atomic, re-verify element didn't shift
+				idx = (hash >> 32) & shard->mask;
+				while ((e = &shard->entries[idx])->key != NOT_PRESENT) {
+					if (__builtin_cheri_equal_exact(old_key, e->key)) {
+						goto do_update_fast;
+					}
+					idx = (idx + 1) & shard->mask;
+				}
+				shard_unlock(shard);
+				return ENOENT; // Deleted while waiting to upgrade the lock.
+			}
+		do_update_fast:
+			e->key = new_key;
+			e->data = new_data;
+			shard_unlock(shard);
 			return 0;
 		}
-
-		// Quadratic probing
-		index += probe++;
+		shard_unlock(shard);
+		return ENOENT;
 	}
 
-	void *ret = e->data;
-	e->data = NOT_PRESENT;
+	// Address changed. Calculate new hash to route the operation.
+	uint64_t new_hash = mallocmap_keyhash(new_key);
+	size_t old_shard_idx = old_hash >> SHARD_SHIFT;
+	size_t new_shard_idx = new_hash >> SHARD_SHIFT;
 
-	htab->used--;
-	if (++htab->tombs > htab->used && htab->used > htab->mask / 4) {
-		// Try to rebuild the hash table if the number of tombs exceeds number of
-		// active items. If the resize fails, the we still have deleted the entry.
-		mallocmap_resize(2 * htab->used, htab);
+	// Cross-Shard Update. This is non-atomic wrt. to mallocmap.
+	if (old_shard_idx != new_shard_idx) {
+		int err = mallocmap_delete(old_key, NULL, htab);
+		if (err) return err;
+		return mallocmap_insert(new_key, new_data, htab);
 	}
 
-	return ret;
+	// Same-Shard Update: Atomic delete + insert, but only to acquire the lock once.
+	// Address changed, so ideal bucket changed. We must maintain linear probing invariants.
+	shard_t *shard = &shards[old_shard_idx];
+	shard_wrlock(shard);
+
+	// First, Inline Backward-Shift Delete
+	void *deleted_data = NULL;
+	size_t idx = (old_hash >> 32) & shard->mask;
+
+	while ((e = &shard->entries[idx])->key != NOT_PRESENT) {
+		if (!__builtin_cheri_equal_exact(old_key, e->key)) {
+			idx = (idx + 1) & shard->mask;
+			continue;
+		}
+
+		deleted_data = e->data;
+		shard->entries[idx].key = NOT_PRESENT;
+		shard->entries[idx].data = NOT_PRESENT;
+		shard->used--;
+
+		size_t curr = idx;
+		size_t next = (curr + 1) & shard->mask;
+		while (shard->entries[next].key != NOT_PRESENT) {
+			uint64_t next_hash = mallocmap_keyhash(shard->entries[next].key);
+			size_t ideal = (next_hash >> 32) & shard->mask;
+			size_t dist_next = (next - ideal) & shard->mask;
+			size_t dist_curr = (curr - ideal) & shard->mask;
+
+			if (dist_curr < dist_next) {
+				shard->entries[curr] = shard->entries[next];
+				shard->entries[next].key = NOT_PRESENT;
+				shard->entries[next].data = NOT_PRESENT;
+				curr = next;
+			}
+			next = (next + 1) & shard->mask;
+		}
+		break;
+	}
+
+	if (!deleted_data) {
+		shard_unlock(shard);
+		return ENOENT;
+	}
+
+	// Next, Inline Linear-Probe Insert
+	idx = (new_hash >> 32) & shard->mask;
+	while (shard->entries[idx].key != NOT_PRESENT)
+		idx = (idx + 1) & shard->mask;
+
+	// Note that we do not need to resize the shard, since we
+	// previously deleted an element.
+
+	shard->entries[idx].key = new_key;
+	shard->entries[idx].data = new_data;
+	shard->used++;
+
+	shard_unlock(shard);
+	return 0;  // Successful update;
+}
+
+/*
+ * Deletes item using Backward-Shift Deletion.
+ * Starts with a direct write lock because a successful deletion instantly
+ * modifies the structural layout of the buckets.
+ */
+int mallocmap_delete(void *key, void** existing, struct __mallocmap_tab *htab) {
+	MALLOCMAP_ENTRY *e;
+	shard_t *shards = (shard_t *)htab->entries;
+	uint64_t hash = mallocmap_keyhash(key);
+	shard_t *shard = &shards[hash >> SHARD_SHIFT]; // Top bits for shard
+
+	shard_wrlock(shard);
+
+	size_t idx = (hash >> 32) & shard->mask; // Middle-high bits for bucket
+	while ((e = &shard->entries[idx])->key != NOT_PRESENT) {
+		if (!__builtin_cheri_equal_exact(key, e->key)) {
+			idx = (idx + 1) & shard->mask;
+			continue;
+		}
+
+		if (existing)
+			*existing = e->data;
+
+		// Wipe the entry
+		shard->entries[idx].key = NOT_PRESENT;
+		shard->entries[idx].data = NOT_PRESENT;
+		shard->used--;
+
+		// Backward shift algorithm to close the gap without tombstones
+		size_t curr = idx;
+		size_t next = (curr + 1) & shard->mask;
+
+		while (shard->entries[next].key != NOT_PRESENT) {
+			uint64_t next_hash = mallocmap_keyhash(shard->entries[next].key);
+			size_t ideal = (next_hash >> 32) & shard->mask; // Middle-high bits for ideal bucket
+
+			size_t dist_next = (next - ideal) & shard->mask;
+			size_t dist_curr = (curr - ideal) & shard->mask;
+
+			// If next element is further from ideal than it would be at curr, shift it back.
+			if (dist_curr < dist_next) {
+				shard->entries[curr] = shard->entries[next];
+				shard->entries[next].key = NOT_PRESENT;
+				shard->entries[next].data = NOT_PRESENT;
+				curr = next;
+			}
+			next = (next + 1) & shard->mask;
+		}
+
+		shard_unlock(shard);
+		return 0;
+	}
+
+	shard_unlock(shard);
+	return ENOENT;
 }
 
 #endif

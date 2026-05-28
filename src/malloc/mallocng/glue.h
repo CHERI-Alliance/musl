@@ -258,13 +258,9 @@ static inline void ll_unlock(int *lock) {
 __attribute__((__visibility__("hidden")))
 extern int __malloc_lock[1];
 
-__attribute__((__visibility__("hidden")))
-extern int __mallocmap_lock[1];
-
 #define LOCK_OBJ_DEF \
 void __malloc_atfork(int who) { malloc_atfork(who); } \
-int __malloc_lock[1];								  \
-int __mallocmap_lock[1]
+int __malloc_lock[1]
 
 #if defined(MALLOCNG_LOCK_MUTEX) && defined(MALLOCNG_LOCK_RWLOCK)
 #error "Cannot define both MALLOCNG_LOCK_MUTEX and MALLOCNG_LOCK_RWLOCK"
@@ -286,18 +282,6 @@ static inline void unlock()
 }
 static inline void upgradelock()
 {
-}
-static inline void mallocmap_rdlock()
-{
-	if (MT) LOCK(__mallocmap_lock);
-}
-static inline void mallocmap_wrlock()
-{
-	if (MT) LOCK(__mallocmap_lock);
-}
-static inline void mallocmap_unlock()
-{
-	UNLOCK(__mallocmap_lock);
 }
 
 #elif defined(MALLOCNG_LOCK_RWLOCK)
@@ -334,18 +318,6 @@ static inline void upgradelock(void) {
 	wrlock();
 }
 
-static inline void mallocmap_rdlock() {
-	ll_rdlock(__mallocmap_lock, LL_WRLOCK_MAX_TRIES);
-}
-
-static inline void mallocmap_wrlock() {
-	ll_wrlock(__mallocmap_lock, LL_WRLOCK_MAX_TRIES);
-}
-
-static inline void mallocmap_unlock() {
-	ll_unlock(__mallocmap_lock);
-}
-
 #else
 #error "A lock implementation must be selected"
 #endif
@@ -353,14 +325,13 @@ static inline void mallocmap_unlock() {
 static inline void resetlock()
 {
 	__malloc_lock[0] = 0;
-	__mallocmap_lock[0] = 0;
 }
 
 static inline void malloc_atfork(int who)
 {
-	if (who<0) { rdlock(); mallocmap_rdlock(); }
+	if (who<0) rdlock();
 	else if (who>0) resetlock();
-	else { unlock(); mallocmap_unlock(); };
+	else unlock();
 }
 
 void *malloc_aligned(size_t n, size_t align);

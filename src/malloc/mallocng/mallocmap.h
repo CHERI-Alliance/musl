@@ -1,6 +1,7 @@
 #ifndef MALLOC_MAP_H
 #define MALLOC_MAP_H
 
+#include <errno.h>
 #include <inttypes.h>
 
 // Maps user pointers to widened capabilities.
@@ -27,6 +28,6 @@ struct __mallocmap_tab {
 int mallocmap_create(size_t nel, struct __mallocmap_tab *htab);
 void *mallocmap_find(void *key, struct __mallocmap_tab *htab);
 int mallocmap_insert(void *key, void *data, struct __mallocmap_tab *htab);
-void *mallocmap_delete(void *key, struct __mallocmap_tab *htab);
+int mallocmap_delete(void *key, void **existing, struct __mallocmap_tab *htab);
 
 #endif

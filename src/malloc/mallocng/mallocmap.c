@@ -230,9 +230,9 @@ int mallocmap_insert(void *key, void *data, struct __mallocmap_tab *htab) {
 /*
  * Delete item from hashmap.
  *
- * Returns 1 on success, 0 on failure.
+ * Returns the value of the deleted item on success, 0 on failure.
  */
-int mallocmap_delete(void *key, struct __mallocmap_tab *htab) {
+void *mallocmap_delete(void *key, struct __mallocmap_tab *htab) {
 	size_t hash = mallocmap_keyhash(key);
 
 	MALLOCMAP_ENTRY *e;
@@ -248,18 +248,17 @@ int mallocmap_delete(void *key, struct __mallocmap_tab *htab) {
 		index += probe++;
 	}
 
+	void *ret = e->data;
 	e->data = NOT_PRESENT;
 
 	htab->used--;
 	if (++htab->tombs > htab->used && htab->used > htab->mask / 4) {
-		// Rebuild the hash table if the number of tombs exceeds number of
-		//  active items.
-		if (!mallocmap_resize(2 * htab->used, htab)) {
-			return 0;
-		}
+		// Try to rebuild the hash table if the number of tombs exceeds number of
+		// active items. If the resize fails, the we still have deleted the entry.
+		mallocmap_resize(2 * htab->used, htab);
 	}
 
-	return 1;
+	return ret;
 }
 
 #endif

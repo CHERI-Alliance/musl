@@ -27,6 +27,6 @@ struct __mallocmap_tab {
 int mallocmap_create(size_t nel, struct __mallocmap_tab *htab);
 void *mallocmap_find(void *key, struct __mallocmap_tab *htab);
 int mallocmap_insert(void *key, void *data, struct __mallocmap_tab *htab);
-int mallocmap_delete(void *key, struct __mallocmap_tab *htab);
+void *mallocmap_delete(void *key, struct __mallocmap_tab *htab);
 
 #endif

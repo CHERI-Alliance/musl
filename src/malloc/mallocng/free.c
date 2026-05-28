@@ -103,10 +103,12 @@ void free(void *p)
 	if (!p) return;
 
 #ifdef __CHERI_PURE_CAPABILITY__
+	void *g_mem;
 	wrlock();
-	p = expand_bounds(p);
-	mallocmap_delete(p, &(ctx.capmap));
+	g_mem = mallocmap_delete(p, &(ctx.capmap));
 	unlock();
+	assert(g_mem);
+	p = __builtin_cheri_address_set(g_mem, (size_t) p);
 #endif
 
 	struct meta *g = get_meta(p);

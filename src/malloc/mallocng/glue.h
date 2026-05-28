@@ -252,7 +252,7 @@ static inline void ll_unlock(int *lock) {
 }
 
 #if !defined(MALLOCNG_LOCK_MUTEX) && !defined(MALLOCNG_LOCK_RWLOCK)
-#define MALLOCNG_LOCK_MUTEX
+#define MALLOCNG_LOCK_RWLOCK
 #endif
 
 __attribute__((__visibility__("hidden")))

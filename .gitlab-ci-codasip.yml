@@ -1,4 +1,4 @@
-ci-merged-result:
+yci-mr:
   stage: test
   rules:
     - if: $CI_PIPELINE_SOURCE == "merge_request_event"

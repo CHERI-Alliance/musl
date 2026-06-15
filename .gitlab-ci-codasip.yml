@@ -4,8 +4,6 @@ ci-merged-result:
     - if: $CI_PIPELINE_SOURCE == "merge_request_event"
   variables:
     TRIGGER_ONLY_CI: "true"
-    # YCI_EXTRA_REPO_CONF: |
-    #   meta-codasip-cheri:fsc/musl-git
     YCI_EXTRA_LOCAL_CONF: |
       CODASIP_GIT_MUSL_REPO = "${CI_SERVER_HOST}/${CI_PROJECT_PATH}"
       CODASIP_GIT_MUSL_CHERI_BRANCH = "refs/merge-requests/${CI_MERGE_REQUEST_IID}/merge;nobranch=1"

@@ -11,7 +11,6 @@ Defaults for the options are specified in brackets.
 
 Configuration:
   --srcdir=DIR            source directory [detected]
-  --testdir=DIR           test directory [detected]
 
 Installation directories:
   --prefix=PREFIX         main installation prefix [/usr/local/musl]
@@ -146,7 +145,6 @@ LDFLAGS_AUTO=
 LDFLAGS_TRY=
 OPTIMIZE_GLOBS=
 srcdir=
-testdir=
 prefix=/usr/local/musl
 exec_prefix='$(prefix)'
 bindir='$(exec_prefix)/bin'
@@ -174,7 +172,6 @@ for arg ; do
 case "$arg" in
 --help|-h) usage ;;
 --srcdir=*) srcdir=${arg#*=} ;;
---testdir=*) testdir=${arg#*=} ;;
 --prefix=*) prefix=${arg#*=} ;;
 --exec-prefix=*) exec_prefix=${arg#*=} ;;
 --bindir=*) bindir=${arg#*=} ;;
@@ -222,7 +219,7 @@ LIBCC=*) LIBCC=${arg#*=} ;;
 esac
 done
 
-for i in srcdir testdir prefix exec_prefix bindir libdir includedir syslibdir ; do
+for i in srcdir prefix exec_prefix bindir libdir includedir syslibdir ; do
 stripdir $i
 done
 
@@ -236,16 +233,6 @@ fi
 abs_builddir="$(pwd)" || fail "$0: cannot determine working directory"
 abs_srcdir="$(cd $srcdir && pwd)" || fail "$0: invalid source directory $srcdir"
 test "$abs_srcdir" = "$abs_builddir" && srcdir=.
-test "$srcdir" != "." && test -f Makefile && test ! -h Makefile && fail "$0: Makefile already exists in the working directory"
-
-#
-# Get the test dir for out-of-tree builds
-#
-if test -z "$testdir" ; then
-testdir="${0%/configure}/test"
-stripdir testdir
-fi
-abs_testdir="$(cd $testdir && pwd)" || fail "$0: invalid test directory $testdir"
 test "$srcdir" != "." && test -f Makefile && test ! -h Makefile && fail "$0: Makefile already exists in the working directory"
 
 #
@@ -945,7 +932,6 @@ ARCH = $ARCH
 SUBARCH = $SUBARCH
 ASMSUBARCH = $ASMSUBARCH
 srcdir = $srcdir
-testdir = $testdir
 prefix = $prefix
 exec_prefix = $exec_prefix
 bindir = $bindir

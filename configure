@@ -33,7 +33,7 @@ Optional features:
   --enable-debug          build with debugging information [disabled]
   --disable-warnings      build with recommended warnings flags [enabled]
   --enable-wrapper=...    build given musl toolchain wrapper [auto]
-  --disable-shared        disable building shared library [enabled]
+  --disable-shared        inhibit building shared library [enabled]
   --disable-static        inhibit building static library [enabled]
   --disable-builtins      do not use compiler atomic builtins [enabled]
   --disable-morello       inhibit using Morello features (only for AArch64 targets) [enabled]
@@ -119,7 +119,7 @@ fi
 tryldflag () {
 printf "checking whether linker accepts %s... " "$2"
 echo "typedef int x;" > "$tmpc"
-if $CC $LDFLAGS_TRY -nostdlib -shared $2 -o /dev/null "$tmpc" >/dev/null 2>&1 ; then
+if $CC $LDFLAGS_TRY -nostdlib -shared "$2" -o /dev/null "$tmpc" >/dev/null 2>&1 ; then
 printf "yes\n"
 eval "$1=\"\${$1} \$2\""
 eval "$1=\${$1# }"

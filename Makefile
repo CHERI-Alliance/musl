@@ -171,7 +171,7 @@ lib/libc.so: $(LOBJS) $(LDSO_OBJS)
 
 lib/libc.a: $(AOBJS)
 	rm -f $@
-	$(AR) rc $@ $(AOBJS) 
+	$(AR) rc $@ $(AOBJS)
 	$(RANLIB) $@
 
 $(EMPTY_LIBS):
